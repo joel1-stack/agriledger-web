@@ -68,12 +68,6 @@
     .trust-badges .badge-item strong { color: var(--primary-green); font-size: 28px; }
 
     /* ===== TESTIMONIALS ===== */
-    .testimonial-dots { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
-    .testimonial-dots button { width: 10px; height: 10px; border-radius: 50%; border: none; background: var(--border-medium); cursor: pointer; transition: var(--transition); padding: 0; }
-    .testimonial-dots button.active { background: var(--primary-green); width: 28px; border-radius: 5px; }
-    .testimonial-arrows { display: flex; justify-content: center; gap: 12px; margin-top: 16px; }
-    .testimonial-arrows button { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-medium); background: var(--surface-white); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
-    .testimonial-arrows button:hover { background: var(--primary-green); color: white; border-color: var(--primary-green); }
     .section-bg-alt { background: var(--primary-light); }
 
     /* ===== SCROLL TOP ===== */
@@ -215,25 +209,7 @@
       </div>
     </section>
 
-    <!-- TESTIMONIALS -->
-    <section class="section" id="testimonials">
-      <div class="section-title reveal">
-        <h2>What Farmers Say</h2>
-        <p>Hear from Kenyan farmers who transformed their farm management with AgriLedger.</p>
-      </div>
-      <div class="testimonials reveal">
-        <div class="testimonial-card" id="testimonialCard">
-          <p class="quote" id="testimonialQuote">"AgriLedger has completely changed how I manage my farm records. I can now see exactly where my money is going and which crops are most profitable."</p>
-          <p class="author" id="testimonialAuthor">— Grace Wanjiku</p>
-          <p class="location" id="testimonialLocation">Smallholder Farmer, Kiambu</p>
-        </div>
-        <div class="testimonial-dots" id="testimonialDots"></div>
-        <div class="testimonial-arrows">
-          <button id="prevTestimonial" aria-label="Previous">&#8592;</button>
-          <button id="nextTestimonial" aria-label="Next">&#8594;</button>
-        </div>
-      </div>
-    </section>
+
 
     <!-- CTA -->
     <section class="section" style="background:linear-gradient(135deg,#1B4332,#2D7A3E);color:white;text-align:center;">
@@ -263,7 +239,6 @@
         <div>
           <h4>Product</h4>
           <a href="#features">Features</a>
-          <a href="#testimonials">Testimonials</a>
           <a href="#">FAQ</a>
           <a href="login.html">Sign In</a>
         </div>
@@ -353,63 +328,7 @@
       }, { threshold: 0.15 });
       fadeEls.forEach(function(el) { observer.observe(el); });
 
-      // TESTIMONIAL CAROUSEL
-      var testimonials = [
-        {
-          quote: '"AgriLedger has completely changed how I manage my farm records. I can now see exactly where my money is going and which crops are most profitable."',
-          author: '— Grace Wanjiku',
-          location: 'Smallholder Farmer, Kiambu'
-        },
-        {
-          quote: '"The livestock tracking feature is a game-changer. I can monitor health records and breeding cycles for all my animals in one place."',
-          author: '— Peter Kamau',
-          location: 'Dairy Farmer, Nakuru'
-        },
-        {
-          quote: '"As a farm manager, I love the detailed reports. Profit and loss statements help me make better decisions every season."',
-          author: '— Mary Achieng',
-          location: 'Farm Manager, Uasin Gishu'
-        },
-        {
-          quote: '"I started with the free plan and upgraded to Pro within a month. Best investment I have made for my farm business."',
-          author: '— James Omondi',
-          location: 'Mixed Farm Owner, Meru'
-        }
-      ];
-      var currentTestimonial = 0;
-      var quoteEl = document.getElementById('testimonialQuote');
-      var authorEl = document.getElementById('testimonialAuthor');
-      var locationEl = document.getElementById('testimonialLocation');
-      var dotsContainer = document.getElementById('testimonialDots');
 
-      function renderTestimonial(index) {
-        var t = testimonials[index];
-        quoteEl.textContent = t.quote;
-        authorEl.textContent = t.author;
-        locationEl.textContent = t.location;
-        document.querySelectorAll('.testimonial-dots button').forEach(function(btn, i) {
-          btn.classList.toggle('active', i === index);
-        });
-      }
-
-      testimonials.forEach(function(_, i) {
-        var dot = document.createElement('button');
-        dot.addEventListener('click', function() {
-          currentTestimonial = i;
-          renderTestimonial(i);
-        });
-        if (i === 0) dot.classList.add('active');
-        dotsContainer.appendChild(dot);
-      });
-
-      document.getElementById('nextTestimonial').addEventListener('click', function() {
-        currentTestimonial = (currentTestimonial + 1) % testimonials.length;
-        renderTestimonial(currentTestimonial);
-      });
-      document.getElementById('prevTestimonial').addEventListener('click', function() {
-        currentTestimonial = (currentTestimonial - 1 + testimonials.length) % testimonials.length;
-        renderTestimonial(currentTestimonial);
-      });
 
       // SMOOTH SCROLL FOR ANCHOR LINKS
       document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
