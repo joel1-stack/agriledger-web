@@ -329,15 +329,18 @@
       }
 
       function loadDashboardData() {
-        if (typeof db !== 'undefined' && db) {
-          db.collection('transactions').orderBy('date', 'desc').limit(50).onSnapshot(function(snapshot) {
-            if (snapshot.empty) { renderDemoData(); return; }
-            var totalIncome = 0, totalExpenses = 0;
-            var activities = [];
-            var incomeTrend = new Array(12).fill(0);
-            var expenseTrend = new Array(12).fill(0);
-            var expenseCats = {};
+        if (typeof db === 'undefined' || !db) {
+          document.getElementById('activityList').innerHTML = '<div class="empty-state"><div style="font-size:48px;margin-bottom:12px;">📡</div><h3>Connecting...</h3><p>Waiting for database connection.</p></div>';
+          return;
+        }
+        db.collection('transactions').orderBy('date', 'desc').limit(50).onSnapshot(function(snapshot) {
+          var totalIncome = 0, totalExpenses = 0;
+          var activities = [];
+          var incomeTrend = new Array(12).fill(0);
+          var expenseTrend = new Array(12).fill(0);
+          var expenseCats = {};
 
+          if (!snapshot.empty) {
             snapshot.forEach(function(doc) {
               var t = doc.data();
               var amount = parseFloat(t.amount) || 0;
@@ -362,12 +365,16 @@
                 });
               }
             });
+          }
 
-            var balance = totalIncome - totalExpenses;
-            document.getElementById('totalIncome').textContent = formatCurrency(totalIncome);
-            document.getElementById('totalExpenses').textContent = formatCurrency(totalExpenses);
-            document.getElementById('totalBalance').textContent = formatCurrency(balance);
+          var balance = totalIncome - totalExpenses;
+          document.getElementById('totalIncome').textContent = formatCurrency(totalIncome);
+          document.getElementById('totalExpenses').textContent = formatCurrency(totalExpenses);
+          document.getElementById('totalBalance').textContent = formatCurrency(balance);
+          document.getElementById('incomeChange').textContent = totalIncome > 0 ? '↑ From ' + formatCurrency(totalIncome) : '';
+          document.getElementById('expenseChange').textContent = totalExpenses > 0 ? '↓ ' + formatCurrency(totalExpenses) : '';
 
+          if (totalIncome > 0 || totalExpenses > 0) {
             var totalCat = 0;
             Object.keys(expenseCats).forEach(function(k) { totalCat += expenseCats[k]; });
             var colors = ['#2D7A3E','#F5A623','#E53935','#3B82F6','#10B981','#8B5CF6','#EC4899','#9CA3AF'];
@@ -375,56 +382,19 @@
             var catArray = Object.keys(expenseCats).map(function(k) {
               return { label: k, value: totalCat > 0 ? Math.round((expenseCats[k]/totalCat)*100) : 0, color: colors[ci++ % colors.length] };
             });
-
             drawCharts({ incomeTrend: incomeTrend, expenseTrend: expenseTrend, expenseCategories: catArray });
-            renderActivities(activities);
-          }, function(err) {
-            console.warn('Firestore error, using demo data:', err);
-            renderDemoData();
-          });
+          }
+          renderActivities(activities);
+        }, function(err) {
+          console.error('Firestore error:', err);
+          document.getElementById('activityList').innerHTML = '<div class="empty-state"><div style="font-size:48px;margin-bottom:12px;">⚠️</div><h3>Could not load data</h3><p>Please check your connection and try again.</p></div>';
+        });
 
-          db.collection('livestock').where('status','==','active').onSnapshot(function(snap) {
-            document.getElementById('activeAnimals').textContent = snap.size || 0;
-          }, function() {
-            document.getElementById('activeAnimals').textContent = '42';
-          });
-        } else {
-          renderDemoData();
-        }
-      }
-
-      function renderDemoData() {
-        document.getElementById('totalIncome').textContent = 'KSh 245,000';
-        document.getElementById('incomeChange').textContent = '\u2191 12%';
-        document.getElementById('totalExpenses').textContent = 'KSh 89,000';
-        document.getElementById('expenseChange').textContent = '\u2193 5%';
-        document.getElementById('totalBalance').textContent = 'KSh 156,000';
-        document.getElementById('activeAnimals').textContent = '42';
-
-        var demoIncome = [120000,135000,110000,145000,155000,140000,160000,175000,165000,180000,195000,210000];
-        var demoExpense = [50000,48000,52000,45000,47000,55000,42000,44000,46000,43000,41000,40000];
-        var demoCategories = [
-          { label: 'Feed', value: 35, color: '#2D7A3E' },
-          { label: 'Labour', value: 25, color: '#F5A623' },
-          { label: 'Medicine', value: 15, color: '#E53935' },
-          { label: 'Transport', value: 12, color: '#3B82F6' },
-          { label: 'Other', value: 13, color: '#9CA3AF' }
-        ];
-        drawCharts({ incomeTrend: demoIncome, expenseTrend: demoExpense, expenseCategories: demoCategories });
-
-        var demoActivities = [
-          { type: 'income', title: 'Milk Sales - Daily collection', amount: 28500, date: new Date(2026,5,29), category: 'Dairy' },
-          { type: 'expense', title: 'Dairy Feed Purchase - 10 bags', amount: 18000, date: new Date(2026,5,29), category: 'Feed' },
-          { type: 'income', title: 'Egg Sales - 20 trays', amount: 12000, date: new Date(2026,5,28), category: 'Poultry' },
-          { type: 'expense', title: 'Veterinary Services - Vaccination', amount: 5500, date: new Date(2026,5,28), category: 'Vet' },
-          { type: 'stock', title: 'New poultry feed stock added', amount: 0, date: new Date(2026,5,27), category: '' },
-          { type: 'income', title: 'Crop Sale - Maize harvest', amount: 45000, date: new Date(2026,5,27), category: 'Crops' },
-          { type: 'expense', title: 'Fertilizer - DAP 50kg x 5', amount: 12500, date: new Date(2026,5,26), category: 'Inputs' },
-          { type: 'income', title: 'Livestock Sale - 2 goats', amount: 24000, date: new Date(2026,5,26), category: 'Livestock' },
-          { type: 'expense', title: 'Electricity bill', amount: 3200, date: new Date(2026,5,25), category: 'Utilities' },
-          { type: 'stock', title: 'New veterinary supplies delivered', amount: 0, date: new Date(2026,5,25), category: '' }
-        ];
-        renderActivities(demoActivities);
+        db.collection('livestock').where('status','==','active').onSnapshot(function(snap) {
+          document.getElementById('activeAnimals').textContent = snap.size || 0;
+        }, function() {
+          document.getElementById('activeAnimals').textContent = '0';
+        });
       }
 
       function renderActivities(activities) {
