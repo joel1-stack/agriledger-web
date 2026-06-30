@@ -1,12 +1,12 @@
-// Firebase Configuration
-// Get your API key and App ID from Firebase Console > Project Settings > General > Your apps > Web app
+// Firebase Configuration - Web SDK v8 (namespaced)
 const firebaseConfig = {
-  apiKey: "YOUR_WEB_API_KEY", // <-- REPLACE with your Web API key from Firebase Console
+  apiKey: "REPLACED_API_KEY",
   authDomain: "agri-ledger-c427d.firebaseapp.com",
   projectId: "agri-ledger-c427d",
-  storageBucket: "agri-ledger-c427d.appspot.com",
+  storageBucket: "agri-ledger-c427d.firebasestorage.app",
   messagingSenderId: "522942087181",
-  appId: "YOUR_WEB_APP_ID" // <-- REPLACE with your Web App ID from Firebase Console
+  appId: "1:522942087181:web:0b181a0a0f456b08d4d544",
+  measurementId: "G-DFNS0P5WMH"
 };
 
 firebase.initializeApp(firebaseConfig);
