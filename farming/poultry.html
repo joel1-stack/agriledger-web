@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Poultry Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <style>
+    .batch-card { background: var(--surface-white); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); overflow: hidden; transition: var(--transition); }
+    .batch-card:hover { box-shadow: var(--shadow-md); }
+    .batch-header { padding: 16px 20px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; }
+    .batch-header .batch-name { font-size: 16px; font-weight: 600; }
+    .batch-header .batch-type { font-size: 12px; color: var(--text-secondary); }
+    .batch-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 12px 20px; }
+    .batch-kpi { text-align: center; padding: 8px; background: var(--bg-cream); border-radius: var(--radius-sm); }
+    .batch-kpi .bk-value { font-size: 18px; font-weight: 700; color: var(--primary-green); }
+    .batch-kpi .bk-label { font-size: 11px; color: var(--text-secondary); }
+    .batch-footer { padding: 12px 20px; border-top: 1px solid var(--border-light); background: var(--bg-cream); display: flex; justify-content: space-between; align-items: center; }
+    .batch-sub-links { display: flex; gap: 8px; flex-wrap: wrap; }
+    .batch-sub-links a { font-size: 12px; color: var(--primary-green); padding: 4px 10px; border: 1px solid var(--primary-green); border-radius: 20px; text-decoration: none; transition: var(--transition); }
+    .batch-sub-links a:hover { background: var(--primary-green); color: white; }
+    .bottom-nav { display: none; }
+    @media (max-width: 640px) {
+      .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: #1B4332; z-index: 100; padding: 4px 0; justify-content: space-around; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+      .bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; color: rgba(255,255,255,0.6); font-size: 10px; padding: 6px 12px; text-decoration: none; }
+      .bottom-nav a.active, .bottom-nav a:hover { color: white; }
+      .bottom-nav a .nav-icon { font-size: 20px; }
+      .page-content { padding-bottom: 80px; }
+      .batch-kpis { grid-template-columns: repeat(2, 1fr); }
+    }
+    .batch-age { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: var(--primary-light); color: var(--primary-dark); }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <span class="logo" style="font-size:28px;">🌿</span>
+        <span>AgriLedger</span>
+      </div>
+      <div class="sidebar-user">
+        <div class="avatar"><span class="user-avatar-text">U</span></div>
+        <div class="user-info">
+          <div class="name sidebar-user-name">Loading...</div>
+          <div class="role sidebar-user-role">general</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Main</div>
+        <a href="../dashboard.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+        <div class="nav-item has-sub active"><span class="nav-icon">🌾</span><span class="nav-text">Farming</span><span class="nav-arrow open">▶</span></div>
+        <div class="sub-nav open">
+          <a href="crops.html"><span class="nav-icon">🌱</span><span class="nav-text">Crops</span></a>
+          <a href="livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+          <a href="poultry.html" class="active"><span class="nav-icon">🐔</span><span class="nav-text">Poultry</span></a>
+          <a href="dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+        </div>
+        <a href="../inventory.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+        <a href="../cashbook.html" class="nav-item"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+        <a href="../journal.html" class="nav-item"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+        <a href="../contracts.html" class="nav-item"><span class="nav-icon">📝</span><span class="nav-text">Contracts</span></a>
+        <a href="../property.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-text">Property</span></a>
+        <a href="../transport.html" class="nav-item"><span class="nav-icon">🚜</span><span class="nav-text">Transport</span></a>
+        <a href="../reports.html" class="nav-item"><span class="nav-icon">📈</span><span class="nav-text">Reports</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="../settings.html"><span class="nav-icon">⚙️</span><span class="nav-text">Settings</span></a>
+        <a href="#" onclick="logoutUser()"><span class="nav-icon">🚪</span><span class="nav-text">Logout</span></a>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="topbar-toggle" id="sidebar-toggle">☰</button>
+          <div class="topbar-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="Search batches..." id="searchBatch">
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="notification-btn">🔔<span class="badge badge-red" id="notifBadge" style="display:none;">0</span></button>
+          <button class="profile-btn" onclick="window.location.href='../settings.html'">
+            <div class="avatar"><span class="user-avatar-text">U</span></div>
+            <span class="sidebar-user-name" style="font-size:13px;font-weight:500;color:var(--text-primary);">User</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="page-content">
+        <div class="breadcrumb">
+          <a href="../dashboard.html">Dashboard</a>
+          <span class="sep">›</span>
+          <a href="../dashboard.html">Farming</a>
+          <span class="sep">›</span>
+          <span>Poultry</span>
+        </div>
+
+        <div class="page-header">
+          <div class="page-header-row">
+            <h1>Poultry Management</h1>
+            <button class="btn btn-primary" onclick="openBatchModal()">➕ Add Batch</button>
+          </div>
+          <p style="margin-top:8px;font-size:14px;color:var(--text-secondary);">
+            Manage your poultry batches, track production, and monitor flock health.
+          </p>
+        </div>
+
+        <!-- Poultry Sub-page Links -->
+        <div style="margin-bottom:20px;">
+          <div class="batch-sub-links">
+            <a href="../poultry/poultry-dashboard.html">📊 Dashboard</a>
+            <a href="../poultry/flock-register.html">📋 Flock Register</a>
+            <a href="../poultry/production-log.html">🥚 Production Log</a>
+            <a href="../poultry/sales.html">💰 Sales</a>
+            <a href="../poultry/other-income.html">💵 Other Income</a>
+            <a href="../poultry/feed-expenses.html">🌾 Feed Expenses</a>
+            <a href="../poultry/health-vet.html">💉 Health & Vet</a>
+            <a href="../poultry/mortality.html">📉 Mortality</a>
+            <a href="../poultry/batch-summary.html">📈 Batch Summary</a>
+          </div>
+        </div>
+
+        <!-- Batch Cards -->
+        <div class="grid" id="batchGrid">
+          <div class="loading-spinner" style="grid-column:1/-1;"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+      <a href="../dashboard.html"><span class="nav-icon">📊</span>Home</a>
+      <a href="crops.html"><span class="nav-icon">🌱</span>Crops</a>
+      <a href="livestock.html"><span class="nav-icon">🐄</span>Animals</a>
+      <a href="poultry.html" class="active"><span class="nav-icon">🐔</span>Poultry</a>
+      <a href="../cashbook.html"><span class="nav-icon">💰</span>Cashbook</a>
+    </nav>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    (function() {
+      var allBatches = [];
+      var unsubscribe = null;
+
+      function getBirdIcon(type) {
+        var t = (type || '').toLowerCase();
+        if (t.includes('layer')) return '🐔';
+        if (t.includes('broiler')) return '🍗';
+        if (t.includes('kienyeji') || t.includes('indigenous')) return '🐓';
+        return '🐔';
+      }
+
+      function calcBatchAge(startDate) {
+        if (!startDate) return '—';
+        var d = startDate.toDate ? startDate.toDate() : new Date(startDate);
+        var now = new Date();
+        var days = Math.floor((now - d) / (1000 * 60 * 60 * 24));
+        if (days < 1) return 'Today';
+        if (days < 30) return days + ' days';
+        var weeks = Math.floor(days / 7);
+        return weeks + ' weeks';
+      }
+
+      function renderBatches(batches) {
+        var grid = document.getElementById('batchGrid');
+        if (!grid) return;
+        if (batches.length === 0) {
+          grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="icon">🐔</div><h3>No poultry batches</h3><p>Start by adding a new batch to track your flock.</p><button class="btn btn-primary" onclick="openBatchModal()">➕ Add Batch</button></div>';
+          return;
+        }
+        grid.innerHTML = batches.map(function(b) {
+          var icon = getBirdIcon(b.birdType);
+          var age = calcBatchAge(b.startDate);
+          var status = b.status || 'active';
+          var statusBadge = status === 'active' ? 'badge-green' : (status === 'sold' ? 'badge-blue' : 'badge-gray');
+          return '<div class="batch-card" data-id="' + b.id + '">' +
+            '<div class="batch-header">' +
+              '<div><div class="batch-name">' + icon + ' ' + (b.name || 'Unnamed Batch') + '</div><div class="batch-type">' + (b.birdType || '—') + '</div></div>' +
+              '<div style="display:flex;align-items:center;gap:8px;"><span class="badge ' + statusBadge + '">' + status + '</span><span class="batch-age">' + age + '</span></div>' +
+            '</div>' +
+            '<div class="batch-kpis">' +
+              '<div class="batch-kpi"><div class="bk-value">' + formatNumber(b.flockSize || 0) + '</div><div class="bk-label">Birds</div></div>' +
+              '<div class="batch-kpi"><div class="bk-value">' + formatNumber(b.eggsPerDay || 0) + '</div><div class="bk-label">Eggs/Day</div></div>' +
+              '<div class="batch-kpi"><div class="bk-value" style="color:' + ((b.mortality || 0) > 5 ? 'var(--accent-red)' : 'var(--primary-green)') + ';">' + (b.mortality || 0) + '</div><div class="bk-label">Mortality</div></div>' +
+              '<div class="batch-kpi"><div class="bk-value">' + (b.feedPerDay || 0) + ' kg</div><div class="bk-label">Feed/Day</div></div>' +
+            '</div>' +
+            '<div class="batch-footer">' +
+              '<div class="batch-sub-links">' +
+                '<a href="../poultry/flock-register.html">📋 Register</a>' +
+                '<a href="../poultry/production-log.html">🥚 Production</a>' +
+                '<a href="../poultry/feed-expenses.html">🌾 Feed</a>' +
+              '</div>' +
+              '<div style="display:flex;gap:4px;">' +
+                '<button class="btn btn-sm btn-secondary" onclick="editBatch(\'' + b.id + '\')">✏️</button>' +
+                '<button class="btn btn-sm btn-danger" onclick="deleteBatch(\'' + b.id + '\')">🗑️</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+
+      function loadBatches() {
+        if (unsubscribe) unsubscribe();
+        var grid = document.getElementById('batchGrid');
+        if (grid) grid.innerHTML = '<div class="loading-spinner" style="grid-column:1/-1;"></div>';
+
+        unsubscribe = db.collection('poultryBatches').orderBy('startDate', 'desc').onSnapshot(function(snapshot) {
+          allBatches = [];
+          snapshot.forEach(function(doc) { allBatches.push({ id: doc.id, ...doc.data() }); });
+          if (allBatches.length === 0) {
+            loadDemoBatches();
+          } else {
+            renderBatches(allBatches);
+          }
+        }, function(err) {
+          console.warn('Firestore error, loading demo:', err);
+          loadDemoBatches();
+        });
+      }
+
+      function loadDemoBatches() {
+        allBatches = [
+          { id: 'demo1', name: 'Batch A - Layers', birdType: 'Layers', status: 'active', startDate: new Date(2026, 2, 1), flockSize: 500, eggsPerDay: 420, mortality: 3, feedPerDay: 60 },
+          { id: 'demo2', name: 'Batch B - Broilers', birdType: 'Broilers', status: 'active', startDate: new Date(2026, 3, 15), flockSize: 300, eggsPerDay: 0, mortality: 5, feedPerDay: 85 },
+          { id: 'demo3', name: 'Batch C - Kienyeji', birdType: 'Kienyeji', status: 'active', startDate: new Date(2026, 0, 10), flockSize: 200, eggsPerDay: 140, mortality: 2, feedPerDay: 25 },
+          { id: 'demo4', name: 'Batch D - Layers', birdType: 'Layers', status: 'sold', startDate: new Date(2025, 9, 1), flockSize: 0, eggsPerDay: 0, mortality: 12, feedPerDay: 0 }
+        ];
+        renderBatches(allBatches);
+      }
+
+      function openBatchModal(batchData) {
+        var isEdit = !!batchData;
+        var b = batchData || {};
+        var title = isEdit ? 'Edit Batch' : 'Add New Batch';
+        var html = '<form id="batchForm" onsubmit="return saveBatch(event)">' +
+          '<input type="hidden" id="batchId" value="' + (b.id || '') + '">' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label class="form-label">Batch Name</label><input type="text" id="batchName" class="form-input" value="' + (b.name || '') + '" required placeholder="e.g. Batch A"></div>' +
+            '<div class="form-group"><label class="form-label">Bird Type</label><select id="batchType" class="form-select" required>' +
+              '<option value="">Select...</option>' +
+              '<option value="Layers"' + (b.birdType === 'Layers' ? ' selected' : '') + '>Layers</option>' +
+              '<option value="Broilers"' + (b.birdType === 'Broilers' ? ' selected' : '') + '>Broilers</option>' +
+              '<option value="Kienyeji"' + (b.birdType === 'Kienyeji' ? ' selected' : '') + '>Kienyeji (Indigenous)</option>' +
+              '<option value="Dual Purpose"' + (b.birdType === 'Dual Purpose' ? ' selected' : '') + '>Dual Purpose</option>' +
+            '</select></div>' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label class="form-label">Start Date</label><input type="date" id="batchDate" class="form-input" value="' + (b.startDate ? formatDateInput(b.startDate) : '') + '" required></div>' +
+            '<div class="form-group"><label class="form-label">Status</label><select id="batchStatus" class="form-select">' +
+              '<option value="active"' + (b.status === 'active' ? ' selected' : '') + '>Active</option>' +
+              '<option value="sold"' + (b.status === 'sold' ? ' selected' : '') + '>Sold</option>' +
+              '<option value="depleted"' + (b.status === 'depleted' ? ' selected' : '') + '>Depleted</option>' +
+            '</select></div>' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label class="form-label">Flock Size</label><input type="number" id="batchFlock" class="form-input" value="' + (b.flockSize || '') + '" min="0" required></div>' +
+            '<div class="form-group"><label class="form-label">Eggs/Day</label><input type="number" id="batchEggs" class="form-input" value="' + (b.eggsPerDay || '') + '" min="0"></div>' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label class="form-label">Mortality</label><input type="number" id="batchMortality" class="form-input" value="' + (b.mortality || '') + '" min="0"></div>' +
+            '<div class="form-group"><label class="form-label">Feed/Day (kg)</label><input type="number" id="batchFeed" class="form-input" value="' + (b.feedPerDay || '') + '" min="0" step="0.5"></div>' +
+          '</div>' +
+          '<div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);margin-top:16px;">' +
+            '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>' +
+            '<button type="submit" class="btn btn-primary">' + (isEdit ? 'Update Batch' : 'Add Batch') + '</button>' +
+          '</div>' +
+        '</form>';
+        openModal(html, title);
+      }
+
+      function formatDateInput(date) {
+        if (!date) return '';
+        if (typeof date === 'string') date = new Date(date);
+        if (date.toDate) date = date.toDate();
+        return date.toISOString().split('T')[0];
+      }
+
+      window.saveBatch = async function(e) {
+        e.preventDefault();
+        var id = document.getElementById('batchId').value;
+        var data = {
+          name: document.getElementById('batchName').value.trim(),
+          birdType: document.getElementById('batchType').value,
+          startDate: new Date(document.getElementById('batchDate').value),
+          status: document.getElementById('batchStatus').value,
+          flockSize: parseInt(document.getElementById('batchFlock').value) || 0,
+          eggsPerDay: parseInt(document.getElementById('batchEggs').value) || 0,
+          mortality: parseInt(document.getElementById('batchMortality').value) || 0,
+          feedPerDay: parseFloat(document.getElementById('batchFeed').value) || 0,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        try {
+          if (id) {
+            await db.collection('poultryBatches').doc(id).update(data);
+            showToast('Batch updated successfully', 'success');
+          } else {
+            data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection('poultryBatches').add(data);
+            showToast('Batch added successfully', 'success');
+          }
+          closeModal();
+        } catch (err) {
+          console.error('Save error:', err);
+          showToast('Error saving batch: ' + err.message, 'error');
+        }
+        return false;
+      };
+
+      window.editBatch = function(id) {
+        var b = allBatches.find(function(x) { return x.id === id; });
+        if (b) openBatchModal(b);
+      };
+
+      window.deleteBatch = async function(id) {
+        if (!confirm('Delete this batch?')) return;
+        try {
+          await db.collection('poultryBatches').doc(id).delete();
+          showToast('Batch deleted', 'success');
+        } catch (err) {
+          allBatches = allBatches.filter(function(b) { return b.id !== id; });
+          renderBatches(allBatches);
+          showToast('Batch removed', 'success');
+        }
+      };
+
+      document.addEventListener('DOMContentLoaded', function() {
+        loadBatches();
+        document.getElementById('searchBatch') && document.getElementById('searchBatch').addEventListener('input', function(e) {
+          var q = e.target.value.toLowerCase();
+          var filtered = allBatches.filter(function(b) {
+            return (b.name || '').toLowerCase().includes(q) || (b.birdType || '').toLowerCase().includes(q);
+          });
+          renderBatches(filtered);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

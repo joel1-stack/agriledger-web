@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Cashbook</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <style>
+    .cb-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+    @media (max-width: 768px) { .cb-grid { grid-template-columns: 1fr; } }
+    .balance-card { background: var(--surface-white); border-radius: var(--radius-md); padding: 24px; border: 1px solid var(--border-light); border-left: 4px solid var(--primary-green); }
+    .balance-card .method-name { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .balance-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; border-bottom: 1px solid var(--border-light); }
+    .balance-row:last-child { border-bottom: none; font-weight: 700; font-size: 16px; border-top: 2px solid var(--primary-green); margin-top: 4px; padding-top: 12px; }
+    .balance-row .label { color: var(--text-secondary); }
+    .balance-row .value.positive { color: var(--primary-green); }
+    .balance-row .value.negative { color: var(--accent-red); }
+    .txn-group { margin-bottom: 20px; }
+    .txn-group .group-date { font-size: 14px; font-weight: 600; color: var(--text-secondary); padding: 8px 0; border-bottom: 1px solid var(--border-light); margin-bottom: 8px; }
+    .txn-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: var(--radius-sm); transition: var(--transition); cursor: default; }
+    .txn-item:hover { background: var(--primary-light); }
+    .txn-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .txn-icon.income { background: var(--primary-light); }
+    .txn-icon.expense { background: #FFEBEE; }
+    .txn-info { flex: 1; min-width: 0; }
+    .txn-info .desc { font-size: 14px; font-weight: 500; }
+    .txn-info .meta { font-size: 12px; color: var(--text-secondary); }
+    .txn-amount { font-size: 15px; font-weight: 700; white-space: nowrap; }
+    .txn-amount.income { color: var(--primary-green); }
+    .txn-amount.expense { color: var(--accent-red); }
+    .txn-badge { margin-left: 8px; }
+    .payment-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .payment-tab { padding: 8px 20px; border-radius: 20px; border: 1px solid var(--border-medium); font-size: 13px; cursor: pointer; transition: var(--transition); background: var(--surface-white); color: var(--text-secondary); }
+    .payment-tab:hover { border-color: var(--primary-green); color: var(--primary-green); }
+    .payment-tab.active { background: var(--primary-green); color: white; border-color: var(--primary-green); }
+    .bottom-nav { display: none; }
+    @media (max-width: 640px) {
+      .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: #1B4332; z-index: 100; padding: 4px 0; justify-content: space-around; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+      .bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; color: rgba(255,255,255,0.6); font-size: 10px; padding: 6px 12px; text-decoration: none; }
+      .bottom-nav a.active, .bottom-nav a:hover { color: white; }
+      .bottom-nav a .nav-icon { font-size: 20px; }
+      .page-content { padding-bottom: 80px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><span style="font-size:28px;">🌿</span><span>AgriLedger</span></div>
+    <div class="sidebar-user">
+      <div class="avatar"><span class="user-avatar-text">U</span></div>
+      <div class="user-info">
+        <div class="name sidebar-user-name">Loading...</div>
+        <div class="role sidebar-user-role">general</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <div class="nav-section">FARMING</div>
+      <a href="farming/crops.html"><span class="nav-icon">🌾</span><span class="nav-text">Crops</span></a>
+      <a href="farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+      <a href="farming/poultry.html"><span class="nav-icon">🐔</span><span class="nav-text">Poultry</span></a>
+      <a href="farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+      <div class="nav-section">FINANCE</div>
+      <a href="inventory.html"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+      <a href="cashbook.html" class="active"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+      <a href="journal.html"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+      <div class="nav-section">BUSINESS</div>
+      <a href="contracts.html"><span class="nav-icon">📋</span><span class="nav-text">Contracts</span></a>
+      <a href="property.html"><span class="nav-icon">🏠</span><span class="nav-text">Property</span></a>
+      <a href="transport.html"><span class="nav-icon">🚛</span><span class="nav-text">Transport</span></a>
+      <a href="reports.html"><span class="nav-icon">📈</span><span class="nav-text">Reports</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a>
+      <a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle">☰</button>
+        <div class="breadcrumb">
+          <a href="dashboard.html">Dashboard</a><span class="sep">›</span><span>Cashbook</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="notification-btn">🔔<span class="badge badge-red">3</span></button>
+        <button class="profile-btn" onclick="window.location.href='settings.html'">
+          <div class="avatar"><span class="user-avatar-text">J</span></div>
+          <span class="sidebar-user-name" style="font-size:13px;">User</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header">
+        <div class="page-header-row">
+          <h1>Cashbook</h1>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-secondary" onclick="exportPDF()">📄 PDF</button>
+            <button class="btn btn-secondary" onclick="exportCSV()">📊 CSV</button>
+            <button class="btn btn-primary" onclick="openAddTxnModal()">➕ Add Transaction</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cb-grid">
+        <div>
+          <div class="payment-tabs" id="paymentTabs">
+            <span class="payment-tab active" data-method="All">All Methods</span>
+            <span class="payment-tab" data-method="Cash">Cash</span>
+            <span class="payment-tab" data-method="M-Pesa">M-Pesa</span>
+            <span class="payment-tab" data-method="Bank">Bank</span>
+            <span class="payment-tab" data-method="Cheque">Cheque</span>
+          </div>
+          <div class="balance-card" id="balanceCard">
+            <div class="method-name">💰 <span id="balMethod">All Methods</span></div>
+            <div class="balance-row"><span class="label">Opening Balance</span><span class="value" id="balOpening">KSh 0</span></div>
+            <div class="balance-row"><span class="label">Total Income (+)</span><span class="value positive" id="balIncome">KSh 0</span></div>
+            <div class="balance-row"><span class="label">Total Expenses (-)</span><span class="value negative" id="balExpense">KSh 0</span></div>
+            <div class="balance-row"><span class="label">Closing Balance</span><span class="value" id="balClosing" style="color:var(--primary-green);">KSh 0</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Transactions</h3>
+            <input type="text" class="form-input" style="width:200px;padding:6px 12px;font-size:13px;" placeholder="Search..." id="cbSearch">
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div id="txnList">
+              <div class="loading-spinner"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="dashboard.html"><span class="nav-icon">📊</span>Home</a>
+    <a href="inventory.html"><span class="nav-icon">📦</span>Inventory</a>
+    <a href="cashbook.html" class="active"><span class="nav-icon">💰</span>Cashbook</a>
+    <a href="journal.html"><span class="nav-icon">📓</span>Journal</a>
+    <a href="settings.html"><span class="nav-icon">⚙️</span>More</a>
+  </nav>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script>
+(function() {
+  var allTxns = [];
+  var activeMethod = 'All';
+  var txnUnsub = null;
+
+  function updateBalance(txns) {
+    var inc = 0, exp = 0;
+    txns.forEach(function(t) {
+      var amt = parseFloat(t.amount) || 0;
+      if (t.type === 'income') inc += amt;
+      else exp += amt;
+    });
+    var bal = inc - exp;
+    document.getElementById('balOpening').textContent = formatCurrency(0);
+    document.getElementById('balIncome').textContent = formatCurrency(inc);
+    document.getElementById('balExpense').textContent = formatCurrency(exp);
+    document.getElementById('balClosing').textContent = formatCurrency(bal);
+  }
+
+  function renderTxns(txns) {
+    var el = document.getElementById('txnList');
+    if (!el) return;
+    if (txns.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">💰</div><h3>No transactions</h3><p>Click "Add Transaction" to get started.</p></div>';
+      return;
+    }
+    var groups = {};
+    txns.forEach(function(t) {
+      var d = t.date ? (t.date.toDate ? t.date.toDate() : new Date(t.date)) : new Date();
+      var key = d.toDateString();
+      if (!groups[key]) groups[key] = { date: d, items: [] };
+      groups[key].items.push(t);
+    });
+    var html = '';
+    Object.keys(groups).sort(function(a,b) { return new Date(b) - new Date(a); }).forEach(function(key) {
+      var g = groups[key];
+      html += '<div class="txn-group"><div class="group-date">' + formatDate(g.date) + '</div>';
+      g.items.forEach(function(t) {
+        var type = t.type === 'income' ? 'income' : 'expense';
+        var icon = type === 'income' ? '💰' : '💸';
+        var pmtBadge = '';
+        if (t.paymentMethod) {
+          var pmtClass = t.paymentMethod === 'Cash' ? 'badge-gray' : (t.paymentMethod === 'M-Pesa' ? 'badge-green' : (t.paymentMethod === 'Bank' ? 'badge-blue' : 'badge-purple'));
+          pmtBadge = ' <span class="badge ' + pmtClass + '">' + t.paymentMethod + '</span>';
+        }
+        var receiptLink = t.receiptUrl ? ' <a href="' + t.receiptUrl + '" target="_blank" style="font-size:11px;color:var(--accent-blue);">📎 Receipt</a>' : '';
+        html += '<div class="txn-item">' +
+          '<div class="txn-icon ' + type + '">' + icon + '</div>' +
+          '<div class="txn-info"><div class="desc">' + (t.description || 'Transaction') + receiptLink + '</div><div class="meta">' + formatTime(t.date) + pmtBadge + '</div></div>' +
+          '<div class="txn-amount ' + type + '">' + (type === 'income' ? '+' : '-') + formatCurrency(t.amount) + '</div>' +
+        '</div>';
+      });
+      html += '</div>';
+    });
+    el.innerHTML = html;
+    updateBalance(txns);
+  }
+
+  function filterTxns() {
+    var search = (document.getElementById('cbSearch').value || '').toLowerCase();
+    var filtered = allTxns.filter(function(t) {
+      var desc = (t.description || '').toLowerCase();
+      var pmt = (t.paymentMethod || '').toLowerCase();
+      var cat = (t.category || '').toLowerCase();
+      var matchesSearch = !search || desc.includes(search) || pmt.includes(search) || cat.includes(search);
+      var matchesMethod = activeMethod === 'All' || (t.paymentMethod || '') === activeMethod;
+      return matchesSearch && matchesMethod;
+    });
+    renderTxns(filtered);
+  }
+
+  function loadData() {
+    if (txnUnsub) txnUnsub();
+    txnUnsub = db.collection('transactions').orderBy('date', 'desc').limit(200).onSnapshot(function(snap) {
+      allTxns = [];
+      snap.forEach(function(d) { allTxns.push({ id: d.id, ...d.data() }); });
+      if (allTxns.length === 0) loadDemoTxns();
+      else filterTxns();
+    }, function() { loadDemoTxns(); });
+  }
+
+  function loadDemoTxns() {
+    var today = new Date();
+    var yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+    var d2 = new Date(today); d2.setDate(d2.getDate() - 2);
+    allTxns = [
+      { id: 't1', type: 'income', description: 'Milk sales - Morning collection', amount: 28500, paymentMethod: 'Cash', date: today, category: 'Dairy' },
+      { id: 't2', type: 'expense', description: 'Dairy meal - 10 bags', amount: 18000, paymentMethod: 'M-Pesa', date: today, category: 'Feed' },
+      { id: 't3', type: 'income', description: 'Egg sales - 20 trays', amount: 12000, paymentMethod: 'Cash', date: yesterday, category: 'Poultry' },
+      { id: 't4', type: 'expense', description: 'Veterinary services', amount: 5500, paymentMethod: 'Cash', date: yesterday, category: 'Vet' },
+      { id: 't5', type: 'income', description: 'Crop sale - Maize', amount: 45000, paymentMethod: 'Bank', date: d2, category: 'Crops' },
+      { id: 't6', type: 'expense', description: 'Fertilizer purchase', amount: 12500, paymentMethod: 'Cash', date: d2, category: 'Inputs' },
+      { id: 't7', type: 'expense', description: 'Electricity bill', amount: 3200, paymentMethod: 'Bank', date: d2, category: 'Utilities' }
+    ];
+    filterTxns();
+  }
+
+  window.openAddTxnModal = function(data) {
+    var isEdit = !!data;
+    var d = data || {};
+    var title = isEdit ? 'Edit Transaction' : 'Add Transaction';
+    var html = '<form id="txnForm" onsubmit="return saveTxn(event)">' +
+      '<input type="hidden" id="txnId" value="' + (d.id || '') + '">' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Type</label><select id="txnType" class="form-select"><option value="income"' + (d.type === 'income' ? ' selected' : '') + '>Income</option><option value="expense"' + (d.type === 'expense' ? ' selected' : '') + '>Expense</option></select></div>' +
+        '<div class="form-group"><label class="form-label">Amount (KSh)</label><input type="number" id="txnAmount" class="form-input" value="' + (d.amount || '') + '" min="0" step="0.5" required></div>' +
+      '</div>' +
+      '<div class="form-group"><label class="form-label">Description</label><input type="text" id="txnDesc" class="form-input" value="' + (d.description || '') + '" required></div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Payment Method</label><select id="txnPayment" class="form-select"><option value="Cash"' + (d.paymentMethod === 'Cash' ? ' selected' : '') + '>Cash</option><option value="M-Pesa"' + (d.paymentMethod === 'M-Pesa' ? ' selected' : '') + '>M-Pesa</option><option value="Bank"' + (d.paymentMethod === 'Bank' ? ' selected' : '') + '>Bank</option><option value="Cheque"' + (d.paymentMethod === 'Cheque' ? ' selected' : '') + '>Cheque</option></select></div>' +
+        '<div class="form-group"><label class="form-label">Category</label><input type="text" id="txnCat" class="form-input" value="' + (d.category || '') + '" placeholder="e.g. Dairy, Feed"></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Date</label><input type="date" id="txnDate" class="form-input" value="' + (d.date ? formatDateInput(d.date) : new Date().toISOString().split('T')[0]) + '"></div>' +
+        '<div class="form-group"><label class="form-label">Receipt URL (optional)</label><input type="url" id="txnReceipt" class="form-input" value="' + (d.receiptUrl || '') + '" placeholder="Link to receipt"></div>' +
+      '</div>' +
+      '<div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);margin-top:16px;">' +
+        '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>' +
+        '<button type="submit" class="btn btn-primary">' + (isEdit ? 'Update' : 'Add Transaction') + '</button>' +
+      '</div></form>';
+    openModal(html, title);
+  };
+
+  function formatDateInput(date) {
+    if (!date) return '';
+    if (typeof date === 'string') date = new Date(date);
+    if (date.toDate) date = date.toDate();
+    return date.toISOString().split('T')[0];
+  }
+
+  window.saveTxn = async function(e) {
+    e.preventDefault();
+    var id = document.getElementById('txnId').value;
+    var date = document.getElementById('txnDate').value ? new Date(document.getElementById('txnDate').value + 'T12:00:00') : new Date();
+    var data = {
+      type: document.getElementById('txnType').value,
+      amount: parseFloat(document.getElementById('txnAmount').value) || 0,
+      description: document.getElementById('txnDesc').value.trim(),
+      paymentMethod: document.getElementById('txnPayment').value,
+      category: document.getElementById('txnCat').value.trim(),
+      date: date,
+      receiptUrl: document.getElementById('txnReceipt').value.trim(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    try {
+      if (id) { await db.collection('transactions').doc(id).update(data); showToast('Transaction updated', 'success'); }
+      else { data.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('transactions').add(data); showToast('Transaction added', 'success'); }
+      closeModal();
+    } catch (err) {
+      showToast('Error: ' + err.message, 'error');
+    }
+    return false;
+  };
+
+  function exportPDF() {
+    showToast('PDF export - coming soon', 'info');
+  }
+  function exportCSV() {
+    if (allTxns.length === 0) { showToast('No data to export', 'warning'); return; }
+    var csv = 'Date,Type,Description,Amount,PaymentMethod,Category\n';
+    allTxns.forEach(function(t) {
+      csv += formatDate(t.date) + ',' + (t.type || '') + ',"' + (t.description || '') + '",' + (t.amount || 0) + ',' + (t.paymentMethod || '') + ',' + (t.category || '') + '\n';
+    });
+    var blob = new Blob([csv], { type: 'text/csv' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'cashbook_export.csv'; a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSV exported', 'success');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    loadData();
+    document.querySelectorAll('.payment-tab').forEach(function(t) {
+      t.addEventListener('click', function() {
+        document.querySelectorAll('.payment-tab').forEach(function(p) { p.classList.remove('active'); });
+        this.classList.add('active');
+        activeMethod = this.dataset.method;
+        document.getElementById('balMethod').textContent = this.textContent.trim();
+        filterTxns();
+      });
+    });
+    document.getElementById('cbSearch').addEventListener('input', filterTxns);
+  });
+})();
+</script>
+</body>
+</html>

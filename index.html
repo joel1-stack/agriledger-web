@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Farm Accounting Made Simple</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <style>
+    /* ===== PAGE LOAD ANIMATION ===== */
+    .page-wrapper { animation: pageFadeIn 0.5s ease; }
+    @keyframes pageFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ===== SCROLL REVEAL ===== */
+    .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-left { opacity: 0; transform: translateX(-40px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal-left.visible { opacity: 1; transform: translateX(0); }
+    .reveal-right { opacity: 0; transform: translateX(40px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal-right.visible { opacity: 1; transform: translateX(0); }
+    .reveal-scale { opacity: 0; transform: scale(0.9); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal-scale.visible { opacity: 1; transform: scale(1); }
+
+    /* ===== HERO ===== */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 80px 24px 60px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1B4332 0%, #2D7A3E 40%, #1B5E2A 100%);
+    }
+    .hero-bg {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920') center center / cover no-repeat;
+      opacity: 0.2;
+      z-index: 0;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, rgba(27,67,50,0.95) 0%, rgba(45,122,62,0.85) 100%);
+      z-index: 1;
+    }
+    .hero-content { flex: 1; max-width: 560px; position: relative; z-index: 2; }
+    .hero-content h1 { font-size: clamp(38px, 5vw, 56px); font-weight: 800; line-height: 1.1; margin-bottom: 16px; color: white; }
+    .hero-content h1 span { color: #F5A623; }
+    .hero-content p { font-size: clamp(16px, 2vw, 18px); color: rgba(255,255,255,0.85); line-height: 1.7; margin-bottom: 32px; }
+    .hero-content .hero-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+    .hero-content .hero-buttons .btn-primary { background: #F5A623; color: #1B4332; }
+    .hero-content .hero-buttons .btn-primary:hover { background: #E69500; }
+    .hero-content .hero-buttons .btn-secondary { background: rgba(255,255,255,0.15); color: white; border: 2px solid rgba(255,255,255,0.3); }
+    .hero-content .hero-buttons .btn-secondary:hover { background: rgba(255,255,255,0.25); border-color: white; }
+    .hero-image { flex: 1; max-width: 520px; position: relative; z-index: 2; }
+    .hero-image img { border-radius: var(--radius-lg); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+
+    /* ===== TRUST BADGES ===== */
+    .trust-badges { text-align: center; padding: 50px 24px; background: white; }
+    .trust-badges .badge-row { display: flex; align-items: center; justify-content: center; gap: 50px; flex-wrap: wrap; margin-top: 24px; }
+    .trust-badges .badge-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 14px; color: var(--text-secondary); }
+    .trust-badges .badge-item strong { color: var(--primary-green); font-size: 28px; }
+
+    /* ===== TESTIMONIALS ===== */
+    .testimonial-dots { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
+    .testimonial-dots button { width: 10px; height: 10px; border-radius: 50%; border: none; background: var(--border-medium); cursor: pointer; transition: var(--transition); padding: 0; }
+    .testimonial-dots button.active { background: var(--primary-green); width: 28px; border-radius: 5px; }
+    .testimonial-arrows { display: flex; justify-content: center; gap: 12px; margin-top: 16px; }
+    .testimonial-arrows button { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-medium); background: var(--surface-white); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+    .testimonial-arrows button:hover { background: var(--primary-green); color: white; border-color: var(--primary-green); }
+    .section-bg-alt { background: var(--primary-light); }
+
+    /* ===== SCROLL TOP ===== */
+    .scroll-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--primary-green); color: white; border: none; cursor: pointer; font-size: 20px; display: none; align-items: center; justify-content: center; box-shadow: var(--shadow-lg); z-index: 50; transition: var(--transition); }
+    .scroll-top.visible { display: flex; }
+    .scroll-top:hover { background: var(--primary-dark); transform: translateY(-2px); }
+
+    /* ===== NAVBAR SCROLL EFFECT ===== */
+    .public-nav.scrolled { background: rgba(27,67,50,0.98); backdrop-filter: blur(10px); box-shadow: 0 2px 20px rgba(0,0,0,0.1); }
+    .public-nav.scrolled .brand,
+    .public-nav.scrolled .nav-links a { color: white; }
+
+    @media (max-width: 768px) {
+      .hero { flex-direction: column; text-align: center; padding-top: 100px; }
+      .hero-content .hero-buttons { justify-content: center; }
+      .hero-image { margin-top: 40px; }
+      .trust-badges .badge-row { gap: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="public-page">
+
+    <!-- NAVBAR -->
+    <nav class="public-nav" id="navbar">
+      <div class="brand">
+        <img src="assets/images/3D%20Logo%20%27sam%20k%27%20with%20Nature%20tru%20one%20.png" alt="Sam K Farm Logo" style="height:36px;width:auto;">
+        <span>AgriLedger</span>
+      </div>
+      <div class="nav-links" id="navLinks">
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="login.html" class="btn btn-secondary btn-sm">Login</a>
+        <a href="register.html" class="btn btn-primary btn-sm">Get Started</a>
+      </div>
+      <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">☰</button>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero" id="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-content reveal-left">
+        <h1>Farm Accounting<br>Made <span>Simple</span></h1>
+        <p>Track crops, livestock, expenses and profits. The all-in-one farm management system designed for Kenyan farmers.</p>
+        <div class="hero-buttons">
+          <a href="register.html" class="btn btn-primary btn-lg">Get Started Free</a>
+          <a href="#features" class="btn btn-secondary btn-lg">Learn More</a>
+        </div>
+      </div>
+      <div class="hero-image reveal-right">
+        <img src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=600" alt="Farmer using tablet in the field" loading="lazy">
+      </div>
+    </section>
+
+    <!-- TRUST BADGES -->
+    <section class="trust-badges">
+      <p style="font-size:18px;font-weight:600;color:var(--text-primary);">Trusted by 500+ Kenyan Farmers</p>
+      <div class="badge-row">
+        <div class="badge-item">
+          <strong>500+</strong>
+          <span>Farmers</span>
+        </div>
+        <div class="badge-item">
+          <strong>12K+</strong>
+          <span>Transactions Logged</span>
+        </div>
+        <div class="badge-item">
+          <strong>47</strong>
+          <span>Counties Covered</span>
+        </div>
+        <div class="badge-item">
+          <strong>98%</strong>
+          <span>Satisfaction Rate</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="section" id="features">
+      <div class="section-title reveal">
+        <h2>Everything You Need to Manage Your Farm</h2>
+        <p>Powerful tools designed specifically for Kenyan agricultural operations, from smallholder farms to large enterprises.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="icon">🌾</div>
+          <h3>Crop Tracking</h3>
+          <p>Monitor planting cycles, track yields per acre, log input costs, and get harvest forecasts for all your crop enterprises.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="icon">🐄</div>
+          <h3>Livestock Management</h3>
+          <p>Manage herd health records, track breeding cycles, monitor feeding schedules, and record milk production and sales.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="icon">🏠</div>
+          <h3>Property & Assets</h3>
+          <p>Keep tabs on farm assets, land parcels, buildings, and equipment. Track depreciation and maintenance schedules.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="icon">📦</div>
+          <h3>Inventory Control</h3>
+          <p>Manage stock levels of feed, fertilizers, seeds, and supplies. Get low-stock alerts and track usage patterns in real time.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="icon">💰</div>
+          <h3>Cashbook</h3>
+          <p>Record all income and expenses with ease. Categorize transactions, reconcile accounts, and view cash flow at a glance.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="icon">📊</div>
+          <h3>Reports & Analytics</h3>
+          <p>Generate comprehensive profit & loss statements, balance sheets, and custom reports to make informed business decisions.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="section section-bg-alt" id="how-it-works">
+      <div class="section-title reveal">
+        <h2>How It Works</h2>
+        <p>Get started in three simple steps and take control of your farm's financial health.</p>
+      </div>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="number">1</div>
+          <h3>Create Your Account</h3>
+          <p>Sign up for free and set up your farm profile. No credit card required to get started.</p>
+        </div>
+        <div class="step reveal">
+          <div class="number">2</div>
+          <h3>Add Farm Data</h3>
+          <p>Record your crops, livestock, inventory items, and daily transactions with our simple forms.</p>
+        </div>
+        <div class="step reveal">
+          <div class="number">3</div>
+          <h3>Track & Grow</h3>
+          <p>Monitor your farm's performance with real-time dashboards and reports. Make data-driven decisions.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TESTIMONIALS -->
+    <section class="section" id="testimonials">
+      <div class="section-title reveal">
+        <h2>What Farmers Say</h2>
+        <p>Hear from Kenyan farmers who transformed their farm management with AgriLedger.</p>
+      </div>
+      <div class="testimonials reveal">
+        <div class="testimonial-card" id="testimonialCard">
+          <p class="quote" id="testimonialQuote">"AgriLedger has completely changed how I manage my farm records. I can now see exactly where my money is going and which crops are most profitable."</p>
+          <p class="author" id="testimonialAuthor">— Grace Wanjiku</p>
+          <p class="location" id="testimonialLocation">Smallholder Farmer, Kiambu</p>
+        </div>
+        <div class="testimonial-dots" id="testimonialDots"></div>
+        <div class="testimonial-arrows">
+          <button id="prevTestimonial" aria-label="Previous">&#8592;</button>
+          <button id="nextTestimonial" aria-label="Next">&#8594;</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section class="section section-bg-alt" id="pricing">
+      <div class="section-title reveal">
+        <h2>Simple Pricing</h2>
+        <p>Choose the plan that fits your farm size. Start for free, upgrade as you grow.</p>
+      </div>
+      <div class="pricing-grid">
+        <div class="pricing-card reveal">
+          <h3>Free</h3>
+          <div class="price">KSh 0</div>
+          <div class="price-period">forever</div>
+          <ul>
+            <li>1 farm profile</li>
+            <li>Basic reports & charts</li>
+            <li>Up to 50 transactions/month</li>
+            <li>Email support</li>
+            <li>Crop & livestock tracking</li>
+          </ul>
+          <a href="register.html" class="btn btn-outline btn-block">Get Started</a>
+        </div>
+        <div class="pricing-card featured reveal">
+          <h3>Pro</h3>
+          <div class="price">KSh 500</div>
+          <div class="price-period">per month</div>
+          <ul>
+            <li>Unlimited farms</li>
+            <li>Advanced reports & analytics</li>
+            <li>Unlimited transactions</li>
+            <li>Priority support</li>
+            <li>Everything in Free, plus:</li>
+            <li>Multi-user access</li>
+            <li>Data export (Excel/PDF)</li>
+          </ul>
+          <a href="register.html" class="btn btn-primary btn-block">Start Free Trial</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="public-footer">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <span class="footer-logo-icon">🌱</span>
+            <span class="footer-logo-text">AgriLedger</span>
+          </div>
+          <p>Farm accounting and management software built for Kenyan farmers. Track, analyze, and grow your agricultural enterprise with confidence.</p>
+          <div class="social">
+            <a href="#" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+            <a href="#" aria-label="Twitter"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg></a>
+            <a href="#" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678a6.162 6.162 0 100 12.324 6.162 6.162 0 100-12.324zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405a1.441 1.441 0 11-2.882 0 1.441 1.441 0 012.882 0z"/></svg></a>
+            <a href="#" aria-label="YouTube"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+          </div>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#testimonials">Testimonials</a>
+          <a href="#">FAQ</a>
+          <a href="login.html">Sign In</a>
+        </div>
+        <div>
+          <h4>Company</h4>
+          <a href="#">About Us</a>
+          <a href="#">Blog</a>
+          <a href="#">Careers</a>
+          <a href="#">Contact</a>
+        </div>
+        <div>
+          <h4>Support</h4>
+          <a href="#">Help Center</a>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="mailto:hello@agriledger.co.ke">hello@agriledger.co.ke</a>
+          <a href="tel:+254700000000">+254 700 000 000</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-bottom-content">
+          <span>&copy; 2026 AgriLedger. All rights reserved.</span>
+          <span class="footer-made-in">Made with ❤️ for Kenyan Farmers</span>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <button class="scroll-top" id="scrollTop" aria-label="Scroll to top">&#8593;</button>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (function() {
+
+      // MOBILE TOGGLE
+      var toggle = document.getElementById('mobileToggle');
+      var navLinks = document.getElementById('navLinks');
+      if (toggle && navLinks) {
+        toggle.addEventListener('click', function() {
+          navLinks.classList.toggle('open');
+        });
+        document.querySelectorAll('.nav-links a').forEach(function(link) {
+          link.addEventListener('click', function() {
+            navLinks.classList.remove('open');
+          });
+        });
+      }
+
+      // NAVBAR SCROLL EFFECT
+      var navbar = document.getElementById('navbar');
+      window.addEventListener('scroll', function() {
+        if (window.scrollY > 60) {
+          navbar.classList.add('scrolled');
+        } else {
+          navbar.classList.remove('scrolled');
+        }
+      });
+
+      // SCROLL TO TOP
+      var scrollBtn = document.getElementById('scrollTop');
+      window.addEventListener('scroll', function() {
+        if (window.scrollY > 400) {
+          scrollBtn.classList.add('visible');
+        } else {
+          scrollBtn.classList.remove('visible');
+        }
+      });
+      scrollBtn.addEventListener('click', function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      // FADE-IN ON SCROLL
+      var fadeEls = document.querySelectorAll('.reveal');
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15 });
+      fadeEls.forEach(function(el) { observer.observe(el); });
+
+      // TESTIMONIAL CAROUSEL
+      var testimonials = [
+        {
+          quote: '"AgriLedger has completely changed how I manage my farm records. I can now see exactly where my money is going and which crops are most profitable."',
+          author: '— Grace Wanjiku',
+          location: 'Smallholder Farmer, Kiambu'
+        },
+        {
+          quote: '"The livestock tracking feature is a game-changer. I can monitor health records and breeding cycles for all my animals in one place."',
+          author: '— Peter Kamau',
+          location: 'Dairy Farmer, Nakuru'
+        },
+        {
+          quote: '"As a farm manager, I love the detailed reports. Profit and loss statements help me make better decisions every season."',
+          author: '— Mary Achieng',
+          location: 'Farm Manager, Uasin Gishu'
+        },
+        {
+          quote: '"I started with the free plan and upgraded to Pro within a month. Best investment I have made for my farm business."',
+          author: '— James Omondi',
+          location: 'Mixed Farm Owner, Meru'
+        }
+      ];
+      var currentTestimonial = 0;
+      var quoteEl = document.getElementById('testimonialQuote');
+      var authorEl = document.getElementById('testimonialAuthor');
+      var locationEl = document.getElementById('testimonialLocation');
+      var dotsContainer = document.getElementById('testimonialDots');
+
+      function renderTestimonial(index) {
+        var t = testimonials[index];
+        quoteEl.textContent = t.quote;
+        authorEl.textContent = t.author;
+        locationEl.textContent = t.location;
+        document.querySelectorAll('.testimonial-dots button').forEach(function(btn, i) {
+          btn.classList.toggle('active', i === index);
+        });
+      }
+
+      testimonials.forEach(function(_, i) {
+        var dot = document.createElement('button');
+        dot.addEventListener('click', function() {
+          currentTestimonial = i;
+          renderTestimonial(i);
+        });
+        if (i === 0) dot.classList.add('active');
+        dotsContainer.appendChild(dot);
+      });
+
+      document.getElementById('nextTestimonial').addEventListener('click', function() {
+        currentTestimonial = (currentTestimonial + 1) % testimonials.length;
+        renderTestimonial(currentTestimonial);
+      });
+      document.getElementById('prevTestimonial').addEventListener('click', function() {
+        currentTestimonial = (currentTestimonial - 1 + testimonials.length) % testimonials.length;
+        renderTestimonial(currentTestimonial);
+      });
+
+      // SMOOTH SCROLL FOR ANCHOR LINKS
+      document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+        anchor.addEventListener('click', function(e) {
+          var target = document.querySelector(this.getAttribute('href'));
+          if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+
+    })();
+  </script>
+</body>
+</html>

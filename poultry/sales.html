@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Sales</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <style>
+    .sale-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .sale-summary .card { padding: 16px; text-align: center; }
+    .sale-summary .val { font-size: 22px; font-weight: 700; }
+    .tab-content { display: none; padding: 20px 0; }
+    .tab-content.active { display: block; }
+    .form-auto-bg { background: var(--bg-cream); }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><span>🌱</span><span>AgriLedger</span></div>
+    <div class="sidebar-user"><div class="avatar user-avatar-text">J</div><div class="user-info"><div class="name sidebar-user-name">User</div><div class="role sidebar-user-role">general</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="../dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <div class="nav-section">POULTRY</div>
+      <a href="poultry-dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <a href="farm-setup.html"><span class="nav-icon">⚙️</span><span class="nav-text">Farm Setup</span></a>
+      <a href="flock-register.html"><span class="nav-icon">📋</span><span class="nav-text">Flock Register</span></a>
+      <a href="production-log.html"><span class="nav-icon">🥚</span><span class="nav-text">Production Log</span></a>
+      <a href="sales.html" class="active"><span class="nav-icon">💰</span><span class="nav-text">Sales</span></a>
+      <a href="other-income.html"><span class="nav-icon">💵</span><span class="nav-text">Other Income</span></a>
+      <a href="feed-expenses.html"><span class="nav-icon">🌾</span><span class="nav-text">Feed Expenses</span></a>
+      <a href="health-vet.html"><span class="nav-icon">💉</span><span class="nav-text">Health &amp; Vet</span></a>
+      <a href="mortality.html"><span class="nav-icon">⚰️</span><span class="nav-text">Mortality</span></a>
+      <a href="batch-summary.html"><span class="nav-icon">📈</span><span class="nav-text">Batch Summary</span></a>
+      <div class="nav-section">MAIN</div>
+      <a href="../farming/crops.html"><span class="nav-icon">🌾</span><span class="nav-text">Crops</span></a>
+      <a href="../farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+      <a href="../farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+      <a href="../inventory.html"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+      <a href="../cashbook.html"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+      <a href="../journal.html"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+    </nav>
+    <div class="sidebar-footer"><a href="../settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a><a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a></div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><button class="topbar-toggle" id="sidebar-toggle">☰</button><div class="breadcrumb"><a href="../dashboard.html">Dashboard</a><span class="sep">›</span><a href="poultry-dashboard.html">Poultry</a><span class="sep">›</span><span>Sales</span></div></div>
+      <div class="topbar-right"><button class="notification-btn">🔔<span class="badge badge-red">3</span></button><button class="profile-btn" onclick="window.location.href='../settings.html'"><div class="avatar user-avatar-text">J</div><span class="sidebar-user-name" style="font-size:13px;">User</span></button></div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header"><div class="page-header-row"><div><h1>Sales</h1><p style="font-size:14px;color:var(--text-secondary);">Track all poultry product sales</p></div></div></div>
+
+      <div class="sale-summary" id="saleSummary">
+        <div class="card"><div class="val" style="color:var(--primary-green);" id="monthTotal">KSh 0</div><div style="font-size:13px;color:var(--text-secondary);">This Month's Total</div></div>
+        <div class="card"><div class="val" style="color:var(--accent-gold);" id="eggTotal">KSh 0</div><div style="font-size:13px;color:var(--text-secondary);">Egg Sales</div></div>
+        <div class="card"><div class="val" style="color:var(--accent-blue);" id="birdTotal">KSh 0</div><div style="font-size:13px;color:var(--text-secondary);">Bird Sales</div></div>
+        <div class="card"><div class="val" style="color:var(--accent-red);" id="outstandingTotal">KSh 0</div><div style="font-size:13px;color:var(--text-secondary);">Outstanding</div></div>
+      </div>
+
+      <div class="tabs" id="saleTabs">
+        <div class="tab active" data-tab="egg">🥚 Egg Sales</div>
+        <div class="tab" data-tab="bird">🐔 Bird Sales</div>
+        <div class="tab" data-tab="chicks">🐤 Chicks</div>
+        <div class="tab" data-tab="other">📦 Other</div>
+      </div>
+
+      <div id="eggTab" class="tab-content active">
+        <div class="card" style="margin-bottom:16px;"><div class="card-body">
+          <form id="eggSaleForm" onsubmit="return saveSale(event,'Egg Sales')">
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Date</label><input type="date" id="eggDate" class="form-input" required></div>
+              <div class="form-group"><label class="form-label">Buyer</label><input type="text" id="eggBuyer" class="form-input" placeholder="Buyer name" required></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Batch</label><select id="eggBatch" class="form-select"><option value="">General</option></select></div>
+              <div class="form-group"><label class="form-label">Egg Type</label><select id="eggType" class="form-select"><option value="Layer">Layer</option><option value="Kienyeji">Kienyeji</option><option value="Mixed">Mixed</option></select></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Quantity (trays)</label><input type="number" id="eggQty" class="form-input" min="0" step="0.5" oninput="calcSaleTotal('egg')" required></div>
+              <div class="form-group"><label class="form-label">Price per Tray</label><input type="number" id="eggPrice" class="form-input" min="0" step="0.5" oninput="calcSaleTotal('egg')" required></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Total (Auto)</label><input type="text" id="eggTotalAuto" class="form-input form-auto-bg" readonly></div>
+              <div class="form-group"><label class="form-label">Payment Method</label><select id="eggPayMethod" class="form-select"><option value="Cash">Cash</option><option value="M-Pesa">M-Pesa</option><option value="Bank Transfer">Bank Transfer</option><option value="Credit">Credit</option></select></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Payment Status</label><select id="eggPaid" class="form-select"><option value="Paid">Paid</option><option value="Partial">Partial</option><option value="Outstanding">Outstanding</option></select></div>
+              <div class="form-group"><label class="form-label">Amount Paid</label><input type="number" id="eggPaidAmount" class="form-input" min="0" step="0.5"></div>
+            </div>
+            <button type="submit" class="btn btn-primary">💾 Record Egg Sale</button>
+          </form>
+        </div></div>
+      </div>
+
+      <div id="birdTab" class="tab-content">
+        <div class="card" style="margin-bottom:16px;"><div class="card-body">
+          <form id="birdSaleForm" onsubmit="return saveSale(event,'Bird Sales')">
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Date</label><input type="date" id="birdDate" class="form-input" required></div>
+              <div class="form-group"><label class="form-label">Buyer</label><input type="text" id="birdBuyer" class="form-input" required></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Batch</label><select id="birdBatch" class="form-select"><option value="">Select</option></select></div>
+              <div class="form-group"><label class="form-label">Quantity (birds)</label><input type="number" id="birdQty" class="form-input" min="1" oninput="calcSaleTotal('bird')" required></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Price per Bird</label><input type="number" id="birdPrice" class="form-input" min="0" step="0.5" oninput="calcSaleTotal('bird')" required></div>
+              <div class="form-group"><label class="form-label">Total (Auto)</label><input type="text" id="birdTotalAuto" class="form-input form-auto-bg" readonly></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Payment Method</label><select id="birdPayMethod" class="form-select"><option value="Cash">Cash</option><option value="M-Pesa">M-Pesa</option><option value="Bank Transfer">Bank Transfer</option><option value="Credit">Credit</option></select></div>
+              <div class="form-group"><label class="form-label">Payment Status</label><select id="birdPaid" class="form-select"><option value="Paid">Paid</option><option value="Partial">Partial</option><option value="Outstanding">Outstanding</option></select></div>
+            </div>
+            <button type="submit" class="btn btn-primary">💾 Record Bird Sale</button>
+          </form>
+        </div></div>
+      </div>
+
+      <div id="chicksTab" class="tab-content">
+        <div class="card" style="margin-bottom:16px;"><div class="card-body">
+          <form id="chickSaleForm" onsubmit="return saveSale(event,'Chicks')">
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Date</label><input type="date" id="chickDate" class="form-input" required></div>
+              <div class="form-group"><label class="form-label">Buyer</label><input type="text" id="chickBuyer" class="form-input" required></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Quantity (chicks)</label><input type="number" id="chickQty" class="form-input" min="1" oninput="calcSaleTotal('chick')" required></div>
+              <div class="form-group"><label class="form-label">Price per Chick</label><input type="number" id="chickPrice" class="form-input" min="0" step="0.5" oninput="calcSaleTotal('chick')" required></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Total (Auto)</label><input type="text" id="chickTotalAuto" class="form-input form-auto-bg" readonly></div>
+              <div class="form-group"><label class="form-label">Payment Method</label><select id="chickPayMethod" class="form-select"><option value="Cash">Cash</option><option value="M-Pesa">M-Pesa</option><option value="Bank Transfer">Bank Transfer</option></select></div>
+            </div>
+            <button type="submit" class="btn btn-primary">💾 Record Chick Sale</button>
+          </form>
+        </div></div>
+      </div>
+
+      <div id="otherTab" class="tab-content">
+        <div class="card" style="margin-bottom:16px;"><div class="card-body">
+          <form id="otherSaleForm" onsubmit="return saveSale(event,'Other')">
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Date</label><input type="date" id="otherDate" class="form-input" required></div>
+              <div class="form-group"><label class="form-label">Buyer</label><input type="text" id="otherBuyer" class="form-input" required></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Description</label><input type="text" id="otherDesc" class="form-input" placeholder="e.g. Manure, feathers" required></div>
+              <div class="form-group"><label class="form-label">Amount</label><input type="number" id="otherAmount" class="form-input" min="0" step="0.5" required></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Payment Method</label><select id="otherPayMethod" class="form-select"><option value="Cash">Cash</option><option value="M-Pesa">M-Pesa</option><option value="Bank Transfer">Bank Transfer</option></select></div>
+              <div class="form-group"><label class="form-label">Payment Status</label><select id="otherPaid" class="form-select"><option value="Paid">Paid</option><option value="Outstanding">Outstanding</option></select></div>
+            </div>
+            <button type="submit" class="btn btn-primary">💾 Record Sale</button>
+          </form>
+        </div></div>
+      </div>
+
+      <div class="table-container">
+        <table id="salesTable">
+          <thead><tr><th>Date</th><th>Type</th><th>Buyer</th><th>Batch</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead>
+          <tbody id="salesTableBody"><tr><td colspan="9"><div class="loading-spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="../js/firebase-config.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+(function() {
+  var allSales = [], allBatches = [];
+
+  function load() {
+    db.collection('poultryBatches').onSnapshot(function(snap) {
+      allBatches = []; snap.forEach(function(d) { allBatches.push({ id: d.id, ...d.data() }); });
+      populateBatchSelects();
+    }, function() {});
+    db.collection('poultrySales').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
+      allSales = []; snap.forEach(function(d) { allSales.push({ id: d.id, ...d.data() }); });
+      if (allSales.length === 0) loadDemo();
+      renderSummary();
+      renderTable();
+    }, function() { loadDemo(); });
+  }
+
+  function loadDemo() {
+    allSales = [
+      { id:'s1', date:new Date(2026,5,5), type:'Egg Sales', buyer:'Nairobi Traders', batchName:'Batch A', qty:20, unitPrice:450, total:9000, payment:'Cash', status:'Paid' },
+      { id:'s2', date:new Date(2026,5,8), type:'Egg Sales', buyer:'Green Market', batchName:'Batch C', qty:15, unitPrice:600, total:9000, payment:'M-Pesa', status:'Paid' },
+      { id:'s3', date:new Date(2026,5,12), type:'Bird Sales', buyer:'Farmers Choice', batchName:'Batch B', qty:50, unitPrice:350, total:17500, payment:'Bank Transfer', status:'Paid' },
+      { id:'s4', date:new Date(2026,5,15), type:'Egg Sales', buyer:'Local Shop', batchName:'Batch A', qty:30, unitPrice:450, total:13500, payment:'Credit', status:'Outstanding' },
+      { id:'s5', date:new Date(2026,5,20), type:'Chicks', buyer:'Joel Kimani', batchName:'—', qty:100, unitPrice:150, total:15000, payment:'Cash', status:'Paid' }
+    ];
+    renderSummary(); renderTable();
+  }
+
+  function populateBatchSelects() {
+    var html = '<option value="">General</option>' + allBatches.map(function(b) { return '<option value="' + b.id + '">' + (b.name||'Unnamed') + '</option>'; }).join('');
+    document.getElementById('eggBatch').innerHTML = html;
+    document.getElementById('birdBatch').innerHTML = '<option value="">Select</option>' + allBatches.map(function(b) { return '<option value="' + b.id + '">' + (b.name||'Unnamed') + '</option>'; }).join('');
+    document.getElementById('eggDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('birdDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('chickDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('otherDate').value = new Date().toISOString().split('T')[0];
+  }
+
+  window.calcSaleTotal = function(prefix) {
+    var qty = parseFloat(document.getElementById(prefix + 'Qty').value) || 0;
+    var price = parseFloat(document.getElementById(prefix + 'Price').value) || 0;
+    document.getElementById(prefix + 'TotalAuto').value = 'KSh ' + formatNumber(qty * price);
+  };
+
+  window.saveSale = function(e, type) {
+    e.preventDefault();
+    var prefix = type === 'Egg Sales' ? 'egg' : type === 'Bird Sales' ? 'bird' : type === 'Chicks' ? 'chick' : 'other';
+    var dateVal = document.getElementById(prefix + 'Date').value;
+    var buyer = document.getElementById(prefix + 'Buyer').value;
+    var qty = parseFloat(document.getElementById(prefix + 'Qty')?.value) || 0;
+    var price = parseFloat(document.getElementById(prefix + 'Price')?.value) || 0;
+    var amount = parseFloat(document.getElementById(prefix + 'Amount')?.value) || (qty * price);
+    var batchSel = document.getElementById(prefix + 'Batch');
+    var batchName = batchSel ? (batchSel.options[batchSel.selectedIndex]?.text || '—') : '—';
+    var payMethod = document.getElementById(prefix + 'PayMethod')?.value || 'Cash';
+    var paid = document.getElementById(prefix + 'Paid')?.value || 'Paid';
+    var paidAmt = parseFloat(document.getElementById(prefix + 'PaidAmount')?.value) || amount;
+
+    var data = {
+      date: new Date(dateVal + 'T00:00:00'),
+      type: type,
+      buyer: buyer,
+      batchName: batchName,
+      qty: qty,
+      unitPrice: price,
+      total: amount,
+      payment: payMethod,
+      status: paid,
+      paidAmount: paidAmt,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    db.collection('poultrySales').add(data).then(function() {
+      showToast(type + ' recorded', 'success');
+      document.getElementById(prefix + 'Buyer').value = '';
+      if (document.getElementById(prefix + 'Qty')) document.getElementById(prefix + 'Qty').value = '';
+      if (document.getElementById(prefix + 'Price')) document.getElementById(prefix + 'Price').value = '';
+      if (document.getElementById(prefix + 'Amount')) document.getElementById(prefix + 'Amount').value = '';
+      if (document.getElementById(prefix + 'TotalAuto')) document.getElementById(prefix + 'TotalAuto').value = '';
+    }).catch(function(err) {
+      console.warn(err);
+      data.id = 'local_' + Date.now();
+      allSales.unshift(data);
+      renderSummary(); renderTable();
+      showToast('Saved locally', 'info');
+    });
+    return false;
+  };
+
+  function renderSummary() {
+    var now = new Date(), m = now.getMonth(), y = now.getFullYear();
+    var monthSales = allSales.filter(function(s) {
+      var d = s.date ? (s.date.toDate ? s.date.toDate() : new Date(s.date)) : new Date();
+      return d.getMonth() === m && d.getFullYear() === y;
+    });
+    var total = monthSales.reduce(function(sum, s) { return sum + (parseFloat(s.total)||0); }, 0);
+    var eggs = monthSales.filter(function(s) { return s.type === 'Egg Sales'; }).reduce(function(sum,s) { return sum + (parseFloat(s.total)||0); }, 0);
+    var birds = monthSales.filter(function(s) { return s.type === 'Bird Sales'; }).reduce(function(sum,s) { return sum + (parseFloat(s.total)||0); }, 0);
+    var outstanding = monthSales.filter(function(s) { return s.status === 'Outstanding' || s.status === 'Partial'; }).reduce(function(sum,s) { return sum + (parseFloat(s.total)||0) - (parseFloat(s.paidAmount)||0); }, 0);
+
+    document.getElementById('monthTotal').textContent = formatCurrency(total);
+    document.getElementById('eggTotal').textContent = formatCurrency(eggs);
+    document.getElementById('birdTotal').textContent = formatCurrency(birds);
+    document.getElementById('outstandingTotal').textContent = formatCurrency(Math.max(0, outstanding));
+  }
+
+  function renderTable() {
+    var tbody = document.getElementById('salesTableBody');
+    if (!tbody) return;
+    if (allSales.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="icon">💰</div><h3>No sales yet</h3><p>Record your first sale above.</p></div></td></tr>';
+      return;
+    }
+    var sorted = allSales.slice().sort(function(a,b) {
+      var da = a.date ? (a.date.toDate ? a.date.toDate() : new Date(a.date)) : new Date(0);
+      var db = b.date ? (b.date.toDate ? b.date.toDate() : new Date(b.date)) : new Date(0);
+      return db - da;
+    });
+    tbody.innerHTML = sorted.map(function(s) {
+      var d = s.date ? (s.date.toDate ? s.date.toDate() : new Date(s.date)) : new Date();
+      var badgeCls = s.status === 'Paid' ? 'badge-green' : s.status === 'Partial' ? 'badge-gold' : 'badge-red';
+      return '<tr><td>' + formatDate(d) + '</td><td>' + (s.type||'—') + '</td><td>' + (s.buyer||'—') + '</td><td>' + (s.batchName||'—') + '</td><td>' + (s.qty||'—') + '</td><td>' + (s.unitPrice ? 'KSh '+formatNumber(s.unitPrice) : '—') + '</td><td><strong>' + formatCurrency(s.total||0) + '</strong></td><td>' + (s.payment||'—') + '</td><td><span class="badge ' + badgeCls + '">' + s.status + '</span></td></tr>';
+    }).join('');
+  }
+
+  // Tab switching
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(load, 300);
+    document.querySelectorAll('#saleTabs .tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('#saleTabs .tab').forEach(function(t) { t.classList.remove('active'); });
+        document.querySelectorAll('.tab-content').forEach(function(tc) { tc.classList.remove('active'); });
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

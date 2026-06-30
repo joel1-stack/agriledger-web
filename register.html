@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account - AgriLedger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <style>
+    .auth-form .auth-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary-green);
+      margin-bottom: 8px;
+    }
+    .auth-form h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .auth-form .subtitle {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 28px;
+    }
+    .step-indicator .step-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--border-light);
+      color: var(--text-light);
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+    .step-indicator .step-dot.active {
+      background: var(--primary-green);
+      color: white;
+    }
+    .step-indicator .step-dot.completed {
+      background: var(--primary-green);
+      color: white;
+    }
+    .step-indicator .step-line {
+      flex: 1;
+      height: 3px;
+      background: var(--border-light);
+      margin: 0 8px;
+      border-radius: 2px;
+      transition: var(--transition);
+    }
+    .step-indicator .step-line.completed {
+      background: var(--primary-green);
+    }
+    .step-indicator .step-label {
+      font-size: 11px;
+      color: var(--text-light);
+      text-align: center;
+      margin-top: 6px;
+    }
+    .step-container {
+      width: 100%;
+    }
+    .step-panel {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .step-panel.active {
+      display: block;
+    }
+    .password-wrapper {
+      position: relative;
+    }
+    .password-wrapper .form-input {
+      padding-right: 44px;
+    }
+    .password-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-light);
+      font-size: 18px;
+      padding: 4px;
+      line-height: 1;
+    }
+    .password-toggle:hover {
+      color: var(--text-secondary);
+    }
+    .auth-error {
+      background: #FFEBEE;
+      color: #C62828;
+      border: 1px solid #EF9A9A;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .auth-error.visible {
+      display: block;
+    }
+    .btn-loading {
+      position: relative;
+      pointer-events: none;
+    }
+    .btn-loading .btn-text {
+      opacity: 0;
+    }
+    .btn-loading .btn-spinner {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    .step-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .step-buttons .btn {
+      flex: 1;
+    }
+    .field-error {
+      color: var(--accent-red);
+      font-size: 12px;
+      margin-top: 4px;
+      display: none;
+    }
+    .field-error.visible {
+      display: block;
+    }
+    .form-input.error {
+      border-color: var(--accent-red);
+    }
+    .role-info {
+      background: var(--primary-light);
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--primary-dark);
+      margin-bottom: 16px;
+    }
+    @media (max-width: 768px) {
+      .auth-form {
+        padding: 32px 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-container">
+      <!-- FORM SIDE -->
+      <div class="auth-form">
+        <div class="auth-brand">
+          <img src="assets/images/3D%20Logo%20%27sam%20k%27%20with%20Nature%20tru%20one%20.png" alt="AgriLedger" style="height:32px;width:auto;">
+          <span>AgriLedger</span>
+        </div>
+        <h1>Create Your Account</h1>
+        <p class="subtitle">Join thousands of Kenyan farmers managing smarter</p>
+
+        <div class="auth-error" id="authError"></div>
+
+        <!-- STEP INDICATOR -->
+        <div class="step-indicator">
+          <div style="display:flex;flex-direction:column;align-items:center;">
+            <div class="step-dot active" id="step1Dot">1</div>
+            <span class="step-label">Details</span>
+          </div>
+          <div class="step-line" id="stepLine"></div>
+          <div style="display:flex;flex-direction:column;align-items:center;">
+            <div class="step-dot" id="step2Dot">2</div>
+            <span class="step-label">Farm</span>
+          </div>
+        </div>
+
+        <form id="registerForm" novalidate>
+          <!-- STEP 1 -->
+          <div class="step-panel active" id="step1">
+            <div class="form-group">
+              <label class="form-label" for="fullName">Full Name</label>
+              <div class="form-input-icon">
+                <span class="icon">&#128100;</span>
+                <input type="text" id="fullName" class="form-input" placeholder="John Mwangi" required autocomplete="name">
+              </div>
+              <div class="field-error" id="fullNameError">Please enter your full name</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="regEmail">Email Address</label>
+              <div class="form-input-icon">
+                <span class="icon">&#9993;</span>
+                <input type="email" id="regEmail" class="form-input" placeholder="john@example.com" required autocomplete="email">
+              </div>
+              <div class="field-error" id="regEmailError">Please enter a valid email</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="phone">Phone Number</label>
+              <div class="form-input-icon">
+                <span class="icon">&#128222;</span>
+                <input type="tel" id="phone" class="form-input" placeholder="+254 7XX XXX XXX" autocomplete="tel">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="regPassword">Password</label>
+              <div class="form-input-icon password-wrapper">
+                <span class="icon">&#128274;</span>
+                <input type="password" id="regPassword" class="form-input" placeholder="Min. 6 characters" required autocomplete="new-password">
+                <button type="button" class="password-toggle" id="regPasswordToggle" aria-label="Toggle password visibility">&#128065;</button>
+              </div>
+              <div class="field-error" id="regPasswordError">Password must be at least 6 characters</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="confirmPassword">Confirm Password</label>
+              <div class="form-input-icon password-wrapper">
+                <span class="icon">&#128274;</span>
+                <input type="password" id="confirmPassword" class="form-input" placeholder="Repeat your password" required autocomplete="new-password">
+                <button type="button" class="password-toggle" id="confirmPasswordToggle" aria-label="Toggle password visibility">&#128065;</button>
+              </div>
+              <div class="field-error" id="confirmPasswordError">Passwords do not match</div>
+            </div>
+
+            <div class="step-buttons">
+              <button type="button" class="btn btn-primary btn-lg" id="continueBtn">Continue</button>
+            </div>
+          </div>
+
+          <!-- STEP 2 -->
+          <div class="step-panel" id="step2">
+            <div class="form-group">
+              <label class="form-label" for="farmName">Farm Name</label>
+              <div class="form-input-icon">
+                <span class="icon">&#127793;</span>
+                <input type="text" id="farmName" class="form-input" placeholder="Mwangi Farm" required>
+              </div>
+              <div class="field-error" id="farmNameError">Please enter your farm name</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="businessUnit">Business Unit</label>
+              <div class="form-input-icon">
+                <span class="icon">&#127808;</span>
+                <select id="businessUnit" class="form-input" required>
+                  <option value="">Select business unit</option>
+                  <option value="Main Farm">Main Farm</option>
+                  <option value="Poultry">Poultry</option>
+                  <option value="Dairy">Dairy</option>
+                  <option value="Crops">Crops</option>
+                  <option value="Livestock">Livestock</option>
+                  <option value="Mixed Farm">Mixed Farm</option>
+                </select>
+              </div>
+              <div class="field-error" id="businessUnitError">Please select a business unit</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Role</label>
+              <div class="role-info">
+                &#128161; Your role is set to <strong>General</strong> with full access to manage farm data.
+              </div>
+              <input type="hidden" id="role" value="general">
+            </div>
+
+            <div class="step-buttons">
+              <button type="button" class="btn btn-secondary btn-lg" id="backBtn">Back</button>
+              <button type="submit" class="btn btn-primary btn-lg" id="registerBtn">
+                <span class="btn-text">Create Account</span>
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <div class="auth-footer" style="margin-top:20px;">
+          Already have an account? <a href="login.html">Sign In</a>
+        </div>
+      </div>
+
+      <!-- IMAGE SIDE -->
+      <div class="auth-image">
+        <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600" alt="Farm landscape" loading="lazy">
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (function() {
+      // ELEMENTS
+      var step1 = document.getElementById('step1');
+      var step2 = document.getElementById('step2');
+      var step1Dot = document.getElementById('step1Dot');
+      var step2Dot = document.getElementById('step2Dot');
+      var stepLine = document.getElementById('stepLine');
+      var continueBtn = document.getElementById('continueBtn');
+      var backBtn = document.getElementById('backBtn');
+      var registerBtn = document.getElementById('registerBtn');
+      var form = document.getElementById('registerForm');
+      var authError = document.getElementById('authError');
+
+      // STEP 1 FIELDS
+      var fullName = document.getElementById('fullName');
+      var regEmail = document.getElementById('regEmail');
+      var phone = document.getElementById('phone');
+      var regPassword = document.getElementById('regPassword');
+      var confirmPassword = document.getElementById('confirmPassword');
+
+      // STEP 2 FIELDS
+      var farmName = document.getElementById('farmName');
+      var businessUnit = document.getElementById('businessUnit');
+      var role = document.getElementById('role');
+
+      // ERROR ELEMENTS
+      var fullNameError = document.getElementById('fullNameError');
+      var regEmailError = document.getElementById('regEmailError');
+      var regPasswordError = document.getElementById('regPasswordError');
+      var confirmPasswordError = document.getElementById('confirmPasswordError');
+      var farmNameError = document.getElementById('farmNameError');
+      var businessUnitError = document.getElementById('businessUnitError');
+
+      function clearErrors() {
+        document.querySelectorAll('.field-error').forEach(function(el) { el.classList.remove('visible'); });
+        document.querySelectorAll('.form-input.error').forEach(function(el) { el.classList.remove('error'); });
+        authError.classList.remove('visible');
+      }
+
+      function showFieldError(el, errEl) {
+        el.classList.add('error');
+        errEl.classList.add('visible');
+      }
+
+      // PASSWORD TOGGLES
+      document.getElementById('regPasswordToggle').addEventListener('click', function() {
+        var type = regPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+        regPassword.setAttribute('type', type);
+        this.innerHTML = type === 'password' ? '&#128065;' : '&#128064;';
+      });
+      document.getElementById('confirmPasswordToggle').addEventListener('click', function() {
+        var type = confirmPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+        confirmPassword.setAttribute('type', type);
+        this.innerHTML = type === 'password' ? '&#128065;' : '&#128064;';
+      });
+
+      // CONTINUE TO STEP 2
+      continueBtn.addEventListener('click', function() {
+        clearErrors();
+        var valid = true;
+
+        if (!fullName.value.trim()) {
+          showFieldError(fullName, fullNameError);
+          valid = false;
+        }
+        var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!regEmail.value.trim() || !emailRegex.test(regEmail.value.trim())) {
+          showFieldError(regEmail, regEmailError);
+          valid = false;
+        }
+        if (!regPassword.value || regPassword.value.length < 6) {
+          showFieldError(regPassword, regPasswordError);
+          valid = false;
+        }
+        if (regPassword.value !== confirmPassword.value) {
+          showFieldError(confirmPassword, confirmPasswordError);
+          valid = false;
+        }
+
+        if (valid) {
+          step1.classList.remove('active');
+          step2.classList.add('active');
+          step1Dot.classList.remove('active');
+          step1Dot.classList.add('completed');
+          stepLine.classList.add('completed');
+          step2Dot.classList.add('active');
+        }
+      });
+
+      // BACK TO STEP 1
+      backBtn.addEventListener('click', function() {
+        clearErrors();
+        step2.classList.remove('active');
+        step1.classList.add('active');
+        step1Dot.classList.add('active');
+        step1Dot.classList.remove('completed');
+        stepLine.classList.remove('completed');
+        step2Dot.classList.remove('active');
+      });
+
+      // FORM SUBMIT
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        clearErrors();
+        authError.classList.remove('visible');
+
+        // Validate step 2 fields
+        var valid = true;
+        if (!farmName.value.trim()) {
+          showFieldError(farmName, farmNameError);
+          valid = false;
+        }
+        if (!businessUnit.value) {
+          showFieldError(businessUnit, businessUnitError);
+          valid = false;
+        }
+        if (!valid) return;
+
+        // SHOW LOADING
+        registerBtn.disabled = true;
+        registerBtn.classList.add('btn-loading');
+        registerBtn.innerHTML = '<div class="btn-spinner"></div>';
+
+        var name = fullName.value.trim();
+        var email = regEmail.value.trim();
+        var phoneVal = phone.value.trim();
+        var password = regPassword.value;
+        var farm = farmName.value.trim();
+        var unit = businessUnit.value;
+
+        var result = await registerUser(email, password, name, phoneVal);
+
+        if (result.success) {
+          // Save additional profile data (farm name, business unit)
+          var user = result.user;
+          try {
+            await db.collection('users').doc(user.uid).update({
+              farmName: farm,
+              businessUnit: unit
+            });
+            sessionStorage.setItem('agriUser', JSON.stringify({
+              id: user.uid,
+              email: email,
+              name: name,
+              phoneNumber: phoneVal,
+              role: 'general',
+              farmName: farm,
+              businessUnit: unit
+            }));
+          } catch (err) {
+            console.warn('Profile update:', err.message);
+          }
+          // Redirect handled by auth.onAuthStateChanged in auth.js
+        } else {
+          authError.textContent = result.error;
+          authError.classList.add('visible');
+          registerBtn.disabled = false;
+          registerBtn.classList.remove('btn-loading');
+          registerBtn.innerHTML = '<span class="btn-text">Create Account</span>';
+        }
+      });
+
+      // ENTER KEY NAVIGATION IN STEP 1
+      confirmPassword.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') continueBtn.click();
+      });
+      // ENTER KEY IN STEP 2
+      businessUnit.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') form.dispatchEvent(new Event('submit'));
+      });
+
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Livestock Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <style>
+    .animal-stat-card { text-align: center; padding: 20px; }
+    .animal-stat-card .stat-icon { font-size: 28px; margin-bottom: 8px; }
+    .animal-stat-card .stat-value { font-size: 28px; font-weight: 700; }
+    .animal-stat-card .stat-label { font-size: 13px; color: var(--text-secondary); }
+    .status-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+    .status-badge.active { background: var(--primary-light); color: var(--primary-dark); }
+    .status-badge.sold { background: #FFEBEE; color: #C62828; }
+    .status-badge.deceased { background: #F3F4F6; color: var(--text-secondary); }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .detail-item { padding: 8px 12px; background: var(--bg-cream); border-radius: var(--radius-sm); }
+    .detail-item .dl { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+    .detail-item .dv { font-size: 14px; font-weight: 500; margin-top: 2px; }
+    .photo-placeholder { width: 100%; height: 160px; background: var(--primary-light); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 48px; margin-bottom: 16px; }
+    .inline-edit { display: inline-flex; align-items: center; gap: 4px; }
+    .inline-edit input { width: 60px; padding: 2px 6px; border: 1px solid var(--border-medium); border-radius: 4px; font-size: 13px; text-align: center; }
+    .inline-edit .save-btn { padding: 2px 8px; font-size: 11px; cursor: pointer; border: none; border-radius: 4px; background: var(--primary-green); color: white; }
+    .bottom-nav { display: none; }
+    @media (max-width: 640px) {
+      .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: #1B4332; z-index: 100; padding: 4px 0; justify-content: space-around; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+      .bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; color: rgba(255,255,255,0.6); font-size: 10px; padding: 6px 12px; text-decoration: none; }
+      .bottom-nav a.active, .bottom-nav a:hover { color: white; }
+      .bottom-nav a .nav-icon { font-size: 20px; }
+      .page-content { padding-bottom: 80px; }
+    }
+    .milk-input { width: 50px; padding: 2px 4px; border: 1px solid var(--border-light); border-radius: 4px; font-size: 12px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <span class="logo" style="font-size:28px;">🌿</span>
+        <span>AgriLedger</span>
+      </div>
+      <div class="sidebar-user">
+        <div class="avatar"><span class="user-avatar-text">U</span></div>
+        <div class="user-info">
+          <div class="name sidebar-user-name">Loading...</div>
+          <div class="role sidebar-user-role">general</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Main</div>
+        <a href="../dashboard.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+        <div class="nav-item has-sub active"><span class="nav-icon">🌾</span><span class="nav-text">Farming</span><span class="nav-arrow open">▶</span></div>
+        <div class="sub-nav open">
+          <a href="crops.html"><span class="nav-icon">🌱</span><span class="nav-text">Crops</span></a>
+          <a href="livestock.html" class="active"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+          <a href="poultry.html"><span class="nav-icon">🐔</span><span class="nav-text">Poultry</span></a>
+          <a href="dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+        </div>
+        <a href="../inventory.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+        <a href="../cashbook.html" class="nav-item"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+        <a href="../journal.html" class="nav-item"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+        <a href="../contracts.html" class="nav-item"><span class="nav-icon">📝</span><span class="nav-text">Contracts</span></a>
+        <a href="../property.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-text">Property</span></a>
+        <a href="../transport.html" class="nav-item"><span class="nav-icon">🚜</span><span class="nav-text">Transport</span></a>
+        <a href="../reports.html" class="nav-item"><span class="nav-icon">📈</span><span class="nav-text">Reports</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="../settings.html"><span class="nav-icon">⚙️</span><span class="nav-text">Settings</span></a>
+        <a href="#" onclick="logoutUser()"><span class="nav-icon">🚪</span><span class="nav-text">Logout</span></a>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="topbar-toggle" id="sidebar-toggle">☰</button>
+          <div class="topbar-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="Search animals..." id="searchAnimal">
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="notification-btn">🔔<span class="badge badge-red" id="notifBadge" style="display:none;">0</span></button>
+          <button class="profile-btn" onclick="window.location.href='../settings.html'">
+            <div class="avatar"><span class="user-avatar-text">U</span></div>
+            <span class="sidebar-user-name" style="font-size:13px;font-weight:500;color:var(--text-primary);">User</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="page-content">
+        <div class="breadcrumb">
+          <a href="../dashboard.html">Dashboard</a>
+          <span class="sep">›</span>
+          <a href="../dashboard.html">Farming</a>
+          <span class="sep">›</span>
+          <span>Livestock</span>
+        </div>
+
+        <div class="page-header">
+          <div class="page-header-row">
+            <h1>Livestock Management</h1>
+            <button class="btn btn-primary" onclick="openAnimalModal()">➕ Add Animal</button>
+          </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="kpi-strip" id="statsBar">
+          <div class="card animal-stat-card">
+            <div class="stat-icon">🐄</div>
+            <div class="stat-value" id="statTotal">0</div>
+            <div class="stat-label">Total Animals</div>
+          </div>
+          <div class="card animal-stat-card">
+            <div class="stat-icon">🐄</div>
+            <div class="stat-value" id="statCattle">0</div>
+            <div class="stat-label">Cattle</div>
+          </div>
+          <div class="card animal-stat-card">
+            <div class="stat-icon">🐑</div>
+            <div class="stat-value" id="statSheep">0</div>
+            <div class="stat-label">Sheep</div>
+          </div>
+          <div class="card animal-stat-card">
+            <div class="stat-icon">🐐</div>
+            <div class="stat-value" id="statGoats">0</div>
+            <div class="stat-label">Goats</div>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <input type="text" class="form-input search-input" id="filterSearch" placeholder="Search by tag, name or breed...">
+          <select class="form-select" id="filterType">
+            <option value="">All Types</option>
+            <option value="Cattle">Cattle</option>
+            <option value="Sheep">Sheep</option>
+            <option value="Goats">Goats</option>
+            <option value="Pigs">Pigs</option>
+          </select>
+          <select class="form-select" id="filterStatus">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="sold">Sold</option>
+            <option value="deceased">Deceased</option>
+          </select>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+          <table id="animalTable">
+            <thead>
+              <tr>
+                <th>Tag #</th>
+                <th>Name</th>
+                <th>Breed</th>
+                <th>Type</th>
+                <th>Age</th>
+                <th>Weight</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="animalTableBody">
+              <tr><td colspan="8" style="text-align:center;padding:40px;"><div class="loading-spinner"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+      <a href="../dashboard.html"><span class="nav-icon">📊</span>Home</a>
+      <a href="crops.html"><span class="nav-icon">🌱</span>Crops</a>
+      <a href="livestock.html" class="active"><span class="nav-icon">🐄</span>Animals</a>
+      <a href="../cashbook.html"><span class="nav-icon">💰</span>Cashbook</a>
+      <a href="../settings.html"><span class="nav-icon">⚙️</span>More</a>
+    </nav>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    (function() {
+      var allAnimals = [];
+      var unsubscribe = null;
+
+      function calcAge(birthDate) {
+        if (!birthDate) return '—';
+        var d = birthDate.toDate ? birthDate.toDate() : new Date(birthDate);
+        var now = new Date();
+        var months = (now.getFullYear() - d.getFullYear()) * 12 + now.getMonth() - d.getMonth();
+        if (months < 12) return months + ' mo';
+        var yrs = Math.floor(months / 12);
+        var mos = months % 12;
+        return yrs + 'y ' + mos + 'm';
+      }
+
+      function getAnimalIcon(type) {
+        var t = (type || '').toLowerCase();
+        if (t === 'cattle') return '🐄';
+        if (t === 'sheep') return '🐑';
+        if (t === 'goats' || t === 'goat') return '🐐';
+        if (t === 'pigs' || t === 'pig') return '🐖';
+        return '🐄';
+      }
+
+      function getStatusBadge(status) {
+        return '<span class="status-badge ' + (status || 'active') + '">' + (status || 'active') + '</span>';
+      }
+
+      function renderTable(animals) {
+        var tbody = document.getElementById('animalTableBody');
+        if (!tbody) return;
+        if (animals.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;"><div class="empty-state"><div class="icon">🐄</div><h3>No animals registered</h3><p>Add your first animal to start tracking.</p><button class="btn btn-primary" onclick="openAnimalModal()">➕ Add Animal</button></div></td></tr>';
+          return;
+        }
+        tbody.innerHTML = animals.map(function(a) {
+          return '<tr data-id="' + a.id + '" style="cursor:pointer;">' +
+            '<td><strong>' + (a.tagNumber || '—') + '</strong></td>' +
+            '<td>' + getAnimalIcon(a.type) + ' ' + (a.name || 'Unnamed') + '</td>' +
+            '<td>' + (a.breed || '—') + '</td>' +
+            '<td>' + (a.type || '—') + '</td>' +
+            '<td>' + calcAge(a.birthDate) + '</td>' +
+            '<td>' + (a.weight ? a.weight + ' kg' : '—') + '</td>' +
+            '<td>' + getStatusBadge(a.status) + '</td>' +
+            '<td><div class="actions"><button class="edit-btn" onclick="event.stopPropagation();viewAnimal(\'' + a.id + '\')">👁️</button><button class="delete-btn" onclick="event.stopPropagation();deleteAnimal(\'' + a.id + '\')">🗑️</button></div></td>' +
+          '</tr>';
+        }).join('');
+
+        // Row click for detail modal
+        tbody.querySelectorAll('tr[data-id]').forEach(function(tr) {
+          tr.addEventListener('click', function() {
+            var id = this.dataset.id;
+            viewAnimal(id);
+          });
+        });
+      }
+
+      function filterAnimals() {
+        var search = (document.getElementById('filterSearch').value || '').toLowerCase();
+        var type = document.getElementById('filterType').value;
+        var status = document.getElementById('filterStatus').value;
+        var filtered = allAnimals.filter(function(a) {
+          var tag = (a.tagNumber || '').toLowerCase();
+          var name = (a.name || '').toLowerCase();
+          var breed = (a.breed || '').toLowerCase();
+          var matchesSearch = !search || tag.includes(search) || name.includes(search) || breed.includes(search);
+          var matchesType = !type || a.type === type;
+          var matchesStatus = !status || a.status === status;
+          return matchesSearch && matchesType && matchesStatus;
+        });
+        renderTable(filtered);
+      }
+
+      function updateStats(animals) {
+        document.getElementById('statTotal').textContent = animals.length;
+        var cattle = animals.filter(function(a) { return a.type === 'Cattle'; }).length;
+        var sheep = animals.filter(function(a) { return a.type === 'Sheep'; }).length;
+        var goats = animals.filter(function(a) { return a.type === 'Goats' || a.type === 'Goat'; }).length;
+        document.getElementById('statCattle').textContent = cattle;
+        document.getElementById('statSheep').textContent = sheep;
+        document.getElementById('statGoats').textContent = goats;
+      }
+
+      function loadAnimals() {
+        if (unsubscribe) unsubscribe();
+        var tbody = document.getElementById('animalTableBody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;"><div class="loading-spinner"></div></td></tr>';
+
+        unsubscribe = db.collection('livestock').orderBy('tagNumber', 'asc').onSnapshot(function(snapshot) {
+          allAnimals = [];
+          snapshot.forEach(function(doc) { allAnimals.push({ id: doc.id, ...doc.data() }); });
+          if (allAnimals.length === 0) {
+            loadDemoAnimals();
+          } else {
+            updateStats(allAnimals);
+            filterAnimals();
+          }
+        }, function(err) {
+          console.warn('Firestore error, loading demo:', err);
+          loadDemoAnimals();
+        });
+      }
+
+      function loadDemoAnimals() {
+        allAnimals = [
+          { id: 'demo1', tagNumber: 'CT-001', name: 'Bella', breed: 'Friesian', type: 'Cattle', birthDate: new Date(2022, 5, 15), weight: 520, status: 'active' },
+          { id: 'demo2', tagNumber: 'CT-002', name: 'Daisy', breed: 'Ayrshire', type: 'Cattle', birthDate: new Date(2023, 2, 10), weight: 480, status: 'active' },
+          { id: 'demo3', tagNumber: 'CT-003', name: 'Molly', breed: 'Jersey', type: 'Cattle', birthDate: new Date(2024, 0, 20), weight: 350, status: 'active' },
+          { id: 'demo4', tagNumber: 'SH-001', name: 'Snowy', breed: 'Dorper', type: 'Sheep', birthDate: new Date(2024, 8, 1), weight: 45, status: 'active' },
+          { id: 'demo5', tagNumber: 'SH-002', name: 'Fluffy', breed: 'Merino', type: 'Sheep', birthDate: new Date(2024, 11, 15), weight: 40, status: 'sold' },
+          { id: 'demo6', tagNumber: 'GT-001', name: 'Billy', breed: 'German Alpine', type: 'Goats', birthDate: new Date(2023, 6, 10), weight: 65, status: 'active' },
+          { id: 'demo7', tagNumber: 'GT-002', name: 'Nanny', breed: 'Saanen', type: 'Goats', birthDate: new Date(2024, 3, 5), weight: 55, status: 'active' },
+          { id: 'demo8', tagNumber: 'CT-004', name: 'Stella', breed: 'Friesian', type: 'Cattle', birthDate: new Date(2025, 1, 1), weight: 200, status: 'deceased' }
+        ];
+        updateStats(allAnimals);
+        filterAnimals();
+      }
+
+      function openAnimalModal(animalData) {
+        var isEdit = !!animalData;
+        var a = animalData || {};
+        var title = isEdit ? 'Edit Animal' : 'Add New Animal';
+        var html = '<form id="animalForm" onsubmit="return saveAnimal(event)">' +
+          '<input type="hidden" id="animalId" value="' + (a.id || '') + '">' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label class="form-label">Tag Number</label><input type="text" id="animalTag" class="form-input" value="' + (a.tagNumber || '') + '" required placeholder="e.g. CT-001"></div>' +
+            '<div class="form-group"><label class="form-label">Name</label><input type="text" id="animalName" class="form-input" value="' + (a.name || '') + '" placeholder="e.g. Bella"></div>' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label class="form-label">Type</label><select id="animalType" class="form-select" required>' +
+              '<option value="">Select type...</option>' +
+              '<option value="Cattle"' + (a.type === 'Cattle' ? ' selected' : '') + '>Cattle</option>' +
+              '<option value="Sheep"' + (a.type === 'Sheep' ? ' selected' : '') + '>Sheep</option>' +
+              '<option value="Goats"' + (a.type === 'Goats' || a.type === 'Goat' ? ' selected' : '') + '>Goats</option>' +
+              '<option value="Pigs"' + (a.type === 'Pigs' || a.type === 'Pig' ? ' selected' : '') + '>Pigs</option>' +
+            '</select></div>' +
+            '<div class="form-group"><label class="form-label">Breed</label><input type="text" id="animalBreed" class="form-input" value="' + (a.breed || '') + '" placeholder="e.g. Friesian"></div>' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label class="form-label">Birth Date</label><input type="date" id="animalBirth" class="form-input" value="' + (a.birthDate ? formatDateInput(a.birthDate) : '') + '"></div>' +
+            '<div class="form-group"><label class="form-label">Weight (kg)</label><input type="number" id="animalWeight" class="form-input" value="' + (a.weight || '') + '" step="0.5" min="0"></div>' +
+          '</div>' +
+          '<div class="form-group"><label class="form-label">Status</label><select id="animalStatus" class="form-select">' +
+            '<option value="active"' + (a.status === 'active' ? ' selected' : '') + '>Active</option>' +
+            '<option value="sold"' + (a.status === 'sold' ? ' selected' : '') + '>Sold</option>' +
+            '<option value="deceased"' + (a.status === 'deceased' ? ' selected' : '') + '>Deceased</option>' +
+          '</select></div>' +
+          '<div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);margin-top:16px;">' +
+            '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>' +
+            '<button type="submit" class="btn btn-primary">' + (isEdit ? 'Update Animal' : 'Add Animal') + '</button>' +
+          '</div>' +
+        '</form>';
+        openModal(html, title);
+      }
+
+      function formatDateInput(date) {
+        if (!date) return '';
+        if (typeof date === 'string') date = new Date(date);
+        if (date.toDate) date = date.toDate();
+        return date.toISOString().split('T')[0];
+      }
+
+      window.saveAnimal = async function(e) {
+        e.preventDefault();
+        var id = document.getElementById('animalId').value;
+        var data = {
+          tagNumber: document.getElementById('animalTag').value.trim(),
+          name: document.getElementById('animalName').value.trim(),
+          type: document.getElementById('animalType').value,
+          breed: document.getElementById('animalBreed').value.trim(),
+          birthDate: document.getElementById('animalBirth').value ? new Date(document.getElementById('animalBirth').value) : null,
+          weight: parseFloat(document.getElementById('animalWeight').value) || 0,
+          status: document.getElementById('animalStatus').value,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        try {
+          if (id) {
+            await db.collection('livestock').doc(id).update(data);
+            showToast('Animal updated successfully', 'success');
+          } else {
+            data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection('livestock').add(data);
+            showToast('Animal added successfully', 'success');
+          }
+          closeModal();
+        } catch (err) {
+          console.error('Save error:', err);
+          showToast('Error saving animal: ' + err.message, 'error');
+        }
+        return false;
+      };
+
+      window.viewAnimal = function(id) {
+        var a = allAnimals.find(function(x) { return x.id === id; });
+        if (!a) return;
+        var healthHtml = '<div class="empty-state" style="padding:20px;"><div class="icon" style="font-size:32px;">💉</div><p style="font-size:13px;">No health records recorded yet.</p></div>';
+        var breedingHtml = '<div class="empty-state" style="padding:20px;"><div class="icon" style="font-size:32px;">🧬</div><p style="font-size:13px;">No breeding records recorded yet.</p></div>';
+        var html = '<div class="photo-placeholder">' + getAnimalIcon(a.type) + '</div>' +
+          '<div class="detail-grid">' +
+            '<div class="detail-item"><div class="dl">Tag #</div><div class="dv">' + (a.tagNumber || '—') + '</div></div>' +
+            '<div class="detail-item"><div class="dl">Name</div><div class="dv">' + (a.name || '—') + '</div></div>' +
+            '<div class="detail-item"><div class="dl">Breed</div><div class="dv">' + (a.breed || '—') + '</div></div>' +
+            '<div class="detail-item"><div class="dl">Type</div><div class="dv">' + (a.type || '—') + '</div></div>' +
+            '<div class="detail-item"><div class="dl">Age</div><div class="dv">' + calcAge(a.birthDate) + '</div></div>' +
+            '<div class="detail-item"><div class="dl">Weight</div><div class="dv">' + (a.weight ? a.weight + ' kg' : '—') + '</div></div>' +
+            '<div class="detail-item"><div class="dl">Status</div><div class="dv">' + getStatusBadge(a.status) + '</div></div>' +
+            '<div class="detail-item"><div class="dl">Added</div><div class="dv">' + (a.createdAt ? formatDate(a.createdAt) : formatDate(new Date())) + '</div></div>' +
+          '</div>' +
+          '<div style="margin-top:16px;">' +
+            '<div class="tabs">' +
+              '<div class="tab active" onclick="switchDetailTab(this,\'healthTab\')">💉 Health</div>' +
+              '<div class="tab" onclick="switchDetailTab(this,\'breedingTab\')">🧬 Breeding</div>' +
+            '</div>' +
+            '<div id="healthTab" style="padding:12px 0;">' + healthHtml + '</div>' +
+            '<div id="breedingTab" style="padding:12px 0;display:none;">' + breedingHtml + '</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:8px;margin-top:8px;">' +
+            '<button class="btn btn-sm btn-primary" onclick="closeModal();editAnimal(\'' + a.id + '\')">✏️ Edit</button>' +
+          '</div>';
+        openModal(html, a.name || 'Animal Details');
+      };
+
+      window.switchDetailTab = function(el, tabId) {
+        el.parentElement.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+        el.classList.add('active');
+        el.parentElement.parentElement.querySelectorAll('[id$="Tab"]').forEach(function(t) { t.style.display = 'none'; });
+        document.getElementById(tabId).style.display = 'block';
+      };
+
+      window.editAnimal = function(id) {
+        var a = allAnimals.find(function(x) { return x.id === id; });
+        if (a) openAnimalModal(a);
+      };
+
+      window.deleteAnimal = async function(id) {
+        if (!confirm('Delete this animal record?')) return;
+        try {
+          await db.collection('livestock').doc(id).delete();
+          showToast('Animal deleted', 'success');
+        } catch (err) {
+          allAnimals = allAnimals.filter(function(a) { return a.id !== id; });
+          updateStats(allAnimals);
+          filterAnimals();
+          showToast('Animal removed', 'success');
+        }
+      };
+
+      document.addEventListener('DOMContentLoaded', function() {
+        loadAnimals();
+        document.getElementById('filterSearch').addEventListener('input', filterAnimals);
+        document.getElementById('filterType').addEventListener('change', filterAnimals);
+        document.getElementById('filterStatus').addEventListener('change', filterAnimals);
+        document.getElementById('searchAnimal') && document.getElementById('searchAnimal').addEventListener('input', function(e) {
+          document.getElementById('filterSearch').value = e.target.value;
+          filterAnimals();
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

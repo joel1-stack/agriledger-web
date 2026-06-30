@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Journal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <style>
+    .date-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .date-nav .nav-btn { padding: 8px 16px; border: 1px solid var(--border-medium); border-radius: var(--radius-sm); background: var(--surface-white); cursor: pointer; font-size: 13px; transition: var(--transition); }
+    .date-nav .nav-btn:hover { border-color: var(--primary-green); color: var(--primary-green); }
+    .date-nav .date-display { font-size: 18px; font-weight: 700; min-width: 160px; text-align: center; }
+    .date-nav input[type="date"] { padding: 8px 12px; border: 1px solid var(--border-medium); border-radius: var(--radius-sm); font-family: var(--font-family); font-size: 13px; }
+    .daily-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+    @media (max-width: 640px) { .daily-summary { grid-template-columns: 1fr; } }
+    .summary-card { padding: 16px 20px; border-radius: var(--radius-md); border-left: 4px solid var(--primary-green); background: var(--surface-white); border: 1px solid var(--border-light); }
+    .summary-card.income { border-left-color: var(--primary-green); }
+    .summary-card.expense { border-left-color: var(--accent-red); }
+    .summary-card.net { border-left-color: var(--accent-gold); }
+    .summary-card .label { font-size: 12px; color: var(--text-secondary); }
+    .summary-card .value { font-size: 22px; font-weight: 700; }
+    .summary-card .value.positive { color: var(--primary-green); }
+    .summary-card .value.negative { color: var(--accent-red); }
+    .filter-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .filter-chip { padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border-medium); font-size: 13px; cursor: pointer; transition: var(--transition); background: var(--surface-white); color: var(--text-secondary); }
+    .filter-chip:hover { border-color: var(--primary-green); color: var(--primary-green); }
+    .filter-chip.active { background: var(--primary-green); color: white; border-color: var(--primary-green); }
+    .journal-entry { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: var(--radius-sm); border-left: 4px solid var(--border-light); background: var(--surface-white); margin-bottom: 8px; transition: var(--transition); border: 1px solid var(--border-light); }
+    .journal-entry:hover { box-shadow: var(--shadow-md); }
+    .journal-entry.income { border-left-color: var(--primary-green); }
+    .journal-entry.expense { border-left-color: var(--accent-red); }
+    .journal-entry.stock { border-left-color: var(--accent-gold); }
+    .j-entry-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .j-entry-icon.income { background: var(--primary-light); }
+    .j-entry-icon.expense { background: #FFEBEE; }
+    .j-entry-icon.stock { background: #FFF8E1; }
+    .j-entry-body { flex: 1; min-width: 0; }
+    .j-entry-body .j-desc { font-size: 14px; font-weight: 500; }
+    .j-entry-body .j-meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .j-entry-body .j-meta .ref { color: var(--accent-blue); }
+    .j-entry-amount { font-size: 16px; font-weight: 700; white-space: nowrap; }
+    .j-entry-amount.income { color: var(--primary-green); }
+    .j-entry-amount.expense { color: var(--accent-red); }
+    .j-entry-amount.stock { color: var(--accent-gold); }
+    .j-entry-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .j-entry-actions button { padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; background: transparent; transition: var(--transition); }
+    .j-entry-actions button:hover { background: var(--primary-light); }
+    .monthly-bar { display: flex; justify-content: space-between; padding: 16px 20px; background: var(--primary-dark); color: white; border-radius: var(--radius-md); margin-top: 20px; }
+    .monthly-bar .m-stat { text-align: center; }
+    .monthly-bar .m-stat .m-label { font-size: 11px; opacity: 0.7; }
+    .monthly-bar .m-stat .m-value { font-size: 16px; font-weight: 700; }
+    .bottom-nav { display: none; }
+    @media (max-width: 640px) {
+      .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: #1B4332; z-index: 100; padding: 4px 0; justify-content: space-around; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+      .bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; color: rgba(255,255,255,0.6); font-size: 10px; padding: 6px 12px; text-decoration: none; }
+      .bottom-nav a.active, .bottom-nav a:hover { color: white; }
+      .bottom-nav a .nav-icon { font-size: 20px; }
+      .page-content { padding-bottom: 80px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><span style="font-size:28px;">🌿</span><span>AgriLedger</span></div>
+    <div class="sidebar-user">
+      <div class="avatar"><span class="user-avatar-text">U</span></div>
+      <div class="user-info">
+        <div class="name sidebar-user-name">Loading...</div>
+        <div class="role sidebar-user-role">general</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <div class="nav-section">FARMING</div>
+      <a href="farming/crops.html"><span class="nav-icon">🌾</span><span class="nav-text">Crops</span></a>
+      <a href="farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+      <a href="farming/poultry.html"><span class="nav-icon">🐔</span><span class="nav-text">Poultry</span></a>
+      <a href="farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+      <div class="nav-section">FINANCE</div>
+      <a href="inventory.html"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+      <a href="cashbook.html"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+      <a href="journal.html" class="active"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+      <div class="nav-section">BUSINESS</div>
+      <a href="contracts.html"><span class="nav-icon">📋</span><span class="nav-text">Contracts</span></a>
+      <a href="property.html"><span class="nav-icon">🏠</span><span class="nav-text">Property</span></a>
+      <a href="transport.html"><span class="nav-icon">🚛</span><span class="nav-text">Transport</span></a>
+      <a href="reports.html"><span class="nav-icon">📈</span><span class="nav-text">Reports</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a>
+      <a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle">☰</button>
+        <div class="breadcrumb">
+          <a href="dashboard.html">Dashboard</a><span class="sep">›</span><span>Journal</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="notification-btn">🔔<span class="badge badge-red">3</span></button>
+        <button class="profile-btn" onclick="window.location.href='settings.html'">
+          <div class="avatar"><span class="user-avatar-text">J</span></div>
+          <span class="sidebar-user-name" style="font-size:13px;">User</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header">
+        <div class="page-header-row">
+          <h1>Journal</h1>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary" onclick="openAddEntryModal()">➕ Add Entry</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="date-nav">
+        <button class="nav-btn" onclick="navigateDate(-1)">← Yesterday</button>
+        <button class="nav-btn" onclick="navigateDate(0)">📅 Today</button>
+        <button class="nav-btn" onclick="navigateDate(1)">Tomorrow →</button>
+        <input type="date" id="datePicker" onchange="goToDate(this.value)">
+        <span class="date-display" id="dateDisplay">Today</span>
+      </div>
+
+      <div class="daily-summary" id="dailySummary">
+        <div class="summary-card income">
+          <div class="label">Income</div>
+          <div class="value positive" id="jIncome">KSh 0</div>
+        </div>
+        <div class="summary-card expense">
+          <div class="label">Expenses</div>
+          <div class="value negative" id="jExpense">KSh 0</div>
+        </div>
+        <div class="summary-card net">
+          <div class="label">Net</div>
+          <div class="value" id="jNet">KSh 0</div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <div class="filter-chips" id="filterChips">
+          <span class="filter-chip active" data-filter="All">All</span>
+          <span class="filter-chip" data-filter="income">Income</span>
+          <span class="filter-chip" data-filter="expense">Expense</span>
+          <span class="filter-chip" data-filter="stock">Stock</span>
+        </div>
+        <input type="text" class="form-input" style="width:240px;padding:6px 12px;font-size:13px;" placeholder="Search entries..." id="journalSearch">
+      </div>
+
+      <div id="journalEntries" style="margin-top:16px;">
+        <div class="loading-spinner"></div>
+      </div>
+
+      <div class="monthly-bar" id="monthlyBar">
+        <div class="m-stat"><div class="m-label">Monthly Income</div><div class="m-value" id="mIncome">KSh 0</div></div>
+        <div class="m-stat"><div class="m-label">Monthly Expenses</div><div class="m-value" id="mExpense">KSh 0</div></div>
+        <div class="m-stat"><div class="m-label">Monthly Net</div><div class="m-value" id="mNet">KSh 0</div></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="dashboard.html"><span class="nav-icon">📊</span>Home</a>
+    <a href="inventory.html"><span class="nav-icon">📦</span>Inventory</a>
+    <a href="cashbook.html"><span class="nav-icon">💰</span>Cashbook</a>
+    <a href="journal.html" class="active"><span class="nav-icon">📓</span>Journal</a>
+    <a href="settings.html"><span class="nav-icon">⚙️</span>More</a>
+  </nav>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script>
+(function() {
+  var allEntries = [];
+  var currentDate = new Date();
+  var activeFilter = 'All';
+  var txnUnsub = null, stockUnsub = null;
+
+  function normalizeDate(d) {
+    if (!d) return new Date();
+    if (typeof d === 'string') d = new Date(d);
+    if (d.toDate) d = d.toDate();
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  function isSameDay(d1, d2) {
+    var a = normalizeDate(d1), b = normalizeDate(d2);
+    return a.getTime() === b.getTime();
+  }
+
+  function formatDateDisplay(date) {
+    var d = normalizeDate(date);
+    var today = normalizeDate(new Date());
+    var diff = (d.getTime() - today.getTime()) / (1000*60*60*24);
+    if (diff === 0) return 'Today';
+    if (diff === -1) return 'Yesterday';
+    if (diff === 1) return 'Tomorrow';
+    return d.toLocaleDateString('en-KE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function getEntryType(entry) {
+    if (entry.type === 'income') return 'income';
+    if (entry.type === 'expense') return 'expense';
+    return 'stock';
+  }
+
+  function getEntryIcon(entry) {
+    var t = getEntryType(entry);
+    if (t === 'income') return '💰';
+    if (t === 'expense') return '💸';
+    return '📦';
+  }
+
+  function renderEntries(entries) {
+    var el = document.getElementById('journalEntries');
+    if (!el) return;
+    if (entries.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">📓</div><h3>No entries for this day</h3><p>No transactions or stock movements recorded.</p></div>';
+      return;
+    }
+    el.innerHTML = entries.map(function(e) {
+      var type = getEntryType(e);
+      var icon = getEntryIcon(e);
+      var amount = parseFloat(e.amount) || 0;
+      var pmtBadge = e.paymentMethod ? ' <span class="badge badge-gray">' + e.paymentMethod + '</span>' : '';
+      var ref = e.reference ? ' <span class="ref">#' + e.reference + '</span>' : '';
+      var desc = e.description || (e.itemName ? 'Stock: ' + e.itemName : 'Entry');
+      return '<div class="journal-entry ' + type + '">' +
+        '<div class="j-entry-icon ' + type + '">' + icon + '</div>' +
+        '<div class="j-entry-body">' +
+          '<div class="j-desc">' + desc + '</div>' +
+          '<div class="j-meta">' + formatTime(e.date) + pmtBadge + ref + '</div>' +
+        '</div>' +
+        '<div class="j-entry-amount ' + type + '">' + (type === 'income' ? '+' : (type === 'expense' ? '-' : '')) + (type === 'stock' ? formatNumber(amount) + ' units' : formatCurrency(amount)) + '</div>' +
+        '<div class="j-entry-actions">' +
+          '<button onclick="viewEntry(\'' + e.id + '\',\'' + e._source + '\')" title="View">👁️</button>' +
+          '<button onclick="editEntry(\'' + e.id + '\',\'' + e._source + '\')" title="Edit">✏️</button>' +
+          '<button onclick="deleteEntry(\'' + e.id + '\',\'' + e._source + '\')" title="Delete">🗑️</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function updateSummaries(entries) {
+    var inc = 0, exp = 0;
+    entries.forEach(function(e) {
+      var amt = parseFloat(e.amount) || 0;
+      if (e.type === 'income') inc += amt;
+      else if (e.type === 'expense') exp += amt;
+    });
+    document.getElementById('jIncome').textContent = formatCurrency(inc);
+    document.getElementById('jExpense').textContent = formatCurrency(exp);
+    var net = inc - exp;
+    var netEl = document.getElementById('jNet');
+    netEl.textContent = formatCurrency(net);
+    netEl.className = 'value' + (net >= 0 ? ' positive' : ' negative');
+  }
+
+  function updateMonthly(entries) {
+    var inc = 0, exp = 0;
+    var month = currentDate.getMonth();
+    var year = currentDate.getFullYear();
+    entries.forEach(function(e) {
+      var d = e.date ? (e.date.toDate ? e.date.toDate() : new Date(e.date)) : new Date();
+      if (d.getMonth() === month && d.getFullYear() === year) {
+        var amt = parseFloat(e.amount) || 0;
+        if (e.type === 'income') inc += amt;
+        else if (e.type === 'expense') exp += amt;
+      }
+    });
+    document.getElementById('mIncome').textContent = formatCurrency(inc);
+    document.getElementById('mExpense').textContent = formatCurrency(exp);
+    var net = inc - exp;
+    document.getElementById('mNet').textContent = formatCurrency(net);
+  }
+
+  function filterAndRender() {
+    var search = (document.getElementById('journalSearch').value || '').toLowerCase();
+    var dayEntries = allEntries.filter(function(e) {
+      return isSameDay(e.date, currentDate);
+    });
+    var filtered = dayEntries.filter(function(e) {
+      if (activeFilter !== 'All') {
+        var type = getEntryType(e);
+        if (activeFilter === 'stock' && type !== 'stock') return false;
+        if (activeFilter !== 'stock' && type !== activeFilter) return false;
+      }
+      if (search) {
+        var desc = (e.description || e.itemName || '').toLowerCase();
+        var pmt = (e.paymentMethod || '').toLowerCase();
+        if (!desc.includes(search) && !pmt.includes(search)) return false;
+      }
+      return true;
+    });
+    renderEntries(filtered);
+    updateSummaries(dayEntries);
+    updateMonthly(allEntries);
+  }
+
+  function loadData() {
+    if (txnUnsub) txnUnsub();
+    if (stockUnsub) stockUnsub();
+    allEntries = [];
+    txnUnsub = db.collection('transactions').orderBy('date', 'desc').limit(200).onSnapshot(function(snap) {
+      snap.forEach(function(d) { allEntries.push({ id: d.id, _source: 'transactions', ...d.data() }); });
+      if (allEntries.filter(function(e) { return e._source === 'transactions'; }).length === 0) loadDemoData();
+      else filterAndRender();
+    }, function() { loadDemoData(); });
+    stockUnsub = db.collection('stockMovements').orderBy('date', 'desc').limit(100).onSnapshot(function(snap) {
+      snap.forEach(function(d) {
+        var data = d.data();
+        allEntries.push({ id: d.id, _source: 'stockMovements', type: data.type === 'in' ? 'stock_in' : 'stock_out', description: 'Stock ' + (data.type === 'in' ? 'in' : 'out') + ': ' + (data.itemName || data.item || ''), amount: (parseFloat(data.quantity) || 0), date: data.date, paymentMethod: 'Stock' });
+      });
+      filterAndRender();
+    });
+  }
+
+  function loadDemoData() {
+    var today = new Date();
+    var todayStr = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 8, 0);
+    allEntries = [
+      { id: 'j1', _source: 'transactions', type: 'income', description: 'Milk sales - Morning collection', amount: 28500, date: new Date(todayStr), paymentMethod: 'Cash', reference: 'INV-001' },
+      { id: 'j2', _source: 'transactions', type: 'expense', description: 'Dairy meal purchase - 10 bags', amount: 18000, date: new Date(todayStr.getTime() + 2*3600000), paymentMethod: 'M-Pesa', reference: 'EXP-001' },
+      { id: 'j3', _source: 'stockMovements', type: 'stock_in', description: 'Stock in: Poultry Feed Layers', amount: 30, date: new Date(todayStr.getTime() + 4*3600000), paymentMethod: 'Stock' },
+      { id: 'j4', _source: 'transactions', type: 'income', description: 'Egg sales - 20 trays', amount: 12000, date: new Date(today.getFullYear(), today.getMonth(), today.getDate()-1, 10, 0), paymentMethod: 'Cash', reference: 'INV-002' },
+      { id: 'j5', _source: 'transactions', type: 'expense', description: 'Veterinary services - Vaccination', amount: 5500, date: new Date(today.getFullYear(), today.getMonth(), today.getDate()-1, 14, 0), paymentMethod: 'Cash', reference: 'EXP-002' }
+    ];
+    filterAndRender();
+  }
+
+  window.navigateDate = function(delta) {
+    var d = new Date(currentDate);
+    d.setDate(d.getDate() + delta);
+    currentDate = d;
+    updateDateDisplay();
+    filterAndRender();
+  };
+
+  window.goToDate = function(val) {
+    if (val) { currentDate = new Date(val + 'T12:00:00'); updateDateDisplay(); filterAndRender(); }
+  };
+
+  function updateDateDisplay() {
+    document.getElementById('dateDisplay').textContent = formatDateDisplay(currentDate);
+    var picker = document.getElementById('datePicker');
+    if (picker) picker.value = currentDate.toISOString().split('T')[0];
+  }
+
+  window.openAddEntryModal = function(data) {
+    var isEdit = !!data;
+    var d = data || {};
+    var title = isEdit ? 'Edit Entry' : 'Add Journal Entry';
+    var html = '<form id="entryForm" onsubmit="return saveEntry(event)">' +
+      '<input type="hidden" id="entryId" value="' + (d.id || '') + '">' +
+      '<input type="hidden" id="entrySource" value="' + (d._source || 'transactions') + '">' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Type</label><select id="entryType" class="form-select"><option value="income"' + (d.type === 'income' ? ' selected' : '') + '>Income</option><option value="expense"' + (d.type === 'expense' ? ' selected' : '') + '>Expense</option><option value="stock_in"' + (d.type === 'stock_in' ? ' selected' : '') + '>Stock In</option><option value="stock_out"' + (d.type === 'stock_out' ? ' selected' : '') + '>Stock Out</option></select></div>' +
+        '<div class="form-group"><label class="form-label">Amount</label><input type="number" id="entryAmount" class="form-input" value="' + (d.amount || '') + '" min="0" step="0.5" required></div>' +
+      '</div>' +
+      '<div class="form-group"><label class="form-label">Description</label><input type="text" id="entryDesc" class="form-input" value="' + (d.description || '') + '" required></div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Payment Method</label><select id="entryPayment" class="form-select"><option value="">None</option><option value="Cash"' + (d.paymentMethod === 'Cash' ? ' selected' : '') + '>Cash</option><option value="M-Pesa"' + (d.paymentMethod === 'M-Pesa' ? ' selected' : '') + '>M-Pesa</option><option value="Bank"' + (d.paymentMethod === 'Bank' ? ' selected' : '') + '>Bank</option><option value="Cheque"' + (d.paymentMethod === 'Cheque' ? ' selected' : '') + '>Cheque</option></select></div>' +
+        '<div class="form-group"><label class="form-label">Reference</label><input type="text" id="entryRef" class="form-input" value="' + (d.reference || '') + '" placeholder="Optional ref #"></div>' +
+      '</div>' +
+      '<div class="form-group"><label class="form-label">Date & Time</label><input type="datetime-local" id="entryDateTime" class="form-input" value="' + (d.date ? formatDateTimeInput(d.date) : new Date().toISOString().slice(0,16)) + '"></div>' +
+      '<div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);margin-top:16px;">' +
+        '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>' +
+        '<button type="submit" class="btn btn-primary">' + (isEdit ? 'Update' : 'Add Entry') + '</button>' +
+      '</div></form>';
+    openModal(html, title);
+  };
+
+  function formatDateTimeInput(date) {
+    if (!date) return '';
+    if (typeof date === 'string') date = new Date(date);
+    if (date.toDate) date = date.toDate();
+    return date.toISOString().slice(0, 16);
+  }
+
+  window.saveEntry = async function(e) {
+    e.preventDefault();
+    var id = document.getElementById('entryId').value;
+    var source = document.getElementById('entrySource').value;
+    var type = document.getElementById('entryType').value;
+    var dt = document.getElementById('entryDateTime').value;
+    var date = dt ? new Date(dt) : new Date();
+    var data = {
+      type: type === 'stock_in' || type === 'stock_out' ? (type === 'stock_in' ? 'in' : 'out') : type,
+      amount: parseFloat(document.getElementById('entryAmount').value) || 0,
+      description: document.getElementById('entryDesc').value.trim(),
+      paymentMethod: document.getElementById('entryPayment').value,
+      reference: document.getElementById('entryRef').value.trim(),
+      date: date,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    try {
+      var coll = source === 'stockMovements' ? 'stockMovements' : 'transactions';
+      if (id) { await db.collection(coll).doc(id).update(data); showToast('Entry updated', 'success'); }
+      else { data.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection(coll).add(data); showToast('Entry added', 'success'); }
+      closeModal();
+    } catch (err) {
+      showToast('Error: ' + err.message, 'error');
+    }
+    return false;
+  };
+
+  window.viewEntry = function(id, source) {
+    var entry = allEntries.find(function(e) { return e.id === id && e._source === source; });
+    if (!entry) { showToast('Entry not found', 'error'); return; }
+    var type = getEntryType(entry);
+    var html = '<div style="padding:8px 0;"><strong>Description:</strong> ' + (entry.description || 'N/A') + '</div>' +
+      '<div><strong>Amount:</strong> ' + (type === 'stock' ? formatNumber(entry.amount) + ' units' : formatCurrency(entry.amount)) + '</div>' +
+      '<div><strong>Type:</strong> ' + type + '</div>' +
+      '<div><strong>Date:</strong> ' + formatDateTime(entry.date) + '</div>' +
+      (entry.paymentMethod ? '<div><strong>Payment:</strong> ' + entry.paymentMethod + '</div>' : '') +
+      (entry.reference ? '<div><strong>Reference:</strong> ' + entry.reference + '</div>' : '') +
+      (entry.notes ? '<div><strong>Notes:</strong> ' + entry.notes + '</div>' : '');
+    openModal('<div>' + html + '</div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>', 'Entry Details');
+  };
+
+  window.editEntry = function(id, source) {
+    var entry = allEntries.find(function(e) { return e.id === id && e._source === source; });
+    if (entry) window.openAddEntryModal(entry);
+  };
+
+  window.deleteEntry = async function(id, source) {
+    if (!confirm('Delete this entry?')) return;
+    try {
+      await db.collection(source === 'stockMovements' ? 'stockMovements' : 'transactions').doc(id).delete();
+      showToast('Entry deleted', 'success');
+    } catch (err) {
+      allEntries = allEntries.filter(function(e) { return !(e.id === id && e._source === source); });
+      filterAndRender();
+      showToast('Entry removed', 'success');
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    updateDateDisplay();
+    loadData();
+    document.querySelectorAll('.filter-chip').forEach(function(c) {
+      c.addEventListener('click', function() {
+        document.querySelectorAll('.filter-chip').forEach(function(p) { p.classList.remove('active'); });
+        this.classList.add('active');
+        activeFilter = this.dataset.filter;
+        filterAndRender();
+      });
+    });
+    document.getElementById('journalSearch').addEventListener('input', filterAndRender);
+  });
+})();
+</script>
+</body>
+</html>

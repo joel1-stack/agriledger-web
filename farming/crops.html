@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Crop Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <style>
+    .crop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+    @media (max-width: 640px) { .crop-grid { grid-template-columns: 1fr; } }
+    .crop-card { background: var(--surface-white); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); overflow: hidden; transition: var(--transition); }
+    .crop-card:hover { box-shadow: var(--shadow-md); }
+    .crop-card-header { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); }
+    .crop-card-header .crop-icon { font-size: 32px; }
+    .crop-card-header .crop-info { flex: 1; margin-left: 12px; }
+    .crop-card-header .crop-info .name { font-size: 16px; font-weight: 600; }
+    .crop-card-header .crop-info .variety { font-size: 13px; color: var(--text-secondary); }
+    .crop-card-body { padding: 16px 20px; }
+    .crop-card-body .detail-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--border-light); }
+    .crop-card-body .detail-row:last-child { border-bottom: none; }
+    .crop-card-body .detail-row .label { color: var(--text-secondary); }
+    .crop-card-body .detail-row .value { font-weight: 500; }
+    .crop-card-footer { padding: 12px 20px; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end; gap: 8px; background: var(--bg-cream); }
+    .status-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+    .status-badge.planted { background: #FFF8E1; color: #F57F17; }
+    .status-badge.growing { background: var(--primary-light); color: var(--primary-dark); }
+    .status-badge.harvested { background: #E3F2FD; color: #1565C0; }
+    .bottom-nav { display: none; }
+    @media (max-width: 640px) {
+      .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: #1B4332; z-index: 100; padding: 4px 0; justify-content: space-around; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+      .bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; color: rgba(255,255,255,0.6); font-size: 10px; padding: 6px 12px; text-decoration: none; }
+      .bottom-nav a.active, .bottom-nav a:hover { color: white; }
+      .bottom-nav a .nav-icon { font-size: 20px; }
+      .page-content { padding-bottom: 80px; }
+    }
+    .progress-text { font-size: 12px; color: var(--text-secondary); margin-top: 4px; text-align: right; }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <span class="logo" style="font-size:28px;">🌿</span>
+        <span>AgriLedger</span>
+      </div>
+      <div class="sidebar-user">
+        <div class="avatar"><span class="user-avatar-text">U</span></div>
+        <div class="user-info">
+          <div class="name sidebar-user-name">Loading...</div>
+          <div class="role sidebar-user-role">general</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Main</div>
+        <a href="../dashboard.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+        <div class="nav-item has-sub active"><span class="nav-icon">🌾</span><span class="nav-text">Farming</span><span class="nav-arrow open">▶</span></div>
+        <div class="sub-nav open">
+          <a href="crops.html" class="active"><span class="nav-icon">🌱</span><span class="nav-text">Crops</span></a>
+          <a href="livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+          <a href="poultry.html"><span class="nav-icon">🐔</span><span class="nav-text">Poultry</span></a>
+          <a href="dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+        </div>
+        <a href="../inventory.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+        <a href="../cashbook.html" class="nav-item"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+        <a href="../journal.html" class="nav-item"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+        <a href="../contracts.html" class="nav-item"><span class="nav-icon">📝</span><span class="nav-text">Contracts</span></a>
+        <a href="../property.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-text">Property</span></a>
+        <a href="../transport.html" class="nav-item"><span class="nav-icon">🚜</span><span class="nav-text">Transport</span></a>
+        <a href="../reports.html" class="nav-item"><span class="nav-icon">📈</span><span class="nav-text">Reports</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="../settings.html"><span class="nav-icon">⚙️</span><span class="nav-text">Settings</span></a>
+        <a href="#" onclick="logoutUser()"><span class="nav-icon">🚪</span><span class="nav-text">Logout</span></a>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="topbar-toggle" id="sidebar-toggle">☰</button>
+          <div class="topbar-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="Search crops..." id="searchCrop">
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="notification-btn">🔔<span class="badge badge-red" id="notifBadge" style="display:none;">0</span></button>
+          <button class="profile-btn" onclick="window.location.href='../settings.html'">
+            <div class="avatar"><span class="user-avatar-text">U</span></div>
+            <span class="sidebar-user-name" style="font-size:13px;font-weight:500;color:var(--text-primary);">User</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="page-content">
+        <div class="breadcrumb">
+          <a href="../dashboard.html">Dashboard</a>
+          <span class="sep">›</span>
+          <a href="../dashboard.html">Farming</a>
+          <span class="sep">›</span>
+          <span>Crops</span>
+        </div>
+
+        <div class="page-header">
+          <div class="page-header-row">
+            <h1>Crop Management</h1>
+            <button class="btn btn-primary" onclick="openCropModal()">➕ Add New Crop</button>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <input type="text" class="form-input search-input" id="filterSearch" placeholder="Search by name or variety...">
+          <select class="form-select" id="filterStatus">
+            <option value="">All Statuses</option>
+            <option value="planted">Planted</option>
+            <option value="growing">Growing</option>
+            <option value="harvested">Harvested</option>
+          </select>
+          <select class="form-select" id="filterSort">
+            <option value="date-desc">Newest First</option>
+            <option value="date-asc">Oldest First</option>
+            <option value="name-asc">Name A-Z</option>
+            <option value="name-desc">Name Z-A</option>
+          </select>
+        </div>
+
+        <!-- Crop Grid -->
+        <div id="cropGrid" class="crop-grid">
+          <div class="loading-spinner" style="grid-column:1/-1;"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+      <a href="../dashboard.html"><span class="nav-icon">📊</span>Home</a>
+      <a href="crops.html" class="active"><span class="nav-icon">🌱</span>Crops</a>
+      <a href="livestock.html"><span class="nav-icon">🐄</span>Animals</a>
+      <a href="../cashbook.html"><span class="nav-icon">💰</span>Cashbook</a>
+      <a href="../settings.html"><span class="nav-icon">⚙️</span>More</a>
+    </nav>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    (function() {
+      var cropsRef = null;
+      var allCrops = [];
+      var unsubscribe = null;
+
+      // Crop icons by name
+      function getCropIcon(name) {
+        var n = (name || '').toLowerCase();
+        if (n.includes('maize') || n.includes('corn')) return '🌽';
+        if (n.includes('wheat') || n.includes('barley') || n.includes('rice')) return '🌾';
+        if (n.includes('bean') || n.includes('pea') || n.includes('lentil')) return '🫘';
+        if (n.includes('tomato') || n.includes('pepper') || n.includes('cabbage') || n.includes('kale') || n.includes('spinach') || n.includes('onion')) return '🥬';
+        if (n.includes('coffee') || n.includes('tea')) return '🫖';
+        if (n.includes('fruit') || n.includes('mango') || n.includes('avocado') || n.includes('banana')) return '🍌';
+        if (n.includes('potato') || n.includes('cassava') || n.includes('sweet potato')) return '🥔';
+        if (n.includes('sunflower') || n.includes('groundnut') || n.includes('coconut')) return '🌻';
+        if (n.includes('sugarcane') || n.includes('cotton')) return '🌿';
+        return '🌱';
+      }
+
+      function getStatusClass(status) {
+        return 'status-badge ' + (status || 'planted');
+      }
+
+      function calculateProgress(crop) {
+        if (!crop.plantingDate) return 0;
+        var plant = crop.plantingDate.toDate ? crop.plantingDate.toDate() : new Date(crop.plantingDate);
+        var now = new Date();
+        var expectedHarvest = crop.expectedHarvest ? (crop.expectedHarvest.toDate ? crop.expectedHarvest.toDate() : new Date(crop.expectedHarvest)) : new Date(plant.getTime() + 120 * 24 * 60 * 60 * 1000);
+        var total = expectedHarvest.getTime() - plant.getTime();
+        var elapsed = now.getTime() - plant.getTime();
+        if (total <= 0) return 100;
+        var pct = Math.min(100, Math.max(0, (elapsed / total) * 100));
+        return Math.round(pct);
+      }
+
+      function renderCrops(crops) {
+        var grid = document.getElementById('cropGrid');
+        if (!grid) return;
+        if (crops.length === 0) {
+          grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="icon">🌱</div><h3>No crops yet</h3><p>Start by adding your first crop to track planting and harvest.</p><button class="btn btn-primary" onclick="openCropModal()">➕ Add New Crop</button></div>';
+          return;
+        }
+        grid.innerHTML = crops.map(function(c) {
+          var icon = getCropIcon(c.name);
+          var progress = calculateProgress(c);
+          var status = c.status || 'planted';
+          return '<div class="crop-card" data-id="' + c.id + '">' +
+            '<div class="crop-card-header">' +
+              '<div style="display:flex;align-items:center;gap:12px;">' +
+                '<span class="crop-icon">' + icon + '</span>' +
+                '<div class="crop-info">' +
+                  '<div class="name">' + (c.name || 'Unnamed') + '</div>' +
+                  '<div class="variety">' + (c.variety || '') + '</div>' +
+                '</div>' +
+              '</div>' +
+              '<span class="' + getStatusClass(status) + '">' + status.charAt(0).toUpperCase() + status.slice(1) + '</span>' +
+            '</div>' +
+            '<div class="crop-card-body">' +
+              '<div class="detail-row"><span class="label">Planting Date</span><span class="value">' + formatDate(c.plantingDate) + '</span></div>' +
+              '<div class="detail-row"><span class="label">Location</span><span class="value">' + (c.location || '—') + '</span></div>' +
+              '<div class="detail-row"><span class="label">Area</span><span class="value">' + (c.area ? c.area + ' acres' : '—') + '</span></div>' +
+              '<div class="detail-row"><span class="label">Quantity</span><span class="value">' + (c.quantity ? c.quantity + ' ' + (c.unit || 'units') : '—') + '</span></div>' +
+              '<div class="detail-row"><span class="label">Cost Incurred</span><span class="value">' + formatCurrency(c.cost || 0) + '</span></div>' +
+              '<div style="margin-top:8px;">' +
+                '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary);">' +
+                  '<span>Progress to harvest</span>' +
+                '</div>' +
+                '<div class="progress-bar" style="margin-top:4px;"><div class="fill" style="width:' + progress + '%;background:' + (progress >= 100 ? 'var(--accent-blue)' : 'var(--primary-green)') + '"></div></div>' +
+                '<div class="progress-text">' + progress + '%' + (c.expectedHarvest ? ' · Est. ' + formatDate(c.expectedHarvest) : '') + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="crop-card-footer">' +
+              '<button class="btn btn-sm btn-secondary" onclick="editCrop(\'' + c.id + '\')">✏️ Edit</button>' +
+              '<button class="btn btn-sm btn-danger" onclick="deleteCrop(\'' + c.id + '\')">🗑️ Delete</button>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+
+      function filterAndSortCrops() {
+        var search = (document.getElementById('filterSearch').value || '').toLowerCase();
+        var status = document.getElementById('filterStatus').value;
+        var sort = document.getElementById('filterSort').value;
+        var filtered = allCrops.filter(function(c) {
+          var name = (c.name || '').toLowerCase();
+          var variety = (c.variety || '').toLowerCase();
+          var matchesSearch = !search || name.includes(search) || variety.includes(search);
+          var matchesStatus = !status || c.status === status;
+          return matchesSearch && matchesStatus;
+        });
+        filtered.sort(function(a, b) {
+          switch (sort) {
+            case 'date-asc': return (a.plantingDate || '').toString().localeCompare((b.plantingDate || '').toString());
+            case 'name-asc': return (a.name || '').localeCompare(b.name || '');
+            case 'name-desc': return (b.name || '').localeCompare(a.name || '');
+            default: return (b.plantingDate || '').toString().localeCompare((a.plantingDate || '').toString());
+          }
+        });
+        renderCrops(filtered);
+      }
+
+      function loadCrops() {
+        var grid = document.getElementById('cropGrid');
+        if (!grid) return;
+        grid.innerHTML = '<div class="loading-spinner" style="grid-column:1/-1;"></div>';
+
+        if (unsubscribe) unsubscribe();
+        cropsRef = db.collection('crops').orderBy('plantingDate', 'desc');
+        unsubscribe = cropsRef.onSnapshot(function(snapshot) {
+          allCrops = [];
+          snapshot.forEach(function(doc) { allCrops.push({ id: doc.id, ...doc.data() }); });
+          if (allCrops.length === 0) {
+            // Load demo data
+            loadDemoCrops();
+          } else {
+            filterAndSortCrops();
+          }
+        }, function(err) {
+          console.warn('Firestore error, loading demo crops:', err);
+          loadDemoCrops();
+        });
+      }
+
+      function loadDemoCrops() {
+        allCrops = [
+          { id: 'demo1', name: 'Maize', variety: 'H513', status: 'growing', plantingDate: new Date(2026, 2, 15), location: 'Field A - Upper', area: 5, quantity: 2000, unit: 'kg', cost: 45000, expectedHarvest: new Date(2026, 7, 15) },
+          { id: 'demo2', name: 'Tomatoes', variety: 'Anna F1', status: 'growing', plantingDate: new Date(2026, 3, 1), location: 'Greenhouse 1', area: 0.5, quantity: 800, unit: 'kg', cost: 12000, expectedHarvest: new Date(2026, 5, 15) },
+          { id: 'demo3', name: 'Kale', variety: 'Sukuma Wiki', status: 'harvested', plantingDate: new Date(2026, 0, 10), location: 'Field B - Lower', area: 2, quantity: 1500, unit: 'kg', cost: 8000, expectedHarvest: new Date(2026, 3, 10) },
+          { id: 'demo4', name: 'Beans', variety: 'Mwitemania', status: 'planted', plantingDate: new Date(2026, 5, 1), location: 'Field C - Riverside', area: 3, quantity: 1200, unit: 'kg', cost: 15000, expectedHarvest: new Date(2026, 8, 1) },
+          { id: 'demo5', name: 'Potatoes', variety: 'Shangi', status: 'growing', plantingDate: new Date(2026, 3, 20), location: 'Field A - Lower', area: 4, quantity: 5000, unit: 'kg', cost: 28000, expectedHarvest: new Date(2026, 6, 20) },
+          { id: 'demo6', name: 'Avocado', variety: 'Hass', status: 'planted', plantingDate: new Date(2026, 1, 1), location: 'Orchard', area: 2, quantity: 100, unit: 'trees', cost: 35000, expectedHarvest: new Date(2028, 1, 1) }
+        ];
+        filterAndSortCrops();
+      }
+
+      function openCropModal(cropData) {
+        var isEdit = !!cropData;
+        var c = cropData || {};
+        var title = isEdit ? 'Edit Crop' : 'Add New Crop';
+        var html = '<form id="cropForm" onsubmit="return saveCrop(event)">' +
+          '<input type="hidden" id="cropId" value="' + (c.id || '') + '">' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label class="form-label">Crop Name</label><input type="text" id="cropName" class="form-input" value="' + (c.name || '') + '" required placeholder="e.g. Maize"></div>' +
+            '<div class="form-group"><label class="form-label">Variety</label><input type="text" id="cropVariety" class="form-input" value="' + (c.variety || '') + '" placeholder="e.g. H513"></div>' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label class="form-label">Planting Date</label><input type="date" id="cropDate" class="form-input" value="' + (c.plantingDate ? formatDateInput(c.plantingDate) : '') + '" required></div>' +
+            '<div class="form-group"><label class="form-label">Status</label><select id="cropStatus" class="form-select"><option value="planted"' + (c.status === 'planted' ? ' selected' : '') + '>Planted</option><option value="growing"' + (c.status === 'growing' ? ' selected' : '') + '>Growing</option><option value="harvested"' + (c.status === 'harvested' ? ' selected' : '') + '>Harvested</option></select></div>' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label class="form-label">Area (acres)</label><input type="number" id="cropArea" class="form-input" value="' + (c.area || '') + '" step="0.1" min="0"></div>' +
+            '<div class="form-group"><label class="form-label">Quantity</label><input type="number" id="cropQuantity" class="form-input" value="' + (c.quantity || '') + '" step="0.1" min="0"></div>' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label class="form-label">Cost Incurred (KSh)</label><input type="number" id="cropCost" class="form-input" value="' + (c.cost || '') + '" min="0"></div>' +
+            '<div class="form-group"><label class="form-label">Location</label><input type="text" id="cropLocation" class="form-input" value="' + (c.location || '') + '" placeholder="e.g. Field A"></div>' +
+          '</div>' +
+          '<div class="form-group"><label class="form-label">Expected Harvest Date</label><input type="date" id="cropHarvest" class="form-input" value="' + (c.expectedHarvest ? formatDateInput(c.expectedHarvest) : '') + '"></div>' +
+          '<div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);margin-top:16px;">' +
+            '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>' +
+            '<button type="submit" class="btn btn-primary">' + (isEdit ? 'Update Crop' : 'Add Crop') + '</button>' +
+          '</div>' +
+        '</form>';
+        openModal(html, title);
+      }
+
+      function formatDateInput(date) {
+        if (!date) return '';
+        if (typeof date === 'string') date = new Date(date);
+        if (date.toDate) date = date.toDate();
+        return date.toISOString().split('T')[0];
+      }
+
+      window.saveCrop = async function(e) {
+        e.preventDefault();
+        var id = document.getElementById('cropId').value;
+        var data = {
+          name: document.getElementById('cropName').value.trim(),
+          variety: document.getElementById('cropVariety').value.trim(),
+          plantingDate: new Date(document.getElementById('cropDate').value),
+          status: document.getElementById('cropStatus').value,
+          area: parseFloat(document.getElementById('cropArea').value) || 0,
+          quantity: parseFloat(document.getElementById('cropQuantity').value) || 0,
+          cost: parseFloat(document.getElementById('cropCost').value) || 0,
+          location: document.getElementById('cropLocation').value.trim(),
+          expectedHarvest: document.getElementById('cropHarvest').value ? new Date(document.getElementById('cropHarvest').value) : null,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        try {
+          if (id) {
+            await db.collection('crops').doc(id).update(data);
+            showToast('Crop updated successfully', 'success');
+          } else {
+            data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection('crops').add(data);
+            showToast('Crop added successfully', 'success');
+          }
+          closeModal();
+        } catch (err) {
+          console.error('Save error:', err);
+          showToast('Error saving crop: ' + err.message, 'error');
+        }
+        return false;
+      };
+
+      window.editCrop = function(id) {
+        var crop = allCrops.find(function(c) { return c.id === id; });
+        if (crop) openCropModal(crop);
+      };
+
+      window.deleteCrop = async function(id) {
+        if (!confirm('Are you sure you want to delete this crop?')) return;
+        try {
+          await db.collection('crops').doc(id).delete();
+          showToast('Crop deleted', 'success');
+        } catch (err) {
+          console.error('Delete error:', err);
+          // Remove from local demo
+          allCrops = allCrops.filter(function(c) { return c.id !== id; });
+          filterAndSortCrops();
+          showToast('Crop removed', 'success');
+        }
+      };
+
+      // Filter listeners
+      document.addEventListener('DOMContentLoaded', function() {
+        loadCrops();
+        document.getElementById('filterSearch').addEventListener('input', filterAndSortCrops);
+        document.getElementById('filterStatus').addEventListener('change', filterAndSortCrops);
+        document.getElementById('filterSort').addEventListener('change', filterAndSortCrops);
+        document.getElementById('searchCrop') && document.getElementById('searchCrop').addEventListener('input', function(e) {
+          document.getElementById('filterSearch').value = e.target.value;
+          filterAndSortCrops();
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

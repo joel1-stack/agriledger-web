@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Flock Register</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <style>
+    .batch-detail-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 16px; }
+    .batch-detail-stat { text-align: center; padding: 12px; background: var(--bg-cream); border-radius: var(--radius-sm); }
+    .batch-detail-stat .val { font-size: 22px; font-weight: 700; color: var(--primary-green); }
+    .batch-detail-stat .lbl { font-size: 11px; color: var(--text-secondary); }
+    .batch-clickable { cursor: pointer; transition: var(--transition); }
+    .batch-clickable:hover { background: var(--primary-light) !important; }
+    #flockTable tbody tr { cursor: pointer; }
+    #flockTable tbody tr:hover td { background: var(--primary-light); }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><span>🌱</span><span>AgriLedger</span></div>
+    <div class="sidebar-user"><div class="avatar user-avatar-text">J</div><div class="user-info"><div class="name sidebar-user-name">User</div><div class="role sidebar-user-role">general</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="../dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <div class="nav-section">POULTRY</div>
+      <a href="poultry-dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <a href="farm-setup.html"><span class="nav-icon">⚙️</span><span class="nav-text">Farm Setup</span></a>
+      <a href="flock-register.html" class="active"><span class="nav-icon">📋</span><span class="nav-text">Flock Register</span></a>
+      <a href="production-log.html"><span class="nav-icon">🥚</span><span class="nav-text">Production Log</span></a>
+      <a href="sales.html"><span class="nav-icon">💰</span><span class="nav-text">Sales</span></a>
+      <a href="other-income.html"><span class="nav-icon">💵</span><span class="nav-text">Other Income</span></a>
+      <a href="feed-expenses.html"><span class="nav-icon">🌾</span><span class="nav-text">Feed Expenses</span></a>
+      <a href="health-vet.html"><span class="nav-icon">💉</span><span class="nav-text">Health &amp; Vet</span></a>
+      <a href="mortality.html"><span class="nav-icon">⚰️</span><span class="nav-text">Mortality</span></a>
+      <a href="batch-summary.html"><span class="nav-icon">📈</span><span class="nav-text">Batch Summary</span></a>
+      <div class="nav-section">MAIN</div>
+      <a href="../farming/crops.html"><span class="nav-icon">🌾</span><span class="nav-text">Crops</span></a>
+      <a href="../farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+      <a href="../farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+      <a href="../inventory.html"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+      <a href="../cashbook.html"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+      <a href="../journal.html"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+    </nav>
+    <div class="sidebar-footer"><a href="../settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a><a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a></div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><button class="topbar-toggle" id="sidebar-toggle">☰</button><div class="breadcrumb"><a href="../dashboard.html">Dashboard</a><span class="sep">›</span><a href="poultry-dashboard.html">Poultry</a><span class="sep">›</span><span>Flock Register</span></div></div>
+      <div class="topbar-right"><button class="notification-btn">🔔<span class="badge badge-red">3</span></button><button class="profile-btn" onclick="window.location.href='../settings.html'"><div class="avatar user-avatar-text">J</div><span class="sidebar-user-name" style="font-size:13px;">User</span></button></div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header"><div class="page-header-row">
+        <div><h1>Flock Register</h1><p style="font-size:14px;color:var(--text-secondary);">Manage all poultry batches</p></div>
+        <button class="btn btn-primary" onclick="openBatchModal()">➕ Register New Batch</button>
+      </div></div>
+
+      <div class="filter-bar" id="filterBar">
+        <input type="text" class="form-input search-input" id="searchBatch" placeholder="🔍 Search by name or ID...">
+        <select class="form-select" id="filterType"><option value="">All Types</option><option value="Layers">Layers</option><option value="Broilers">Broilers</option><option value="Kienyeji">Kienyeji</option><option value="Dual Purpose">Dual Purpose</option></select>
+        <select class="form-select" id="filterStatus"><option value="">All Status</option><option value="active">Active</option><option value="sold">Sold</option><option value="depleted">Depleted</option></select>
+        <select class="form-select" id="filterYear"><option value="">All Years</option></select>
+      </div>
+
+      <div class="table-container">
+        <table id="flockTable">
+          <thead><tr><th>Batch ID</th><th>Name</th><th>Bird Type</th><th>Breed</th><th>Quantity</th><th>House</th><th>Age</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="flockTableBody"><tr><td colspan="9"><div class="loading-spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="../js/firebase-config.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+(function() {
+  var allBatches = [], allProduction = [];
+
+  function loadBatches() {
+    db.collection('poultryBatches').orderBy('startDate','desc').onSnapshot(function(snap) {
+      allBatches = [];
+      snap.forEach(function(d) { allBatches.push({ id: d.id, ...d.data() }); });
+      if (allBatches.length === 0) loadDemoBatches();
+      else renderTable();
+    }, function() { loadDemoBatches(); });
+
+    db.collection('poultryProduction').limit(1000).onSnapshot(function(snap) {
+      allProduction = [];
+      snap.forEach(function(d) { allProduction.push({ id: d.id, ...d.data() }); });
+    }, function() {});
+  }
+
+  function loadDemoBatches() {
+    allBatches = [
+      { id:'d1', name:'Batch A - Layers', birdType:'Layers', breed:'Hy-Line Brown', flockSize:500, house:'House A', status:'active', startDate:new Date(2026,2,1), eggsPerDay:420, mortality:3, feedPerDay:60 },
+      { id:'d2', name:'Batch B - Broilers', birdType:'Broilers', breed:'Cobb 500', flockSize:300, house:'House B', status:'active', startDate:new Date(2026,3,15), eggsPerDay:0, mortality:5, feedPerDay:85 },
+      { id:'d3', name:'Batch C - Kienyeji', birdType:'Kienyeji', breed:'Improved Kienyeji', flockSize:200, house:'Free Range', status:'active', startDate:new Date(2026,0,10), eggsPerDay:140, mortality:2, feedPerDay:25 },
+      { id:'d4', name:'Batch D - Layers', birdType:'Layers', breed:'ISA Brown', flockSize:0, house:'House A', status:'sold', startDate:new Date(2025,9,1), eggsPerDay:0, mortality:12, feedPerDay:0 }
+    ];
+    renderTable();
+  }
+
+  function calcAge(startDate) {
+    if (!startDate) return '—';
+    var d = startDate.toDate ? startDate.toDate() : new Date(startDate);
+    var days = Math.floor((new Date() - d) / (1000*60*60*24));
+    if (days < 1) return 'Today';
+    if (days < 30) return days + 'd';
+    var w = Math.floor(days/7); var r = days%7;
+    return w + 'w ' + r + 'd';
+  }
+
+  function renderTable() {
+    var tbody = document.getElementById('flockTableBody');
+    if (!tbody) return;
+    var q = (document.getElementById('searchBatch').value||'').toLowerCase();
+    var type = document.getElementById('filterType').value;
+    var status = document.getElementById('filterStatus').value;
+
+    var filtered = allBatches.filter(function(b) {
+      if (q && !(b.name||'').toLowerCase().includes(q) && !(b.id||'').toLowerCase().includes(q)) return false;
+      if (type && b.birdType !== type) return false;
+      if (status && b.status !== status) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="icon">📋</div><h3>No batches found</h3><p>Register a new batch to get started.</p></div></td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(function(b) {
+      var age = calcAge(b.startDate);
+      var badgeClass = b.status === 'active' ? 'badge-green' : (b.status === 'sold' ? 'badge-blue' : 'badge-gray');
+      var shortId = b.id.length > 8 ? b.id.substring(0,8)+'...' : b.id;
+      return '<tr onclick="showBatchDetail(\'' + b.id + '\')">' +
+        '<td><strong>' + shortId + '</strong></td>' +
+        '<td>' + (b.name||'Unnamed') + '</td>' +
+        '<td>' + (b.birdType||'—') + '</td>' +
+        '<td>' + (b.breed||'—') + '</td>' +
+        '<td>' + formatNumber(b.flockSize||0) + '</td>' +
+        '<td>' + (b.house||'—') + '</td>' +
+        '<td>' + age + '</td>' +
+        '<td><span class="badge ' + badgeClass + '">' + (b.status||'—') + '</span></td>' +
+        '<td class="actions"><button class="edit-btn" onclick="event.stopPropagation();editBatch(\'' + b.id + '\')">✏️</button><button class="delete-btn" onclick="event.stopPropagation();deleteBatch(\'' + b.id + '\')">🗑️</button></td>' +
+      '</tr>';
+    }).join('');
+
+    // Populate year filter
+    var yearFilter = document.getElementById('filterYear');
+    var years = {};
+    allBatches.forEach(function(b) {
+      var d = b.startDate ? (b.startDate.toDate ? b.startDate.toDate() : new Date(b.startDate)) : new Date();
+      years[d.getFullYear()] = true;
+    });
+    var currentHtml = yearFilter.innerHTML;
+    var yearOpts = '<option value="">All Years</option>';
+    Object.keys(years).sort().forEach(function(y) { yearOpts += '<option value="' + y + '">' + y + '</option>'; });
+    if (yearFilter.innerHTML !== yearOpts) yearFilter.innerHTML = yearOpts;
+  }
+
+  window.showBatchDetail = function(id) {
+    var b = allBatches.find(function(x) { return x.id === id; });
+    if (!b) return;
+    var prodCount = allProduction.filter(function(p) { return p.batchId === id; }).length;
+    var eggs = parseInt(b.eggsPerDay)||0;
+    var hd = calculateHenDay(eggs, b.flockSize).toFixed(1);
+    var age = calcAge(b.startDate);
+    var html = '<div class="batch-detail-stats">' +
+      '<div class="batch-detail-stat"><div class="val">' + formatNumber(b.flockSize||0) + '</div><div class="lbl">Flock Size</div></div>' +
+      '<div class="batch-detail-stat"><div class="val">' + formatNumber(eggs) + '</div><div class="lbl">Eggs/Day</div></div>' +
+      '<div class="batch-detail-stat"><div class="val">' + hd + '%</div><div class="lbl">Hen Day %</div></div>' +
+      '<div class="batch-detail-stat"><div class="val">' + (b.mortality||0) + '</div><div class="lbl">Mortality</div></div>' +
+      '<div class="batch-detail-stat"><div class="val">' + (b.feedPerDay||0) + ' kg</div><div class="lbl">Feed/Day</div></div>' +
+      '<div class="batch-detail-stat"><div class="val">' + prodCount + '</div><div class="lbl">Prod. Records</div></div>' +
+    '</div>' +
+    '<table style="font-size:13px;"><tbody>' +
+      '<tr><td style="padding:6px 12px;font-weight:500;">Batch Name</td><td>' + (b.name||'—') + '</td></tr>' +
+      '<tr><td style="padding:6px 12px;font-weight:500;">Bird Type</td><td>' + (b.birdType||'—') + '</td></tr>' +
+      '<tr><td style="padding:6px 12px;font-weight:500;">Breed</td><td>' + (b.breed||'—') + '</td></tr>' +
+      '<tr><td style="padding:6px 12px;font-weight:500;">House</td><td>' + (b.house||'—') + '</td></tr>' +
+      '<tr><td style="padding:6px 12px;font-weight:500;">Age</td><td>' + age + '</td></tr>' +
+      '<tr><td style="padding:6px 12px;font-weight:500;">Status</td><td><span class="badge ' + (b.status==='active'?'badge-green':'badge-gray') + '">' + (b.status||'—') + '</span></td></tr>' +
+    '</tbody></table>' +
+    '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">' +
+      '<button class="btn btn-sm btn-primary" onclick="window.location.href=\'production-log.html?batch=' + id + '\'">🥚 Log Production</button>' +
+      '<button class="btn btn-sm btn-secondary" onclick="window.location.href=\'feed-expenses.html?batch=' + id + '\'">🌾 Feed</button>' +
+      '<button class="btn btn-sm btn-secondary" onclick="window.location.href=\'health-vet.html?batch=' + id + '\'">💉 Health</button>' +
+      '<button class="btn btn-sm btn-secondary" onclick="closeModal();editBatch(\'' + id + '\')">✏️ Edit</button>' +
+    '</div>';
+    openModal(html, '📋 ' + (b.name||'Batch Detail'));
+  };
+
+  function openBatchModal(batchData) {
+    var isEdit = !!batchData;
+    var b = batchData || {};
+    var title = isEdit ? 'Edit Batch' : 'Register New Batch';
+    var html = '<form id="batchForm" onsubmit="return saveBatch(event)"><input type="hidden" id="batchId" value="' + (b.id||'') + '">' +
+      '<div class="form-row"><div class="form-group"><label class="form-label">Batch Name</label><input type="text" id="batchName" class="form-input" value="' + (b.name||'') + '" required placeholder="e.g. Batch A"></div>' +
+      '<div class="form-group"><label class="form-label">Bird Type</label><select id="batchType" class="form-select" required>' +
+      '<option value="">Select...</option><option value="Layers"' + (b.birdType==='Layers'?' selected':'') + '>Layers</option><option value="Broilers"' + (b.birdType==='Broilers'?' selected':'') + '>Broilers</option><option value="Kienyeji"' + (b.birdType==='Kienyeji'?' selected':'') + '>Kienyeji</option><option value="Dual Purpose"' + (b.birdType==='Dual Purpose'?' selected':'') + '>Dual Purpose</option></select></div></div>' +
+      '<div class="form-row"><div class="form-group"><label class="form-label">Breed</label><input type="text" id="batchBreed" class="form-input" value="' + (b.breed||'') + '" placeholder="e.g. Hy-Line Brown"></div>' +
+      '<div class="form-group"><label class="form-label">House</label><input type="text" id="batchHouse" class="form-input" value="' + (b.house||'') + '" placeholder="e.g. House A"></div></div>' +
+      '<div class="form-row"><div class="form-group"><label class="form-label">Start Date</label><input type="date" id="batchDate" class="form-input" value="' + (b.startDate ? formatDateInput(b.startDate) : '') + '" required></div>' +
+      '<div class="form-group"><label class="form-label">Status</label><select id="batchStatus" class="form-select"><option value="active"' + (b.status==='active'?' selected':'') + '>Active</option><option value="sold"' + (b.status==='sold'?' selected':'') + '>Sold</option><option value="depleted"' + (b.status==='depleted'?' selected':'') + '>Depleted</option></select></div></div>' +
+      '<div class="form-row"><div class="form-group"><label class="form-label">Flock Size</label><input type="number" id="batchFlock" class="form-input" value="' + (b.flockSize||'') + '" min="0" required></div>' +
+      '<div class="form-group"><label class="form-label">Eggs/Day</label><input type="number" id="batchEggs" class="form-input" value="' + (b.eggsPerDay||'') + '" min="0"></div></div>' +
+      '<div class="form-row"><div class="form-group"><label class="form-label">Mortality (total)</label><input type="number" id="batchMortality" class="form-input" value="' + (b.mortality||'') + '" min="0"></div>' +
+      '<div class="form-group"><label class="form-label">Feed/Day (kg)</label><input type="number" id="batchFeed" class="form-input" value="' + (b.feedPerDay||'') + '" min="0" step="0.5"></div></div>' +
+      '<div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);margin-top:16px;">' +
+      '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button><button type="submit" class="btn btn-primary">' + (isEdit ? 'Update Batch' : 'Register Batch') + '</button></div></form>';
+    openModal(html, title);
+  }
+
+  window.openBatchModal = openBatchModal;
+
+  function formatDateInput(date) {
+    if (!date) return '';
+    if (typeof date === 'string') date = new Date(date);
+    if (date.toDate) date = date.toDate();
+    return date.toISOString().split('T')[0];
+  }
+
+  window.saveBatch = async function(e) {
+    e.preventDefault();
+    var id = document.getElementById('batchId').value;
+    var data = {
+      name: document.getElementById('batchName').value.trim(),
+      birdType: document.getElementById('batchType').value,
+      breed: document.getElementById('batchBreed').value.trim(),
+      house: document.getElementById('batchHouse').value.trim(),
+      startDate: new Date(document.getElementById('batchDate').value),
+      status: document.getElementById('batchStatus').value,
+      flockSize: parseInt(document.getElementById('batchFlock').value)||0,
+      eggsPerDay: parseInt(document.getElementById('batchEggs').value)||0,
+      mortality: parseInt(document.getElementById('batchMortality').value)||0,
+      feedPerDay: parseFloat(document.getElementById('batchFeed').value)||0,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    try {
+      if (id) { await db.collection('poultryBatches').doc(id).update(data); showToast('Batch updated', 'success'); }
+      else { data.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('poultryBatches').add(data); showToast('Batch registered', 'success'); }
+      closeModal();
+    } catch(err) {
+      console.error(err);
+      if (id) { var idx = allBatches.findIndex(function(x) { return x.id === id; }); if (idx>=0) { allBatches[idx] = {id:id,...data}; renderTable(); } }
+      else { data.id = 'local_'+Date.now(); allBatches.unshift(data); renderTable(); }
+      closeModal(); showToast('Batch saved locally', 'info');
+    }
+    return false;
+  };
+
+  window.editBatch = function(id) {
+    var b = allBatches.find(function(x) { return x.id === id; });
+    if (b) openBatchModal(b);
+  };
+
+  window.deleteBatch = async function(id) {
+    if (!confirm('Delete this batch and all associated data?')) return;
+    try { await db.collection('poultryBatches').doc(id).delete(); showToast('Batch deleted', 'success'); }
+    catch(err) { allBatches = allBatches.filter(function(b) { return b.id !== id; }); renderTable(); showToast('Batch removed locally', 'info'); }
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(loadBatches, 300);
+    ['searchBatch','filterType','filterStatus','filterYear'].forEach(function(fid) {
+      document.getElementById(fid).addEventListener('change', renderTable);
+      document.getElementById(fid).addEventListener('input', renderTable);
+    });
+  });
+})();
+</script>
+</body>
+</html>

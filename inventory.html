@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Inventory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <style>
+    .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 768px) { .inv-grid { grid-template-columns: 1fr; } }
+    .inv-table-wrap { overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border-light); }
+    .inv-table-wrap table { min-width: 700px; }
+    .inv-qty { font-weight: 600; }
+    .inv-value { font-weight: 600; color: var(--primary-green); }
+    .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+    .status-badge.ok { background: var(--primary-light); color: var(--primary-dark); }
+    .status-badge.low { background: #FFF8E1; color: #F57F17; }
+    .status-badge.out { background: #FFEBEE; color: #C62828; }
+    .inv-stock-btn { position: relative; }
+    .movement-history { max-height: 300px; overflow-y: auto; }
+    .movement-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid var(--border-light); font-size: 13px; }
+    .movement-item:last-child { border-bottom: none; }
+    .movement-item .mov-type { font-weight: 600; }
+    .movement-item .mov-type.in { color: var(--primary-green); }
+    .movement-item .mov-type.out { color: var(--accent-red); }
+    .movement-item .mov-qty { font-weight: 500; }
+    .movement-item .mov-date { color: var(--text-secondary); font-size: 12px; }
+    .category-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .category-pill { padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border-medium); font-size: 13px; cursor: pointer; transition: var(--transition); background: var(--surface-white); color: var(--text-secondary); }
+    .category-pill:hover { border-color: var(--primary-green); color: var(--primary-green); }
+    .category-pill.active { background: var(--primary-green); color: white; border-color: var(--primary-green); }
+    .bottom-nav { display: none; }
+    @media (max-width: 640px) {
+      .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: #1B4332; z-index: 100; padding: 4px 0; justify-content: space-around; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+      .bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; color: rgba(255,255,255,0.6); font-size: 10px; padding: 6px 12px; text-decoration: none; }
+      .bottom-nav a.active, .bottom-nav a:hover { color: white; }
+      .bottom-nav a .nav-icon { font-size: 20px; }
+      .page-content { padding-bottom: 80px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><span style="font-size:28px;">🌿</span><span>AgriLedger</span></div>
+    <div class="sidebar-user">
+      <div class="avatar"><span class="user-avatar-text">U</span></div>
+      <div class="user-info">
+        <div class="name sidebar-user-name">Loading...</div>
+        <div class="role sidebar-user-role">general</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <div class="nav-section">FARMING</div>
+      <a href="farming/crops.html"><span class="nav-icon">🌾</span><span class="nav-text">Crops</span></a>
+      <a href="farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+      <a href="farming/poultry.html"><span class="nav-icon">🐔</span><span class="nav-text">Poultry</span></a>
+      <a href="farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+      <div class="nav-section">FINANCE</div>
+      <a href="inventory.html" class="active"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+      <a href="cashbook.html"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+      <a href="journal.html"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+      <div class="nav-section">BUSINESS</div>
+      <a href="contracts.html"><span class="nav-icon">📋</span><span class="nav-text">Contracts</span></a>
+      <a href="property.html"><span class="nav-icon">🏠</span><span class="nav-text">Property</span></a>
+      <a href="transport.html"><span class="nav-icon">🚛</span><span class="nav-text">Transport</span></a>
+      <a href="reports.html"><span class="nav-icon">📈</span><span class="nav-text">Reports</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a>
+      <a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle">☰</button>
+        <div class="breadcrumb">
+          <a href="dashboard.html">Dashboard</a><span class="sep">›</span><span>Inventory</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="notification-btn">🔔<span class="badge badge-red">3</span></button>
+        <button class="profile-btn" onclick="window.location.href='settings.html'">
+          <div class="avatar"><span class="user-avatar-text">J</span></div>
+          <span class="sidebar-user-name" style="font-size:13px;">User</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header">
+        <div class="page-header-row">
+          <h1>Inventory Management</h1>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-secondary" onclick="toggleMovementHistory()">📜 Movement History</button>
+            <button class="btn btn-secondary" onclick="openStockMovementModal()">📦 Stock Movement</button>
+            <button class="btn btn-primary" onclick="openAddItemModal()">➕ Add Item</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="category-pills" id="categoryPills">
+        <span class="category-pill active" data-cat="All">All</span>
+        <span class="category-pill" data-cat="Seeds">Seeds</span>
+        <span class="category-pill" data-cat="Feed">Feed</span>
+        <span class="category-pill" data-cat="Medicine">Medicine</span>
+        <span class="category-pill" data-cat="Equipment">Equipment</span>
+        <span class="category-pill" data-cat="Fertilizer">Fertilizer</span>
+        <span class="category-pill" data-cat="Other">Other</span>
+      </div>
+
+      <div class="inv-grid">
+        <div class="card" style="grid-column:1/-1;">
+          <div class="card-header">
+            <h3>Inventory Items</h3>
+            <span id="itemCount" style="font-size:13px;color:var(--text-secondary);">0 items</span>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="inv-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Item Name</th>
+                    <th>Category</th>
+                    <th>Qty</th>
+                    <th>Unit</th>
+                    <th>Unit Price</th>
+                    <th>Value</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="inventoryBody">
+                  <tr><td colspan="8"><div class="loading-spinner"></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="movementPanel" style="display:none;grid-column:1/-1;">
+          <div class="card-header">
+            <h3>Stock Movement History</h3>
+            <button class="btn btn-sm btn-secondary" onclick="toggleMovementHistory()">✕ Close</button>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="movement-history" id="movementList">
+              <div class="loading-spinner"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="dashboard.html"><span class="nav-icon">📊</span>Home</a>
+    <a href="inventory.html" class="active"><span class="nav-icon">📦</span>Inventory</a>
+    <a href="cashbook.html"><span class="nav-icon">💰</span>Cashbook</a>
+    <a href="journal.html"><span class="nav-icon">📓</span>Journal</a>
+    <a href="settings.html"><span class="nav-icon">⚙️</span>More</a>
+  </nav>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script>
+(function() {
+  var allItems = [];
+  var allMovements = [];
+  var activeCat = 'All';
+  var itemUnsub = null, movUnsub = null;
+
+  function getStatusBadge(status) {
+    var cls = status === 'OK' ? 'ok' : (status === 'Low' ? 'low' : 'out');
+    return '<span class="status-badge ' + cls + '">' + (status === 'OK' ? '● OK' : (status === 'Low' ? '● Low' : '● Out')) + '</span>';
+  }
+
+  function renderItems(items) {
+    var tbody = document.getElementById('inventoryBody');
+    if (!tbody) return;
+    if (items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon">📦</div><h3>No inventory items</h3><p>Add items to start tracking your stock.</p></div></td></tr>';
+      document.getElementById('itemCount').textContent = '0 items';
+      return;
+    }
+    tbody.innerHTML = items.map(function(item) {
+      var qty = parseFloat(item.quantity) || 0;
+      var price = parseFloat(item.unitPrice) || 0;
+      var value = qty * price;
+      var status = item.status || (qty <= 0 ? 'Out' : qty < 10 ? 'Low' : 'OK');
+      return '<tr>' +
+        '<td><strong>' + (item.name || 'Unnamed') + '</strong></td>' +
+        '<td>' + (item.category || 'Other') + '</td>' +
+        '<td class="inv-qty">' + formatNumber(qty) + '</td>' +
+        '<td>' + (item.unit || 'pcs') + '</td>' +
+        '<td>' + formatCurrency(price) + '</td>' +
+        '<td class="inv-value">' + formatCurrency(value) + '</td>' +
+        '<td>' + getStatusBadge(status) + '</td>' +
+        '<td><div class="actions"><button class="edit-btn" onclick="editItem(\'' + item.id + '\')">✏️</button><button class="delete-btn" onclick="deleteItem(\'' + item.id + '\')">🗑️</button></div></td>' +
+      '</tr>';
+    }).join('');
+    document.getElementById('itemCount').textContent = items.length + ' items';
+  }
+
+  function renderMovements(movements) {
+    var el = document.getElementById('movementList');
+    if (!el) return;
+    if (movements.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">📜</div><p>No stock movements recorded yet.</p></div>';
+      return;
+    }
+    el.innerHTML = movements.slice().reverse().map(function(m) {
+      var type = m.type === 'in' ? 'in' : 'out';
+      return '<div class="movement-item">' +
+        '<div><span class="mov-type ' + type + '">' + (type === 'in' ? 'IN' : 'OUT') + '</span> <strong>' + (m.itemName || m.item || '') + '</strong></div>' +
+        '<div><span class="mov-qty">' + (type === 'in' ? '+' : '-') + formatNumber(m.quantity || 0) + ' ' + (m.unit || '') + '</span> <span class="mov-date">' + formatDate(m.date) + '</span></div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function filterByCategory(cat) {
+    activeCat = cat;
+    document.querySelectorAll('.category-pill').forEach(function(p) {
+      p.classList.toggle('active', p.dataset.cat === cat);
+    });
+    var filtered = cat === 'All' ? allItems : allItems.filter(function(i) { return (i.category || 'Other') === cat; });
+    renderItems(filtered);
+  }
+
+  function loadData() {
+    if (itemUnsub) itemUnsub();
+    if (movUnsub) movUnsub();
+    itemUnsub = db.collection('inventory').onSnapshot(function(snap) {
+      allItems = [];
+      snap.forEach(function(d) { allItems.push({ id: d.id, ...d.data() }); });
+      if (allItems.length === 0) { loadDemoItems(); }
+      else { filterByCategory(activeCat); }
+    }, function() { loadDemoItems(); });
+    movUnsub = db.collection('stockMovements').orderBy('date', 'desc').limit(100).onSnapshot(function(snap) {
+      allMovements = [];
+      snap.forEach(function(d) { allMovements.push({ id: d.id, ...d.data() }); });
+      if (allMovements.length === 0) loadDemoMovements();
+      else renderMovements(allMovements);
+    }, function() { loadDemoMovements(); });
+  }
+
+  function loadDemoItems() {
+    allItems = [
+      { id: 'd1', name: 'Maize Seeds H513', category: 'Seeds', quantity: 50, unit: 'kg', unitPrice: 220, status: 'OK' },
+      { id: 'd2', name: 'Dairy Meal', category: 'Feed', quantity: 12, unit: 'bags', unitPrice: 1800, status: 'Low' },
+      { id: 'd3', name: 'Dewormer', category: 'Medicine', quantity: 3, unit: 'bottles', unitPrice: 850, status: 'Low' },
+      { id: 'd4', name: 'DAP Fertilizer', category: 'Fertilizer', quantity: 0, unit: 'kg', unitPrice: 3200, status: 'Out' },
+      { id: 'd5', name: 'Poultry Feed Layers', category: 'Feed', quantity: 30, unit: 'bags', unitPrice: 1400, status: 'OK' },
+      { id: 'd6', name: 'Sprayer 16L', category: 'Equipment', quantity: 4, unit: 'pcs', unitPrice: 2500, status: 'OK' },
+      { id: 'd7', name: 'Urea Fertilizer', category: 'Fertilizer', quantity: 8, unit: 'kg', unitPrice: 2800, status: 'Low' },
+      { id: 'd8', name: 'Milking Gloves', category: 'Other', quantity: 20, unit: 'pairs', unitPrice: 180, status: 'OK' }
+    ];
+    filterByCategory(activeCat);
+  }
+
+  function loadDemoMovements() {
+    allMovements = [
+      { id: 'm1', itemName: 'Dairy Meal', type: 'in', quantity: 20, unit: 'bags', date: new Date(2026, 5, 28) },
+      { id: 'm2', itemName: 'Maize Seeds H513', type: 'out', quantity: 10, unit: 'kg', date: new Date(2026, 5, 27) },
+      { id: 'm3', itemName: 'Dewormer', type: 'out', quantity: 1, unit: 'bottles', date: new Date(2026, 5, 25) }
+    ];
+    renderMovements(allMovements);
+  }
+
+  window.openAddItemModal = function(data) {
+    var isEdit = !!data;
+    var d = data || {};
+    var title = isEdit ? 'Edit Item' : 'Add Inventory Item';
+    var html = '<form id="itemForm" onsubmit="return saveItem(event)">' +
+      '<input type="hidden" id="itemId" value="' + (d.id || '') + '">' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Item Name</label><input type="text" id="itemName" class="form-input" value="' + (d.name || '') + '" required></div>' +
+        '<div class="form-group"><label class="form-label">Category</label><select id="itemCategory" class="form-select">' +
+          ['Seeds','Feed','Medicine','Equipment','Fertilizer','Other'].map(function(c) { return '<option value="' + c + '"' + (d.category === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') +
+        '</select></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Quantity</label><input type="number" id="itemQty" class="form-input" value="' + (d.quantity || '') + '" step="0.1" min="0" required></div>' +
+        '<div class="form-group"><label class="form-label">Unit</label><input type="text" id="itemUnit" class="form-input" value="' + (d.unit || '') + '" placeholder="kg, bags, pcs..." required></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Unit Price (KSh)</label><input type="number" id="itemPrice" class="form-input" value="' + (d.unitPrice || '') + '" min="0"></div>' +
+        '<div class="form-group"><label class="form-label">Status</label><select id="itemStatus" class="form-select">' +
+          '<option value="OK"' + (d.status === 'OK' ? ' selected' : '') + '>OK</option>' +
+          '<option value="Low"' + (d.status === 'Low' ? ' selected' : '') + '>Low</option>' +
+          '<option value="Out"' + (d.status === 'Out' ? ' selected' : '') + '>Out</option>' +
+        '</select></div>' +
+      '</div>' +
+      '<div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);margin-top:16px;">' +
+        '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>' +
+        '<button type="submit" class="btn btn-primary">' + (isEdit ? 'Update' : 'Add Item') + '</button>' +
+      '</div></form>';
+    openModal(html, title);
+  };
+
+  window.saveItem = async function(e) {
+    e.preventDefault();
+    var id = document.getElementById('itemId').value;
+    var data = {
+      name: document.getElementById('itemName').value.trim(),
+      category: document.getElementById('itemCategory').value,
+      quantity: parseFloat(document.getElementById('itemQty').value) || 0,
+      unit: document.getElementById('itemUnit').value.trim(),
+      unitPrice: parseFloat(document.getElementById('itemPrice').value) || 0,
+      status: document.getElementById('itemStatus').value,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    try {
+      if (id) { await db.collection('inventory').doc(id).update(data); showToast('Item updated', 'success'); }
+      else { data.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('inventory').add(data); showToast('Item added', 'success'); }
+      closeModal();
+    } catch (err) {
+      showToast('Error: ' + err.message, 'error');
+    }
+    return false;
+  };
+
+  window.editItem = function(id) {
+    var item = allItems.find(function(i) { return i.id === id; });
+    if (item) window.openAddItemModal(item);
+  };
+
+  window.deleteItem = async function(id) {
+    if (!confirm('Delete this item?')) return;
+    try { await db.collection('inventory').doc(id).delete(); showToast('Item deleted', 'success'); }
+    catch (err) {
+      allItems = allItems.filter(function(i) { return i.id !== id; });
+      filterByCategory(activeCat);
+      showToast('Item removed', 'success');
+    }
+  };
+
+  window.openStockMovementModal = function() {
+    var itemOpts = allItems.map(function(i) { return '<option value="' + i.id + '" data-name="' + (i.name||'') + '" data-unit="' + (i.unit||'') + '">' + (i.name||'') + '</option>'; }).join('');
+    var html = '<form id="movementForm" onsubmit="return saveMovement(event)">' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Movement Type</label><select id="movType" class="form-select"><option value="in">Stock In</option><option value="out">Stock Out</option></select></div>' +
+        '<div class="form-group"><label class="form-label">Item</label><select id="movItem" class="form-select" required><option value="">Select item...</option>' + itemOpts + '</select></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Quantity</label><input type="number" id="movQty" class="form-input" step="0.1" min="0.1" required></div>' +
+        '<div class="form-group"><label class="form-label">Unit</label><input type="text" id="movUnit" class="form-input" placeholder="kg, bags..." required></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Unit Price (KSh)</label><input type="number" id="movPrice" class="form-input" min="0" value="0"></div>' +
+        '<div class="form-group"><label class="form-label">Payment Method</label><select id="movPayment" class="form-select"><option value="">None</option><option value="Cash">Cash</option><option value="M-Pesa">M-Pesa</option><option value="Bank">Bank</option><option value="Cheque">Cheque</option></select></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Date</label><input type="date" id="movDate" class="form-input" value="' + new Date().toISOString().split('T')[0] + '"></div>' +
+        '<div class="form-group"><label class="form-label">Notes</label><input type="text" id="movNotes" class="form-input" placeholder="Optional notes"></div>' +
+      '</div>' +
+      '<label class="form-checkbox" style="margin-bottom:16px;"><input type="checkbox" id="movAutoTxn" checked> Auto-create transaction entry</label>' +
+      '<div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);">' +
+        '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>' +
+        '<button type="submit" class="btn btn-primary">Record Movement</button>' +
+      '</div></form>';
+    openModal(html, 'Stock Movement');
+    document.getElementById('movItem').addEventListener('change', function() {
+      var sel = this.options[this.selectedIndex];
+      if (sel) {
+        var unit = sel.dataset.unit || '';
+        if (unit) document.getElementById('movUnit').value = unit;
+      }
+    });
+  };
+
+  window.saveMovement = async function(e) {
+    e.preventDefault();
+    var itemSel = document.getElementById('movItem');
+    var itemId = itemSel.value;
+    var itemName = itemSel.options[itemSel.selectedIndex]?.dataset.name || '';
+    var unit = document.getElementById('movUnit').value.trim();
+    var qty = parseFloat(document.getElementById('movQty').value) || 0;
+    var price = parseFloat(document.getElementById('movPrice').value) || 0;
+    var payment = document.getElementById('movPayment').value;
+    var date = document.getElementById('movDate').value ? new Date(document.getElementById('movDate').value + 'T12:00:00') : new Date();
+    var notes = document.getElementById('movNotes').value.trim();
+    var autoTxn = document.getElementById('movAutoTxn').checked;
+    var type = document.getElementById('movType').value;
+    var data = { item: itemId, itemName: itemName, type: type, quantity: qty, unit: unit, unitPrice: price, paymentMethod: payment, date: date, notes: notes, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+    try {
+      await db.collection('stockMovements').add(data);
+      if (autoTxn && price > 0 && qty > 0) {
+        await db.collection('transactions').add({
+          type: type === 'in' ? 'expense' : 'income',
+          description: (type === 'in' ? 'Stock in: ' : 'Stock out: ') + itemName + ' (' + qty + ' ' + unit + ')',
+          amount: price * qty,
+          paymentMethod: payment || 'Cash',
+          category: 'Stock',
+          date: date,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+      showToast('Movement recorded', 'success');
+      closeModal();
+    } catch (err) {
+      showToast('Error: ' + err.message, 'error');
+    }
+    return false;
+  };
+
+  window.toggleMovementHistory = function() {
+    var panel = document.getElementById('movementPanel');
+    if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    loadData();
+    document.querySelectorAll('.category-pill').forEach(function(p) {
+      p.addEventListener('click', function() { filterByCategory(this.dataset.cat); });
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Production Log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <style>
+    .production-form { background: var(--surface-white); border-radius: var(--radius-md); border: 1px solid var(--border-light); padding: 20px; margin-bottom: 24px; }
+    .production-form h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+    .summary-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .summary-card { background: var(--surface-white); border-radius: var(--radius-md); padding: 16px; border: 1px solid var(--border-light); text-align: center; }
+    .summary-card .sc-value { font-size: 22px; font-weight: 700; color: var(--primary-green); }
+    .summary-card .sc-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+    .chart-section { margin-bottom: 24px; }
+    .chart-section canvas { width: 100% !important; height: 250px !important; }
+    .toggle-section { margin-bottom: 16px; }
+    .toggle-header { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 0; font-weight: 500; font-size: 14px; color: var(--primary-green); }
+    .toggle-header:hover { opacity: 0.8; }
+    .toggle-body { display: none; padding: 12px; background: var(--bg-cream); border-radius: var(--radius-sm); margin-top: 8px; }
+    .toggle-body.open { display: block; }
+    .auto-field { background: var(--bg-cream) !important; }
+    .form-auto { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><span>🌱</span><span>AgriLedger</span></div>
+    <div class="sidebar-user"><div class="avatar user-avatar-text">J</div><div class="user-info"><div class="name sidebar-user-name">User</div><div class="role sidebar-user-role">general</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="../dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <div class="nav-section">POULTRY</div>
+      <a href="poultry-dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <a href="farm-setup.html"><span class="nav-icon">⚙️</span><span class="nav-text">Farm Setup</span></a>
+      <a href="flock-register.html"><span class="nav-icon">📋</span><span class="nav-text">Flock Register</span></a>
+      <a href="production-log.html" class="active"><span class="nav-icon">🥚</span><span class="nav-text">Production Log</span></a>
+      <a href="sales.html"><span class="nav-icon">💰</span><span class="nav-text">Sales</span></a>
+      <a href="other-income.html"><span class="nav-icon">💵</span><span class="nav-text">Other Income</span></a>
+      <a href="feed-expenses.html"><span class="nav-icon">🌾</span><span class="nav-text">Feed Expenses</span></a>
+      <a href="health-vet.html"><span class="nav-icon">💉</span><span class="nav-text">Health &amp; Vet</span></a>
+      <a href="mortality.html"><span class="nav-icon">⚰️</span><span class="nav-text">Mortality</span></a>
+      <a href="batch-summary.html"><span class="nav-icon">📈</span><span class="nav-text">Batch Summary</span></a>
+      <div class="nav-section">MAIN</div>
+      <a href="../farming/crops.html"><span class="nav-icon">🌾</span><span class="nav-text">Crops</span></a>
+      <a href="../farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+      <a href="../farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+      <a href="../inventory.html"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+      <a href="../cashbook.html"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+      <a href="../journal.html"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+    </nav>
+    <div class="sidebar-footer"><a href="../settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a><a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a></div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><button class="topbar-toggle" id="sidebar-toggle">☰</button><div class="breadcrumb"><a href="../dashboard.html">Dashboard</a><span class="sep">›</span><a href="poultry-dashboard.html">Poultry</a><span class="sep">›</span><span>Production Log</span></div></div>
+      <div class="topbar-right"><button class="notification-btn">🔔<span class="badge badge-red">3</span></button><button class="profile-btn" onclick="window.location.href='../settings.html'"><div class="avatar user-avatar-text">J</div><span class="sidebar-user-name" style="font-size:13px;">User</span></button></div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header"><div class="page-header-row"><div><h1>Production Log</h1><p style="font-size:14px;color:var(--text-secondary);">Record daily egg production and broiler weights</p></div></div></div>
+
+      <div class="summary-strip" id="summaryStrip">
+        <div class="summary-card"><div class="sc-value" id="monthlyTrays">0</div><div class="sc-label">Monthly Total Trays</div></div>
+        <div class="summary-card"><div class="sc-value" id="avgLayerRate">0%</div><div class="sc-label">Avg Layer Rate</div></div>
+        <div class="summary-card"><div class="sc-value" id="avgKienyejiRate">0%</div><div class="sc-label">Avg Kienyeji Rate</div></div>
+        <div class="summary-card"><div class="sc-value" id="todayEggs">0</div><div class="sc-label">Total Eggs Today</div></div>
+      </div>
+
+      <div class="production-form">
+        <h3>📝 Record Production</h3>
+        <form id="prodForm" onsubmit="return saveProduction(event)">
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Date</label><input type="date" id="prodDate" class="form-input" required></div>
+            <div class="form-group"><label class="form-label">Batch</label><select id="prodBatch" class="form-select" required onchange="onBatchChange()"><option value="">Select Batch</option></select></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Bird Type</label><input type="text" id="prodBirdType" class="form-input auto-field" readonly></div>
+            <div class="form-group"><label class="form-label">Flock Size</label><input type="number" id="prodFlockSize" class="form-input auto-field" readonly></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Morning Eggs</label><input type="number" id="prodMorning" class="form-input" min="0" oninput="calcAutoFields()" required></div>
+            <div class="form-group"><label class="form-label">Afternoon Eggs</label><input type="number" id="prodAfternoon" class="form-input" min="0" oninput="calcAutoFields()" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Total Eggs (Auto)</label><input type="number" id="prodTotal" class="form-input auto-field" readonly></div>
+            <div class="form-group"><label class="form-label">Saleable Eggs (Auto)</label><input type="number" id="prodSaleable" class="form-input auto-field" readonly></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Hen Day % (Auto)</label><input type="text" id="prodHenDay" class="form-input auto-field" readonly></div>
+            <div class="form-group"><label class="form-label">Trays (Auto)</label><input type="text" id="prodTrays" class="form-input auto-field" readonly></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Broken / Culled</label><input type="number" id="prodBroken" class="form-input" min="0" value="0" oninput="calcAutoFields()"></div>
+            <div class="form-group"><label class="form-label">Notes</label><input type="text" id="prodNotes" class="form-input" placeholder="Optional notes"></div>
+          </div>
+          <button type="submit" class="btn btn-primary">💾 Save Production Record</button>
+        </form>
+      </div>
+
+      <div class="toggle-section">
+        <div class="toggle-header" onclick="toggleBroiler()">🍗 <span>Broiler Weight Gain Recording</span> <span style="font-size:12px;" id="broilerToggle">▶ Show</span></div>
+        <div class="toggle-body" id="broilerSection">
+          <form id="broilerForm" onsubmit="return saveBroilerWeight(event)" style="margin-bottom:12px;">
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Date</label><input type="date" id="broilerDate" class="form-input" required></div>
+              <div class="form-group"><label class="form-label">Batch (Broilers only)</label><select id="broilerBatch" class="form-select" required><option value="">Select Broiler Batch</option></select></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Sample Size (birds)</label><input type="number" id="broilerSample" class="form-input" min="1" required></div>
+              <div class="form-group"><label class="form-label">Total Weight (kg)</label><input type="number" id="broilerWeight" class="form-input" step="0.1" required></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Avg Weight/Bird (Auto)</label><input type="text" id="broilerAvg" class="form-input auto-field" readonly></div>
+              <div class="form-group"><label class="form-label">Age (weeks)</label><input type="number" id="broilerAge" class="form-input" min="0" step="0.5"></div>
+            </div>
+            <button type="submit" class="btn btn-primary">💾 Save Weight</button>
+          </form>
+          <div class="table-container" id="broilerTableContainer"></div>
+        </div>
+      </div>
+
+      <div class="chart-section">
+        <div class="chart-container"><h3>📈 Production Trend (Last 30 Days)</h3><canvas id="prodTrendChart"></canvas></div>
+      </div>
+
+      <div class="table-container">
+        <table id="prodTable">
+          <thead><tr><th>Date</th><th>Batch ID</th><th>Flock Size</th><th>Bird Type</th><th>Morning</th><th>Afternoon</th><th>Total</th><th>Saleable</th><th>Hen Day%</th><th>Trays</th><th>Broken/Culled</th><th>Notes</th></tr></thead>
+          <tbody id="prodTableBody"><tr><td colspan="12"><div class="loading-spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="../js/firebase-config.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+(function() {
+  var allBatches = [], allProduction = [], allBroilerWeights = [];
+  var trendChart = null;
+
+  function loadData() {
+    db.collection('poultryBatches').onSnapshot(function(snap) {
+      allBatches = [];
+      snap.forEach(function(d) { allBatches.push({ id: d.id, ...d.data() }); });
+      if (allBatches.length === 0) loadDemo();
+      else populateBatchSelects();
+    }, function() { loadDemo(); });
+
+    db.collection('poultryProduction').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
+      allProduction = [];
+      snap.forEach(function(d) { allProduction.push({ id: d.id, ...d.data() }); });
+      renderTable();
+      renderSummary();
+      drawChart();
+    }, function() {});
+
+    db.collection('broilerWeights').orderBy('date','desc').limit(100).onSnapshot(function(snap) {
+      allBroilerWeights = [];
+      snap.forEach(function(d) { allBroilerWeights.push({ id: d.id, ...d.data() }); });
+      renderBroilerTable();
+    }, function() {});
+  }
+
+  function loadDemo() {
+    allBatches = [
+      { id:'d1', name:'Batch A - Layers', birdType:'Layers', flockSize:500, eggsPerDay:420, status:'active' },
+      { id:'d2', name:'Batch B - Broilers', birdType:'Broilers', flockSize:300, eggsPerDay:0, status:'active' },
+      { id:'d3', name:'Batch C - Kienyeji', birdType:'Kienyeji', flockSize:200, eggsPerDay:140, status:'active' }
+    ];
+    populateBatchSelects();
+    allProduction = [];
+    var now = new Date();
+    for (var i = 29; i >= 0; i--) {
+      var d = new Date(now); d.setDate(d.getDate() - i);
+      var m = Math.floor(180 + Math.random() * 60);
+      var a = Math.floor(160 + Math.random() * 50);
+      var total = m + a;
+      var flock = 500;
+      allProduction.push({ id:'pd_' + i, date:d, batchId:'d1', batchName:'Batch A - Layers', birdType:'Layers', flockSize:flock, morning:m, afternoon:a, total:total, saleable:Math.floor(total*0.97), henDay:((total/flock)*100).toFixed(1), trays:(total/30).toFixed(1), broken:Math.floor(Math.random()*5), notes:'' });
+      var m2 = Math.floor(55 + Math.random()*25);
+      var a2 = Math.floor(45 + Math.random()*25);
+      var total2 = m2 + a2;
+      var flock2 = 200;
+      allProduction.push({ id:'pd_k' + i, date:d, batchId:'d3', batchName:'Batch C - Kienyeji', birdType:'Kienyeji', flockSize:flock2, morning:m2, afternoon:a2, total:total2, saleable:Math.floor(total2*0.95), henDay:((total2/flock2)*100).toFixed(1), trays:(total2/30).toFixed(1), broken:Math.floor(Math.random()*3), notes:'' });
+    }
+    allBroilerWeights = [
+      { id:'bw1', date:new Date(2026,5,1), batchId:'d2', batchName:'Batch B - Broilers', sampleSize:20, totalWeight:38.5, avgWeight:1.93, age:3 },
+      { id:'bw2', date:new Date(2026,5,8), batchId:'d2', batchName:'Batch B - Broilers', sampleSize:20, totalWeight:55.0, avgWeight:2.75, age:4 },
+      { id:'bw3', date:new Date(2026,5,15), batchId:'d2', batchName:'Batch B - Broilers', sampleSize:20, totalWeight:70.2, avgWeight:3.51, age:5 }
+    ];
+    renderTable();
+    renderSummary();
+    drawChart();
+    renderBroilerTable();
+  }
+
+  function populateBatchSelects() {
+    var sel = document.getElementById('prodBatch');
+    var active = allBatches.filter(function(b) { return b.status === 'active' && b.birdType !== 'Broilers'; });
+    sel.innerHTML = '<option value="">Select Batch</option>' + active.map(function(b) {
+      return '<option value="' + b.id + '">' + (b.name||'Unnamed') + ' (' + b.birdType + ' — ' + (b.flockSize||0) + ' birds)</option>';
+    }).join('');
+
+    var bSel = document.getElementById('broilerBatch');
+    var broilers = allBatches.filter(function(b) { return b.birdType === 'Broilers' && b.status === 'active'; });
+    bSel.innerHTML = '<option value="">Select Broiler Batch</option>' + broilers.map(function(b) {
+      return '<option value="' + b.id + '">' + (b.name||'Unnamed') + ' (' + (b.flockSize||0) + ' birds)</option>';
+    }).join('');
+
+    // Set date to today
+    document.getElementById('prodDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('broilerDate').value = new Date().toISOString().split('T')[0];
+
+    // Check URL for batch param
+    var params = new URLSearchParams(window.location.search);
+    var batchParam = params.get('batch');
+    if (batchParam && document.querySelector('#prodBatch option[value="' + batchParam + '"]')) {
+      document.getElementById('prodBatch').value = batchParam;
+      onBatchChange();
+    }
+  }
+
+  window.onBatchChange = function() {
+    var id = document.getElementById('prodBatch').value;
+    var b = allBatches.find(function(x) { return x.id === id; });
+    if (b) {
+      document.getElementById('prodBirdType').value = b.birdType || '';
+      document.getElementById('prodFlockSize').value = b.flockSize || 0;
+    } else {
+      document.getElementById('prodBirdType').value = '';
+      document.getElementById('prodFlockSize').value = '';
+    }
+    calcAutoFields();
+  };
+
+  window.calcAutoFields = function() {
+    var morning = parseInt(document.getElementById('prodMorning').value) || 0;
+    var afternoon = parseInt(document.getElementById('prodAfternoon').value) || 0;
+    var total = morning + afternoon;
+    var broken = parseInt(document.getElementById('prodBroken').value) || 0;
+    var saleable = Math.max(0, total - broken);
+    var flock = parseInt(document.getElementById('prodFlockSize').value) || 0;
+    var henDay = flock > 0 ? ((total / flock) * 100).toFixed(1) : '0.0';
+    var trays = calculateTrays(total).toFixed(1);
+
+    document.getElementById('prodTotal').value = total;
+    document.getElementById('prodSaleable').value = saleable;
+    document.getElementById('prodHenDay').value = henDay + '%';
+    document.getElementById('prodTrays').value = trays;
+  };
+
+  window.saveProduction = function(e) {
+    e.preventDefault();
+    var batchId = document.getElementById('prodBatch').value;
+    if (!batchId) { showToast('Please select a batch', 'error'); return false; }
+    var dateVal = document.getElementById('prodDate').value;
+    var morning = parseInt(document.getElementById('prodMorning').value)||0;
+    var afternoon = parseInt(document.getElementById('prodAfternoon').value)||0;
+    var broken = parseInt(document.getElementById('prodBroken').value)||0;
+    var total = morning + afternoon;
+    var saleable = Math.max(0, total - broken);
+    var flock = parseInt(document.getElementById('prodFlockSize').value)||0;
+    var b = allBatches.find(function(x) { return x.id === batchId; });
+    var data = {
+      date: new Date(dateVal + 'T00:00:00'),
+      batchId: batchId,
+      batchName: b ? b.name : '',
+      birdType: document.getElementById('prodBirdType').value,
+      flockSize: flock,
+      morning: morning,
+      afternoon: afternoon,
+      total: total,
+      saleable: saleable,
+      henDay: flock > 0 ? ((total/flock)*100).toFixed(1) : '0',
+      trays: (total/30).toFixed(1),
+      broken: broken,
+      notes: document.getElementById('prodNotes').value,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    db.collection('poultryProduction').add(data).then(function() {
+      showToast('Production record saved', 'success');
+      document.getElementById('prodMorning').value = '';
+      document.getElementById('prodAfternoon').value = '';
+      document.getElementById('prodBroken').value = '0';
+      document.getElementById('prodNotes').value = '';
+      calcAutoFields();
+    }).catch(function(err) {
+      console.warn('Firestore error, saving locally:', err);
+      data.id = 'local_' + Date.now();
+      data.date = new Date(dateVal + 'T00:00:00');
+      allProduction.unshift(data);
+      renderTable();
+      renderSummary();
+      drawChart();
+      showToast('Saved locally', 'info');
+    });
+    return false;
+  };
+
+  window.saveBroilerWeight = function(e) {
+    e.preventDefault();
+    var batchId = document.getElementById('broilerBatch').value;
+    if (!batchId) { showToast('Please select a broiler batch', 'error'); return false; }
+    var sample = parseInt(document.getElementById('broilerSample').value)||0;
+    var weight = parseFloat(document.getElementById('broilerWeight').value)||0;
+    var avg = sample > 0 ? (weight / sample) : 0;
+    document.getElementById('broilerAvg').value = avg.toFixed(2) + ' kg';
+    var b = allBatches.find(function(x) { return x.id === batchId; });
+    var data = {
+      date: new Date(document.getElementById('broilerDate').value + 'T00:00:00'),
+      batchId: batchId,
+      batchName: b ? b.name : '',
+      sampleSize: sample,
+      totalWeight: weight,
+      avgWeight: avg,
+      age: parseFloat(document.getElementById('broilerAge').value)||0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    db.collection('broilerWeights').add(data).then(function() {
+      showToast('Broiler weight saved', 'success');
+      document.getElementById('broilerSample').value = '';
+      document.getElementById('broilerWeight').value = '';
+      document.getElementById('broilerAge').value = '';
+      document.getElementById('broilerAvg').value = '';
+    }).catch(function(err) {
+      console.warn(err);
+      data.id = 'local_' + Date.now();
+      allBroilerWeights.unshift(data);
+      renderBroilerTable();
+      showToast('Saved locally', 'info');
+    });
+    return false;
+  };
+
+  function renderSummary() {
+    var now = new Date();
+    var month = now.getMonth(), year = now.getFullYear();
+    var todayStr = now.toDateString();
+    var monthProds = allProduction.filter(function(p) {
+      var d = p.date ? (p.date.toDate ? p.date.toDate() : new Date(p.date)) : new Date();
+      return d.getMonth() === month && d.getFullYear() === year;
+    });
+    var totalEggs = monthProds.reduce(function(s, p) { return s + (parseInt(p.total)||0); }, 0);
+    var totalTrays = monthProds.reduce(function(s, p) { return s + (parseFloat(p.trays)||0); }, 0);
+    document.getElementById('monthlyTrays').textContent = formatNumber(totalTrays, 1);
+
+    var layerProds = monthProds.filter(function(p) { return (p.birdType||'').toLowerCase().includes('layer'); });
+    var kienProds = monthProds.filter(function(p) { return (p.birdType||'').toLowerCase().includes('kien'); });
+    var avgL = layerProds.length ? (layerProds.reduce(function(s,p) { return s + (parseFloat(p.henDay)||0); },0) / layerProds.length) : 0;
+    var avgK = kienProds.length ? (kienProds.reduce(function(s,p) { return s + (parseFloat(p.henDay)||0); },0) / kienProds.length) : 0;
+    document.getElementById('avgLayerRate').textContent = avgL.toFixed(1) + '%';
+    document.getElementById('avgKienyejiRate').textContent = avgK.toFixed(1) + '%';
+
+    var todayEggs = allProduction.filter(function(p) {
+      var d = p.date ? (p.date.toDate ? p.date.toDate() : new Date(p.date)) : new Date();
+      return d.toDateString() === todayStr;
+    }).reduce(function(s, p) { return s + (parseInt(p.total)||0); }, 0);
+    document.getElementById('todayEggs').textContent = formatNumber(todayEggs);
+  }
+
+  function renderTable() {
+    var tbody = document.getElementById('prodTableBody');
+    if (!tbody) return;
+    if (allProduction.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="12"><div class="empty-state"><div class="icon">🥚</div><h3>No production records</h3><p>Record your first day\'s production above.</p></div></td></tr>';
+      return;
+    }
+    var sorted = allProduction.slice().sort(function(a, b) {
+      var da = a.date ? (a.date.toDate ? a.date.toDate() : new Date(a.date)) : new Date(0);
+      var db = b.date ? (b.date.toDate ? b.date.toDate() : new Date(b.date)) : new Date(0);
+      return db - da;
+    });
+    var show = sorted.slice(0, 100);
+    tbody.innerHTML = show.map(function(p) {
+      var d = p.date ? (p.date.toDate ? p.date.toDate() : new Date(p.date)) : new Date();
+      return '<tr>' +
+        '<td>' + formatDate(d) + '</td>' +
+        '<td>' + (p.batchName||p.batchId||'—') + '</td>' +
+        '<td>' + formatNumber(p.flockSize||0) + '</td>' +
+        '<td>' + (p.birdType||'—') + '</td>' +
+        '<td>' + formatNumber(p.morning||0) + '</td>' +
+        '<td>' + formatNumber(p.afternoon||0) + '</td>' +
+        '<td><strong>' + formatNumber(p.total||0) + '</strong></td>' +
+        '<td>' + formatNumber(p.saleable||0) + '</td>' +
+        '<td>' + (p.henDay||'0') + '%</td>' +
+        '<td>' + (p.trays||'0') + '</td>' +
+        '<td>' + (p.broken||0) + '</td>' +
+        '<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;">' + (p.notes||'') + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function drawChart() {
+    var canvas = document.getElementById('prodTrendChart');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var parent = canvas.parentElement;
+    canvas.width = parent.offsetWidth || 700;
+    canvas.height = 250;
+
+    var now = new Date();
+    var labels = [], layerData = [], kienData = [];
+    for (var i = 29; i >= 0; i--) {
+      var d = new Date(now); d.setDate(d.getDate() - i);
+      labels.push(d.getDate() + '/' + (d.getMonth()+1));
+      var ds = d.toDateString();
+      var lTotal = 0, kTotal = 0;
+      allProduction.forEach(function(p) {
+        var pd = p.date ? (p.date.toDate ? p.date.toDate() : new Date(p.date)) : new Date();
+        if (pd.toDateString() === ds) {
+          var total = parseInt(p.total)||0;
+          if ((p.birdType||'').toLowerCase().includes('layer')) lTotal += total;
+          else if ((p.birdType||'').toLowerCase().includes('kien')) kTotal += total;
+          else lTotal += total;
+        }
+      });
+      layerData.push(lTotal);
+      kienData.push(kTotal);
+    }
+
+    if (trendChart && typeof trendChart.destroy === 'function') trendChart.destroy();
+    trendChart = drawLineChart(ctx, labels, [
+      { label: 'Eggs', data: layerData, color: '#2D7A3E' },
+      { label: 'Kienyeji', data: kienData, color: '#F5A623' }
+    ]);
+  }
+
+  function drawLineChart(ctx, labels, datasets) {
+    if (!ctx) return null;
+    var w = ctx.canvas.width, h = ctx.canvas.height;
+    var pad = { top: 20, bottom: 30, left: 40, right: 20 };
+    var chartW = w - pad.left - pad.right, chartH = h - pad.top - pad.bottom;
+    ctx.clearRect(0, 0, w, h);
+    var maxVal = 1;
+    datasets.forEach(function(ds) { ds.data.forEach(function(v) { if (v > maxVal) maxVal = v; }); });
+    maxVal = Math.ceil(maxVal / 100) * 100 + 50;
+    ctx.strokeStyle = '#E5E7EB'; ctx.lineWidth = 1;
+    for (var i = 0; i <= 4; i++) {
+      var y = pad.top + (chartH / 4) * i;
+      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+      ctx.fillStyle = '#9CA3AF'; ctx.font = '10px Inter, sans-serif'; ctx.textAlign = 'right';
+      ctx.fillText(Math.round(maxVal - (maxVal / 4) * i), pad.left - 6, y + 3);
+    }
+    var stepX = chartW / (labels.length - 1 || 1);
+    datasets.forEach(function(ds) {
+      ctx.strokeStyle = ds.color; ctx.lineWidth = 2; ctx.beginPath();
+      ds.data.forEach(function(val, idx) {
+        var x = pad.left + idx * stepX;
+        var y = pad.top + chartH - (val / maxVal) * chartH;
+        if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }); ctx.stroke();
+      ctx.fillStyle = ds.color;
+      ds.data.forEach(function(val, idx) {
+        var x = pad.left + idx * stepX;
+        var y = pad.top + chartH - (val / maxVal) * chartH;
+        ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
+      });
+    });
+    ctx.fillStyle = '#9CA3AF'; ctx.font = '9px Inter, sans-serif'; ctx.textAlign = 'center';
+    var skip = Math.max(1, Math.floor(labels.length / 10));
+    labels.forEach(function(label, idx) {
+      if (idx % skip === 0 || idx === labels.length - 1) ctx.fillText(label, pad.left + idx * stepX, h - pad.bottom + 14);
+    });
+    var legendY = 8, legendX = pad.left;
+    datasets.forEach(function(ds) {
+      ctx.fillStyle = ds.color; ctx.fillRect(legendX, legendY, 10, 10);
+      ctx.fillStyle = '#6B7280'; ctx.font = '10px Inter, sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText(ds.label, legendX + 14, legendY + 8);
+      legendX += ctx.measureText(ds.label).width + 30;
+    });
+    return { destroy: function() { ctx.clearRect(0, 0, w, h); } };
+  }
+
+  function renderBroilerTable() {
+    var el = document.getElementById('broilerTableContainer');
+    if (!el) return;
+    if (allBroilerWeights.length === 0) {
+      el.innerHTML = '<p style="color:var(--text-secondary);font-size:13px;">No broiler weight records yet.</p>';
+      return;
+    }
+    var sorted = allBroilerWeights.slice().sort(function(a,b) {
+      var da = a.date ? (a.date.toDate ? a.date.toDate() : new Date(a.date)) : new Date(0);
+      var db = b.date ? (b.date.toDate ? b.date.toDate() : new Date(b.date)) : new Date(0);
+      return db - da;
+    });
+    el.innerHTML = '<table><thead><tr><th>Date</th><th>Batch</th><th>Sample</th><th>Total Wt</th><th>Avg/Bird</th><th>Age</th></tr></thead><tbody>' +
+      sorted.map(function(w) {
+        var d = w.date ? (w.date.toDate ? w.date.toDate() : new Date(w.date)) : new Date();
+        return '<tr><td>' + formatDate(d) + '</td><td>' + (w.batchName||'—') + '</td><td>' + w.sampleSize + '</td><td>' + w.totalWeight + ' kg</td><td><strong>' + (w.avgWeight||(w.sampleSize>0?(w.totalWeight/w.sampleSize):0)).toFixed(2) + ' kg</strong></td><td>' + (w.age||'—') + ' wks</td></tr>';
+      }).join('') +
+    '</tbody></table>';
+  }
+
+  window.toggleBroiler = function() {
+    var body = document.getElementById('broilerSection');
+    var toggle = document.getElementById('broilerToggle');
+    body.classList.toggle('open');
+    toggle.textContent = body.classList.contains('open') ? '▼ Hide' : '▶ Show';
+  };
+
+  var resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(drawChart, 500);
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(loadData, 300);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Other Income</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <style>
+    .cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .cat-card { background: var(--surface-white); border-radius: var(--radius-md); border: 1px solid var(--border-light); padding: 20px; text-align: center; transition: var(--transition); }
+    .cat-card:hover { box-shadow: var(--shadow-md); }
+    .cat-card .cat-icon { font-size: 32px; margin-bottom: 8px; }
+    .cat-card .cat-value { font-size: 20px; font-weight: 700; color: var(--primary-green); }
+    .cat-card .cat-label { font-size: 12px; color: var(--text-secondary); }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><span>🌱</span><span>AgriLedger</span></div>
+    <div class="sidebar-user"><div class="avatar user-avatar-text">J</div><div class="user-info"><div class="name sidebar-user-name">User</div><div class="role sidebar-user-role">general</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="../dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <div class="nav-section">POULTRY</div>
+      <a href="poultry-dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <a href="farm-setup.html"><span class="nav-icon">⚙️</span><span class="nav-text">Farm Setup</span></a>
+      <a href="flock-register.html"><span class="nav-icon">📋</span><span class="nav-text">Flock Register</span></a>
+      <a href="production-log.html"><span class="nav-icon">🥚</span><span class="nav-text">Production Log</span></a>
+      <a href="sales.html"><span class="nav-icon">💰</span><span class="nav-text">Sales</span></a>
+      <a href="other-income.html" class="active"><span class="nav-icon">💵</span><span class="nav-text">Other Income</span></a>
+      <a href="feed-expenses.html"><span class="nav-icon">🌾</span><span class="nav-text">Feed Expenses</span></a>
+      <a href="health-vet.html"><span class="nav-icon">💉</span><span class="nav-text">Health &amp; Vet</span></a>
+      <a href="mortality.html"><span class="nav-icon">⚰️</span><span class="nav-text">Mortality</span></a>
+      <a href="batch-summary.html"><span class="nav-icon">📈</span><span class="nav-text">Batch Summary</span></a>
+      <div class="nav-section">MAIN</div>
+      <a href="../farming/crops.html"><span class="nav-icon">🌾</span><span class="nav-text">Crops</span></a>
+      <a href="../farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+      <a href="../farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+      <a href="../inventory.html"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+      <a href="../cashbook.html"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+      <a href="../journal.html"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+    </nav>
+    <div class="sidebar-footer"><a href="../settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a><a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a></div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><button class="topbar-toggle" id="sidebar-toggle">☰</button><div class="breadcrumb"><a href="../dashboard.html">Dashboard</a><span class="sep">›</span><a href="poultry-dashboard.html">Poultry</a><span class="sep">›</span><span>Other Income</span></div></div>
+      <div class="topbar-right"><button class="notification-btn">🔔<span class="badge badge-red">3</span></button><button class="profile-btn" onclick="window.location.href='../settings.html'"><div class="avatar user-avatar-text">J</div><span class="sidebar-user-name" style="font-size:13px;">User</span></button></div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header"><div class="page-header-row"><div><h1>Other Income</h1><p style="font-size:14px;color:var(--text-secondary);">Track non-egg, non-bird poultry income</p></div></div></div>
+
+      <div class="cat-grid" id="catGrid">
+        <div class="cat-card"><div class="cat-icon">💩</div><div class="cat-value" id="catManure">KSh 0</div><div class="cat-label">Manure Sales</div></div>
+        <div class="cat-card"><div class="cat-icon">🚜</div><div class="cat-value" id="catEquipment">KSh 0</div><div class="cat-label">Equipment Rental</div></div>
+        <div class="cat-card"><div class="cat-icon">🏠</div><div class="cat-value" id="catSpace">KSh 0</div><div class="cat-label">Space Rental</div></div>
+        <div class="cat-card"><div class="cat-icon">📦</div><div class="cat-value" id="catOther">KSh 0</div><div class="cat-label">Other Income</div></div>
+        <div class="cat-card" style="border:2px solid var(--primary-green);"><div class="cat-icon">💰</div><div class="cat-value" id="catTotal">KSh 0</div><div class="cat-label">Total This Month</div></div>
+      </div>
+
+      <div class="card" style="margin-bottom:24px;"><div class="card-body">
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:16px;">➕ Add Income Record</h3>
+        <form id="incomeForm" onsubmit="return saveIncome(event)">
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Date</label><input type="date" id="incDate" class="form-input" required></div>
+            <div class="form-group"><label class="form-label">Category</label><select id="incCategory" class="form-select" required>
+              <option value="Manure Sales">💩 Manure Sales</option>
+              <option value="Equipment Rental">🚜 Equipment Rental</option>
+              <option value="Space Rental">🏠 Space Rental</option>
+              <option value="Other">📦 Other</option>
+            </select></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Description</label><input type="text" id="incDesc" class="form-input" placeholder="e.g. Sold 10 bags of manure" required></div>
+            <div class="form-group"><label class="form-label">Amount (KSh)</label><input type="number" id="incAmount" class="form-input" min="0" step="0.5" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Payment Method</label><select id="incPayMethod" class="form-select"><option value="Cash">Cash</option><option value="M-Pesa">M-Pesa</option><option value="Bank Transfer">Bank Transfer</option></select></div>
+            <div class="form-group"><label class="form-label">Payment Status</label><select id="incPaid" class="form-select"><option value="Paid">Paid</option><option value="Outstanding">Outstanding</option></select></div>
+          </div>
+          <button type="submit" class="btn btn-primary">💾 Record Income</button>
+        </form>
+      </div></div>
+
+      <div class="table-container">
+        <table id="incomeTable">
+          <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Payment</th><th>Status</th></tr></thead>
+          <tbody id="incomeTableBody"><tr><td colspan="6"><div class="loading-spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="../js/firebase-config.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+(function() {
+  var allIncome = [];
+
+  function load() {
+    db.collection('poultryOtherIncome').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
+      allIncome = []; snap.forEach(function(d) { allIncome.push({ id: d.id, ...d.data() }); });
+      if (allIncome.length === 0) loadDemo();
+      renderCats();
+      renderTable();
+    }, function() { loadDemo(); });
+    document.getElementById('incDate').value = new Date().toISOString().split('T')[0];
+  }
+
+  function loadDemo() {
+    allIncome = [
+      { id:'i1', date:new Date(2026,5,3), category:'Manure Sales', description:'Sold 15 bags of poultry manure', amount:4500, payment:'Cash', status:'Paid' },
+      { id:'i2', date:new Date(2026,5,10), category:'Equipment Rental', description:'Incubator rental fee', amount:3000, payment:'M-Pesa', status:'Paid' },
+      { id:'i3', date:new Date(2026,5,17), category:'Other', description:'Sold empty feed sacks', amount:1200, payment:'Cash', status:'Paid' },
+      { id:'i4', date:new Date(2026,5,22), category:'Space Rental', description:'Poultry house rental for brooder', amount:5000, payment:'Bank Transfer', status:'Outstanding' }
+    ];
+    renderCats(); renderTable();
+  }
+
+  window.saveIncome = function(e) {
+    e.preventDefault();
+    var data = {
+      date: new Date(document.getElementById('incDate').value + 'T00:00:00'),
+      category: document.getElementById('incCategory').value,
+      description: document.getElementById('incDesc').value,
+      amount: parseFloat(document.getElementById('incAmount').value)||0,
+      payment: document.getElementById('incPayMethod').value,
+      status: document.getElementById('incPaid').value,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    db.collection('poultryOtherIncome').add(data).then(function() {
+      showToast('Income recorded', 'success');
+      document.getElementById('incDesc').value = '';
+      document.getElementById('incAmount').value = '';
+    }).catch(function(err) {
+      console.warn(err);
+      data.id = 'local_' + Date.now();
+      allIncome.unshift(data);
+      renderCats(); renderTable();
+      showToast('Saved locally', 'info');
+    });
+    return false;
+  };
+
+  function renderCats() {
+    var now = new Date(), m = now.getMonth(), y = now.getFullYear();
+    var monthInc = allIncome.filter(function(inc) {
+      var d = inc.date ? (inc.date.toDate ? inc.date.toDate() : new Date(inc.date)) : new Date();
+      return d.getMonth() === m && d.getFullYear() === y;
+    });
+    var cats = { 'Manure Sales': 0, 'Equipment Rental': 0, 'Space Rental': 0, 'Other': 0 };
+    var total = 0;
+    monthInc.forEach(function(inc) {
+      var amt = parseFloat(inc.amount)||0;
+      if (cats[inc.category] !== undefined) cats[inc.category] += amt;
+      else cats['Other'] += amt;
+      total += amt;
+    });
+    document.getElementById('catManure').textContent = formatCurrency(cats['Manure Sales']);
+    document.getElementById('catEquipment').textContent = formatCurrency(cats['Equipment Rental']);
+    document.getElementById('catSpace').textContent = formatCurrency(cats['Space Rental']);
+    document.getElementById('catOther').textContent = formatCurrency(cats['Other']);
+    document.getElementById('catTotal').textContent = formatCurrency(total);
+  }
+
+  function renderTable() {
+    var tbody = document.getElementById('incomeTableBody');
+    if (!tbody) return;
+    if (allIncome.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">💵</div><h3>No income records</h3></div></td></tr>';
+      return;
+    }
+    var sorted = allIncome.slice().sort(function(a,b) {
+      var da = a.date ? (a.date.toDate ? a.date.toDate() : new Date(a.date)) : new Date(0);
+      var db = b.date ? (b.date.toDate ? b.date.toDate() : new Date(b.date)) : new Date(0);
+      return db - da;
+    });
+    tbody.innerHTML = sorted.map(function(inc) {
+      var d = inc.date ? (inc.date.toDate ? inc.date.toDate() : new Date(inc.date)) : new Date();
+      var badgeCls = inc.status === 'Paid' ? 'badge-green' : 'badge-red';
+      return '<tr><td>' + formatDate(d) + '</td><td>' + (inc.category||'—') + '</td><td>' + (inc.description||'—') + '</td><td><strong>' + formatCurrency(inc.amount||0) + '</strong></td><td>' + (inc.payment||'—') + '</td><td><span class="badge ' + badgeCls + '">' + (inc.status||'—') + '</span></td></tr>';
+    }).join('');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() { setTimeout(load, 300); });
+})();
+</script>
+</body>
+</html>

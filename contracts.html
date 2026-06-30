@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Contracts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <style>
+    .contract-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 20px; }
+    @media (max-width: 640px) { .contract-grid { grid-template-columns: 1fr; } }
+    .contract-card { background: var(--surface-white); border-radius: var(--radius-md); border: 1px solid var(--border-light); overflow: hidden; transition: var(--transition); }
+    .contract-card:hover { box-shadow: var(--shadow-md); }
+    .contract-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
+    .contract-header .c-title { font-size: 16px; font-weight: 600; }
+    .contract-header .c-party { font-size: 13px; color: var(--text-secondary); }
+    .contract-body { padding: 16px 20px; }
+    .contract-body .c-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--border-light); }
+    .contract-body .c-row:last-child { border-bottom: none; }
+    .contract-body .c-row .c-label { color: var(--text-secondary); }
+    .contract-body .c-row .c-value { font-weight: 500; }
+    .milestone-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+    .milestone-table th { text-align: left; padding: 6px 8px; background: var(--bg-cream); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); }
+    .milestone-table td { padding: 6px 8px; border-top: 1px solid var(--border-light); }
+    .milestone-table .ms-paid { color: var(--primary-green); font-weight: 600; }
+    .contract-footer { padding: 12px 20px; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end; gap: 8px; background: var(--bg-cream); }
+    .bottom-nav { display: none; }
+    @media (max-width: 640px) {
+      .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: #1B4332; z-index: 100; padding: 4px 0; justify-content: space-around; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+      .bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; color: rgba(255,255,255,0.6); font-size: 10px; padding: 6px 12px; text-decoration: none; }
+      .bottom-nav a.active, .bottom-nav a:hover { color: white; }
+      .bottom-nav a .nav-icon { font-size: 20px; }
+      .page-content { padding-bottom: 80px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><span style="font-size:28px;">🌿</span><span>AgriLedger</span></div>
+    <div class="sidebar-user">
+      <div class="avatar"><span class="user-avatar-text">U</span></div>
+      <div class="user-info">
+        <div class="name sidebar-user-name">Loading...</div>
+        <div class="role sidebar-user-role">general</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <div class="nav-section">FARMING</div>
+      <a href="farming/crops.html"><span class="nav-icon">🌾</span><span class="nav-text">Crops</span></a>
+      <a href="farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+      <a href="farming/poultry.html"><span class="nav-icon">🐔</span><span class="nav-text">Poultry</span></a>
+      <a href="farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+      <div class="nav-section">FINANCE</div>
+      <a href="inventory.html"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+      <a href="cashbook.html"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+      <a href="journal.html"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+      <div class="nav-section">BUSINESS</div>
+      <a href="contracts.html" class="active"><span class="nav-icon">📋</span><span class="nav-text">Contracts</span></a>
+      <a href="property.html"><span class="nav-icon">🏠</span><span class="nav-text">Property</span></a>
+      <a href="transport.html"><span class="nav-icon">🚛</span><span class="nav-text">Transport</span></a>
+      <a href="reports.html"><span class="nav-icon">📈</span><span class="nav-text">Reports</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a>
+      <a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle">☰</button>
+        <div class="breadcrumb">
+          <a href="dashboard.html">Dashboard</a><span class="sep">›</span><span>Contracts</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="notification-btn">🔔<span class="badge badge-red">3</span></button>
+        <button class="profile-btn" onclick="window.location.href='settings.html'">
+          <div class="avatar"><span class="user-avatar-text">J</span></div>
+          <span class="sidebar-user-name" style="font-size:13px;">User</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header">
+        <div class="page-header-row">
+          <h1>Contracts</h1>
+          <button class="btn btn-primary" onclick="openContractModal()">➕ Add Contract</button>
+        </div>
+      </div>
+
+      <div id="contractsGrid" class="contract-grid">
+        <div class="loading-spinner" style="grid-column:1/-1;"></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="dashboard.html"><span class="nav-icon">📊</span>Home</a>
+    <a href="contracts.html" class="active"><span class="nav-icon">📋</span>Contracts</a>
+    <a href="property.html"><span class="nav-icon">🏠</span>Property</a>
+    <a href="transport.html"><span class="nav-icon">🚛</span>Transport</a>
+    <a href="settings.html"><span class="nav-icon">⚙️</span>More</a>
+  </nav>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script>
+(function() {
+  var allContracts = [];
+  var contractUnsub = null;
+
+  function getStatusBadge(status) {
+    var s = (status || 'draft').toLowerCase();
+    var cls = s === 'active' ? 'badge-green' : (s === 'completed' ? 'badge-blue' : (s === 'cancelled' ? 'badge-red' : 'badge-gray'));
+    return '<span class="badge ' + cls + '">' + s.charAt(0).toUpperCase() + s.slice(1) + '</span>';
+  }
+
+  function getMilestoneStatus(ms) {
+    if (ms.paid) return '<span class="ms-paid">● Paid</span>';
+    var due = ms.dueDate ? (ms.dueDate.toDate ? ms.dueDate.toDate() : new Date(ms.dueDate)) : null;
+    if (due && due < new Date()) return '<span style="color:var(--accent-red);font-weight:600;">● Overdue</span>';
+    return '<span style="color:var(--accent-amber);">● Pending</span>';
+  }
+
+  function renderContracts(contracts) {
+    var grid = document.getElementById('contractsGrid');
+    if (!grid) return;
+    if (contracts.length === 0) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="icon">📋</div><h3>No contracts yet</h3><p>Create a contract to track agreements with buyers or suppliers.</p><button class="btn btn-primary" onclick="openContractModal()">➕ Add Contract</button></div>';
+      return;
+    }
+    grid.innerHTML = contracts.map(function(c) {
+      var milestones = c.milestones || [];
+      var msRows = milestones.length ? milestones.map(function(m) {
+        return '<tr><td>' + (m.milestone || 'Milestone') + '</td><td>' + formatCurrency(m.amount || 0) + '</td><td>' + formatDate(m.dueDate) + '</td><td>' + getMilestoneStatus(m) + '</td></tr>';
+      }).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);padding:12px;">No milestones set</td></tr>';
+      return '<div class="contract-card">' +
+        '<div class="contract-header">' +
+          '<div><div class="c-title">' + (c.title || 'Unnamed Contract') + '</div><div class="c-party">' + (c.party || '') + '</div></div>' +
+          getStatusBadge(c.status) +
+        '</div>' +
+        '<div class="contract-body">' +
+          '<div class="c-row"><span class="c-label">Contract Value</span><span class="c-value">' + formatCurrency(c.value || 0) + '</span></div>' +
+          '<div class="c-row"><span class="c-label">Start Date</span><span class="c-value">' + formatDate(c.startDate) + '</span></div>' +
+          '<div class="c-row"><span class="c-label">End Date</span><span class="c-value">' + formatDate(c.endDate) + '</span></div>' +
+          '<div style="margin-top:12px;"><strong style="font-size:13px;">Payment Schedule</strong></div>' +
+          '<table class="milestone-table"><thead><tr><th>Milestone</th><th>Amount</th><th>Due Date</th><th>Status</th></tr></thead><tbody>' + msRows + '</tbody></table>' +
+        '</div>' +
+        '<div class="contract-footer">' +
+          '<button class="btn btn-sm btn-secondary" onclick="viewContract(\'' + c.id + '\')">👁️ View</button>' +
+          '<button class="btn btn-sm btn-secondary" onclick="editContract(\'' + c.id + '\')">✏️ Edit</button>' +
+          '<button class="btn btn-sm btn-danger" onclick="deleteContract(\'' + c.id + '\')">🗑️ Delete</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function loadData() {
+    if (contractUnsub) contractUnsub();
+    contractUnsub = db.collection('contracts').orderBy('createdAt', 'desc').onSnapshot(function(snap) {
+      allContracts = [];
+      snap.forEach(function(d) {
+        var data = d.data();
+        allContracts.push({ id: d.id, milestones: data.milestones || [], ...data });
+      });
+      if (allContracts.length === 0) loadDemoContracts();
+      else renderContracts(allContracts);
+    }, function() { loadDemoContracts(); });
+  }
+
+  function loadDemoContracts() {
+    allContracts = [
+      { id: 'c1', title: 'Maize Supply Agreement', party: 'Buyer: NCPB', value: 450000, status: 'active', startDate: new Date(2026, 0, 15), endDate: new Date(2026, 6, 15), milestones: [
+        { milestone: 'Initial Deposit', amount: 100000, dueDate: new Date(2026, 0, 30), paid: true },
+        { milestone: 'Mid-term Payment', amount: 200000, dueDate: new Date(2026, 3, 15), paid: false },
+        { milestone: 'Final Payment', amount: 150000, dueDate: new Date(2026, 6, 15), paid: false }
+      ]},
+      { id: 'c2', title: 'Dairy Products Supply', party: 'Buyer: Brookside Dairy', value: 280000, status: 'active', startDate: new Date(2026, 2, 1), endDate: new Date(2026, 8, 1), milestones: [
+        { milestone: 'Monthly Supply 1', amount: 70000, dueDate: new Date(2026, 3, 1), paid: true },
+        { milestone: 'Monthly Supply 2', amount: 70000, dueDate: new Date(2026, 4, 1), paid: false },
+        { milestone: 'Monthly Supply 3', amount: 70000, dueDate: new Date(2026, 5, 1), paid: false }
+      ]},
+      { id: 'c3', title: 'Poultry Feed Supply', party: 'Supplier: Unga Farm Care', value: 120000, status: 'completed', startDate: new Date(2025, 9, 1), endDate: new Date(2025, 11, 31), milestones: [
+        { milestone: 'Full Payment', amount: 120000, dueDate: new Date(2025, 11, 31), paid: true }
+      ]}
+    ];
+    renderContracts(allContracts);
+  }
+
+  window.openContractModal = function(data) {
+    var isEdit = !!data;
+    var d = data || {};
+    var title = isEdit ? 'Edit Contract' : 'Add Contract';
+    var msHtml = '';
+    if (d.milestones && d.milestones.length) {
+      d.milestones.forEach(function(m, i) {
+        msHtml += '<div class="form-row" style="margin-bottom:8px;">' +
+          '<div class="form-group"><input type="text" class="form-input ms-name" value="' + (m.milestone || '') + '" placeholder="Milestone name"></div>' +
+          '<div class="form-group"><input type="number" class="form-input ms-amount" value="' + (m.amount || '') + '" placeholder="Amount"></div>' +
+          '<div class="form-group"><input type="date" class="form-input ms-date" value="' + (m.dueDate ? formatDateInput(m.dueDate) : '') + '"></div>' +
+          '<div style="display:flex;align-items:center;"><button type="button" class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()">✕</button></div>' +
+        '</div>';
+      });
+    }
+    var html = '<form id="contractForm" onsubmit="return saveContract(event)">' +
+      '<input type="hidden" id="contractId" value="' + (d.id || '') + '">' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Contract Title</label><input type="text" id="cTitle" class="form-input" value="' + (d.title || '') + '" required></div>' +
+        '<div class="form-group"><label class="form-label">Buyer/Supplier</label><input type="text" id="cParty" class="form-input" value="' + (d.party || '') + '" required></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Contract Value (KSh)</label><input type="number" id="cValue" class="form-input" value="' + (d.value || '') + '" min="0" required></div>' +
+        '<div class="form-group"><label class="form-label">Status</label><select id="cStatus" class="form-select"><option value="draft"' + (d.status === 'draft' ? ' selected' : '') + '>Draft</option><option value="active"' + (d.status === 'active' ? ' selected' : '') + '>Active</option><option value="completed"' + (d.status === 'completed' ? ' selected' : '') + '>Completed</option><option value="cancelled"' + (d.status === 'cancelled' ? ' selected' : '') + '>Cancelled</option></select></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Start Date</label><input type="date" id="cStart" class="form-input" value="' + (d.startDate ? formatDateInput(d.startDate) : '') + '" required></div>' +
+        '<div class="form-group"><label class="form-label">End Date</label><input type="date" id="cEnd" class="form-input" value="' + (d.endDate ? formatDateInput(d.endDate) : '') + '" required></div>' +
+      '</div>' +
+      '<div style="margin-top:16px;"><strong style="font-size:14px;">Payment Schedule (Milestones)</strong></div>' +
+      '<div id="milestonesContainer">' + msHtml + '</div>' +
+      '<button type="button" class="btn btn-sm btn-secondary" onclick="addMilestoneRow()" style="margin-top:8px;">➕ Add Milestone</button>' +
+      '<div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);margin-top:16px;">' +
+        '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>' +
+        '<button type="submit" class="btn btn-primary">' + (isEdit ? 'Update Contract' : 'Add Contract') + '</button>' +
+      '</div></form>';
+    openModal(html, title);
+  };
+
+  window.addMilestoneRow = function() {
+    var container = document.getElementById('milestonesContainer');
+    var div = document.createElement('div');
+    div.className = 'form-row';
+    div.style.marginBottom = '8px';
+    div.innerHTML = '<div class="form-group"><input type="text" class="form-input ms-name" placeholder="Milestone name"></div>' +
+      '<div class="form-group"><input type="number" class="form-input ms-amount" placeholder="Amount"></div>' +
+      '<div class="form-group"><input type="date" class="form-input ms-date"></div>' +
+      '<div style="display:flex;align-items:center;"><button type="button" class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()">✕</button></div>';
+    container.appendChild(div);
+  };
+
+  function formatDateInput(date) {
+    if (!date) return '';
+    if (typeof date === 'string') date = new Date(date);
+    if (date.toDate) date = date.toDate();
+    return date.toISOString().split('T')[0];
+  }
+
+  window.saveContract = async function(e) {
+    e.preventDefault();
+    var id = document.getElementById('contractId').value;
+    var milestones = [];
+    document.querySelectorAll('#milestonesContainer .form-row').forEach(function(row) {
+      var name = row.querySelector('.ms-name');
+      var amount = row.querySelector('.ms-amount');
+      var date = row.querySelector('.ms-date');
+      if (name && name.value) {
+        milestones.push({
+          milestone: name.value,
+          amount: parseFloat(amount?.value) || 0,
+          dueDate: date?.value ? new Date(date.value + 'T12:00:00') : null,
+          paid: false
+        });
+      }
+    });
+    var data = {
+      title: document.getElementById('cTitle').value.trim(),
+      party: document.getElementById('cParty').value.trim(),
+      value: parseFloat(document.getElementById('cValue').value) || 0,
+      status: document.getElementById('cStatus').value,
+      startDate: document.getElementById('cStart').value ? new Date(document.getElementById('cStart').value + 'T12:00:00') : null,
+      endDate: document.getElementById('cEnd').value ? new Date(document.getElementById('cEnd').value + 'T12:00:00') : null,
+      milestones: milestones,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    try {
+      if (id) { await db.collection('contracts').doc(id).update(data); showToast('Contract updated', 'success'); }
+      else { data.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('contracts').add(data); showToast('Contract added', 'success'); }
+      closeModal();
+    } catch (err) {
+      showToast('Error: ' + err.message, 'error');
+    }
+    return false;
+  };
+
+  window.viewContract = function(id) {
+    var c = allContracts.find(function(x) { return x.id === id; });
+    if (!c) return;
+    var msHtml = (c.milestones || []).map(function(m, i) {
+      return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-light);font-size:13px;">' +
+        '<span>' + (m.milestone || 'Milestone ' + (i+1)) + '</span>' +
+        '<span>' + formatCurrency(m.amount || 0) + '</span>' +
+        '<span>' + formatDate(m.dueDate) + '</span>' +
+        '<span>' + (m.paid ? '<span style="color:var(--primary-green);font-weight:600;">Paid</span>' : '<button class="btn btn-sm btn-primary" onclick="recordMilestonePayment(\'' + id + '\', ' + i + ')">Record Payment</button>') + '</span>' +
+      '</div>';
+    }).join('');
+    var html = '<div style="padding:8px 0;">' +
+      '<div class="form-row"><div><strong>Title:</strong> ' + (c.title || '') + '</div><div><strong>Party:</strong> ' + (c.party || '') + '</div></div>' +
+      '<div class="form-row"><div><strong>Value:</strong> ' + formatCurrency(c.value || 0) + '</div><div><strong>Status:</strong> ' + (c.status || 'draft') + '</div></div>' +
+      '<div class="form-row"><div><strong>Start:</strong> ' + formatDate(c.startDate) + '</div><div><strong>End:</strong> ' + formatDate(c.endDate) + '</div></div>' +
+      '<div style="margin-top:16px;"><strong>Payment Schedule</strong></div>' +
+      msHtml +
+    '</div>';
+    openModal(html + '<div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>', 'Contract Details');
+  };
+
+  window.recordMilestonePayment = async function(contractId, milestoneIdx) {
+    if (!confirm('Record this milestone as paid? This will create a transaction entry.')) return;
+    try {
+      var c = allContracts.find(function(x) { return x.id === contractId; });
+      if (!c || !c.milestones || !c.milestones[milestoneIdx]) { showToast('Milestone not found', 'error'); return; }
+      var ms = c.milestones[milestoneIdx];
+      ms.paid = true;
+      await db.collection('contracts').doc(contractId).update({ milestones: c.milestones });
+      await db.collection('transactions').add({
+        type: 'income',
+        description: 'Contract payment: ' + (c.title || '') + ' - ' + (ms.milestone || 'Milestone'),
+        amount: ms.amount || 0,
+        paymentMethod: 'Bank',
+        category: 'Contracts',
+        date: new Date(),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      showToast('Payment recorded & transaction created', 'success');
+      closeModal();
+    } catch (err) {
+      showToast('Error: ' + err.message, 'error');
+    }
+  };
+
+  window.editContract = function(id) {
+    var c = allContracts.find(function(x) { return x.id === id; });
+    if (c) window.openContractModal(c);
+  };
+
+  window.deleteContract = async function(id) {
+    if (!confirm('Delete this contract?')) return;
+    try { await db.collection('contracts').doc(id).delete(); showToast('Contract deleted', 'success'); }
+    catch (err) {
+      allContracts = allContracts.filter(function(x) { return x.id !== id; });
+      renderContracts(allContracts);
+      showToast('Contract removed', 'success');
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', function() { loadData(); });
+})();
+</script>
+</body>
+</html>

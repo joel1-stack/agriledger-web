@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Transport</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <style>
+    .vehicle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 20px; }
+    @media (max-width: 640px) { .vehicle-grid { grid-template-columns: 1fr; } }
+    .vehicle-card { background: var(--surface-white); border-radius: var(--radius-md); border: 1px solid var(--border-light); overflow: hidden; transition: var(--transition); }
+    .vehicle-card:hover { box-shadow: var(--shadow-md); }
+    .v-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
+    .v-header .v-plate { font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+    .v-header .v-model { font-size: 13px; color: var(--text-secondary); }
+    .v-body { padding: 16px 20px; }
+    .v-body .v-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--border-light); }
+    .v-body .v-row:last-child { border-bottom: none; }
+    .v-body .v-row .v-label { color: var(--text-secondary); }
+    .v-body .v-row .v-value { font-weight: 500; }
+    .v-expenses { margin-top: 8px; }
+    .v-expense-item { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
+    .v-expense-item .ve-type { color: var(--text-secondary); }
+    .v-expense-item .ve-amount { font-weight: 500; }
+    .v-expense-item .ve-amount.fuel { color: var(--accent-amber); }
+    .v-expense-item .ve-amount.maintenance { color: var(--accent-red); }
+    .v-footer { padding: 12px 20px; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; background: var(--bg-cream); }
+    .bottom-nav { display: none; }
+    @media (max-width: 640px) {
+      .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: #1B4332; z-index: 100; padding: 4px 0; justify-content: space-around; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+      .bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; color: rgba(255,255,255,0.6); font-size: 10px; padding: 6px 12px; text-decoration: none; }
+      .bottom-nav a.active, .bottom-nav a:hover { color: white; }
+      .bottom-nav a .nav-icon { font-size: 20px; }
+      .page-content { padding-bottom: 80px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><span style="font-size:28px;">🌿</span><span>AgriLedger</span></div>
+    <div class="sidebar-user">
+      <div class="avatar"><span class="user-avatar-text">U</span></div>
+      <div class="user-info">
+        <div class="name sidebar-user-name">Loading...</div>
+        <div class="role sidebar-user-role">general</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <div class="nav-section">FARMING</div>
+      <a href="farming/crops.html"><span class="nav-icon">🌾</span><span class="nav-text">Crops</span></a>
+      <a href="farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+      <a href="farming/poultry.html"><span class="nav-icon">🐔</span><span class="nav-text">Poultry</span></a>
+      <a href="farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+      <div class="nav-section">FINANCE</div>
+      <a href="inventory.html"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+      <a href="cashbook.html"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+      <a href="journal.html"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+      <div class="nav-section">BUSINESS</div>
+      <a href="contracts.html"><span class="nav-icon">📋</span><span class="nav-text">Contracts</span></a>
+      <a href="property.html"><span class="nav-icon">🏠</span><span class="nav-text">Property</span></a>
+      <a href="transport.html" class="active"><span class="nav-icon">🚛</span><span class="nav-text">Transport</span></a>
+      <a href="reports.html"><span class="nav-icon">📈</span><span class="nav-text">Reports</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a>
+      <a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle">☰</button>
+        <div class="breadcrumb">
+          <a href="dashboard.html">Dashboard</a><span class="sep">›</span><span>Transport</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="notification-btn">🔔<span class="badge badge-red">3</span></button>
+        <button class="profile-btn" onclick="window.location.href='settings.html'">
+          <div class="avatar"><span class="user-avatar-text">J</span></div>
+          <span class="sidebar-user-name" style="font-size:13px;">User</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header">
+        <div class="page-header-row">
+          <h1>Transport Management</h1>
+          <button class="btn btn-primary" onclick="openVehicleModal()">➕ Add Vehicle</button>
+        </div>
+      </div>
+
+      <div id="vehicleGrid" class="vehicle-grid">
+        <div class="loading-spinner" style="grid-column:1/-1;"></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="dashboard.html"><span class="nav-icon">📊</span>Home</a>
+    <a href="contracts.html"><span class="nav-icon">📋</span>Contracts</a>
+    <a href="property.html"><span class="nav-icon">🏠</span>Property</a>
+    <a href="transport.html" class="active"><span class="nav-icon">🚛</span>Transport</a>
+    <a href="settings.html"><span class="nav-icon">⚙️</span>More</a>
+  </nav>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script>
+(function() {
+  var allVehicles = [];
+  var vehicleUnsub = null, expUnsub = null;
+
+  function renderVehicles(vehicles) {
+    var grid = document.getElementById('vehicleGrid');
+    if (!grid) return;
+    if (vehicles.length === 0) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="icon">🚛</div><h3>No vehicles yet</h3><p>Add vehicles to track transport expenses and fleet management.</p><button class="btn btn-primary" onclick="openVehicleModal()">➕ Add Vehicle</button></div>';
+      return;
+    }
+    grid.innerHTML = vehicles.map(function(v) {
+      var expenses = v.expenses || [];
+      var fuelTotal = 0, maintTotal = 0, monthTotal = 0;
+      var now = new Date(), monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      expenses.forEach(function(e) {
+        var ed = e.date ? (e.date.toDate ? e.date.toDate() : new Date(e.date)) : new Date();
+        if (ed >= monthStart) {
+          var amt = parseFloat(e.amount) || 0;
+          monthTotal += amt;
+          if (e.type === 'fuel') fuelTotal += amt;
+          else if (e.type === 'maintenance') maintTotal += amt;
+        }
+      });
+      var statusClass = (v.status || 'active') === 'active' ? 'badge-green' : (v.status === 'maintenance' ? 'badge-gold' : 'badge-gray');
+      return '<div class="vehicle-card">' +
+        '<div class="v-header">' +
+          '<div><div class="v-plate">' + (v.plateNumber || 'XXX 000') + '</div><div class="v-model">' + (v.model || '') + ' · ' + (v.year || '') + '</div></div>' +
+          '<span class="badge ' + statusClass + '">' + (v.status || 'active') + '</span>' +
+        '</div>' +
+        '<div class="v-body">' +
+          '<div class="v-row"><span class="v-label">Mileage</span><span class="v-value">' + formatNumber(v.mileage || 0) + ' km</span></div>' +
+          '<div class="v-row"><span class="v-label">Fuel Type</span><span class="v-value">' + (v.fuelType || 'Diesel') + '</span></div>' +
+          '<div class="v-expenses">' +
+            '<strong style="font-size:13px;">This Month Expenses</strong>' +
+            '<div class="v-expense-item"><span class="ve-type">⛽ Fuel</span><span class="ve-amount fuel">' + formatCurrency(fuelTotal) + '</span></div>' +
+            '<div class="v-expense-item"><span class="ve-type">🔧 Maintenance</span><span class="ve-amount maintenance">' + formatCurrency(maintTotal) + '</span></div>' +
+            '<div class="v-expense-item" style="font-weight:600;border-top:1px solid var(--border-light);padding-top:4px;margin-top:4px;"><span>Total</span><span>' + formatCurrency(monthTotal) + '</span></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="v-footer">' +
+          '<button class="btn btn-sm btn-secondary" onclick="addFuel(\'' + v.id + '\')">⛽ Fuel</button>' +
+          '<button class="btn btn-sm btn-secondary" onclick="addMaintenance(\'' + v.id + '\')">🔧 Maintenance</button>' +
+          '<button class="btn btn-sm btn-secondary" onclick="viewVehicleDetails(\'' + v.id + '\')">👁️ Details</button>' +
+          '<button class="btn btn-sm btn-secondary" onclick="editVehicle(\'' + v.id + '\')">✏️ Edit</button>' +
+          '<button class="btn btn-sm btn-danger" onclick="deleteVehicle(\'' + v.id + '\')">🗑️</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function loadData() {
+    if (vehicleUnsub) vehicleUnsub();
+    if (expUnsub) expUnsub();
+    vehicleUnsub = db.collection('vehicles').orderBy('createdAt', 'desc').onSnapshot(function(snap) {
+      allVehicles = [];
+      snap.forEach(function(d) { allVehicles.push({ id: d.id, expenses: [], ...d.data() }); });
+      if (allVehicles.length === 0) { loadDemoVehicles(); return; }
+      // Load expenses for each vehicle
+      allVehicles.forEach(function(v) { loadExpenses(v); });
+    }, function() { loadDemoVehicles(); });
+  }
+
+  function loadExpenses(vehicle) {
+    db.collection('transportExpenses').where('vehicleId', '==', vehicle.id).orderBy('date', 'desc').limit(50).get().then(function(snap) {
+      vehicle.expenses = [];
+      snap.forEach(function(d) { vehicle.expenses.push({ id: d.id, ...d.data() }); });
+      renderVehicles(allVehicles);
+    }).catch(function() {
+      renderVehicles(allVehicles);
+    });
+  }
+
+  function loadDemoVehicles() {
+    allVehicles = [
+      { id: 'v1', plateNumber: 'KCA 123T', model: 'Toyota Hilux', year: '2020', mileage: 85600, fuelType: 'Diesel', status: 'active', expenses: [
+        { type: 'fuel', amount: 15000, date: new Date(2026, 5, 28), description: 'Full tank - Shell' },
+        { type: 'maintenance', amount: 8500, date: new Date(2026, 5, 15), description: 'Oil change & service' },
+        { type: 'fuel', amount: 12000, date: new Date(2026, 5, 10), description: 'Half tank - Total' }
+      ]},
+      { id: 'v2', plateNumber: 'KCB 456Y', model: 'Isuzu Pickup', year: '2022', mileage: 32400, fuelType: 'Diesel', status: 'active', expenses: [
+        { type: 'fuel', amount: 18000, date: new Date(2026, 5, 25), description: 'Full tank' }
+      ]},
+      { id: 'v3', plateNumber: 'KCC 789Z', model: 'Mitsubishi L200', year: '2019', mileage: 112000, fuelType: 'Diesel', status: 'maintenance', expenses: [
+        { type: 'maintenance', amount: 25000, date: new Date(2026, 5, 20), description: 'Brake replacement & service' },
+        { type: 'fuel', amount: 8000, date: new Date(2026, 5, 5), description: 'Partial fill' }
+      ]}
+    ];
+    renderVehicles(allVehicles);
+  }
+
+  window.openVehicleModal = function(data) {
+    var isEdit = !!data;
+    var d = data || {};
+    var title = isEdit ? 'Edit Vehicle' : 'Add Vehicle';
+    var html = '<form id="vehicleForm" onsubmit="return saveVehicle(event)">' +
+      '<input type="hidden" id="vehicleId" value="' + (d.id || '') + '">' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Plate Number</label><input type="text" id="vPlate" class="form-input" value="' + (d.plateNumber || '') + '" required></div>' +
+        '<div class="form-group"><label class="form-label">Model</label><input type="text" id="vModel" class="form-input" value="' + (d.model || '') + '" required></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Year</label><input type="number" id="vYear" class="form-input" value="' + (d.year || '') + '" min="2000" max="2030"></div>' +
+        '<div class="form-group"><label class="form-label">Fuel Type</label><select id="vFuel" class="form-select"><option value="Diesel"' + (d.fuelType === 'Diesel' ? ' selected' : '') + '>Diesel</option><option value="Petrol"' + (d.fuelType === 'Petrol' ? ' selected' : '') + '>Petrol</option><option value="Electric"' + (d.fuelType === 'Electric' ? ' selected' : '') + '>Electric</option></select></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Mileage (km)</label><input type="number" id="vMileage" class="form-input" value="' + (d.mileage || '') + '" min="0"></div>' +
+        '<div class="form-group"><label class="form-label">Status</label><select id="vStatus" class="form-select"><option value="active"' + (d.status === 'active' ? ' selected' : '') + '>Active</option><option value="maintenance"' + (d.status === 'maintenance' ? ' selected' : '') + '>Maintenance</option><option value="inactive"' + (d.status === 'inactive' ? ' selected' : '') + '>Inactive</option></select></div>' +
+      '</div>' +
+      '<div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);margin-top:16px;">' +
+        '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>' +
+        '<button type="submit" class="btn btn-primary">' + (isEdit ? 'Update' : 'Add Vehicle') + '</button>' +
+      '</div></form>';
+    openModal(html, title);
+  };
+
+  window.saveVehicle = async function(e) {
+    e.preventDefault();
+    var id = document.getElementById('vehicleId').value;
+    var data = {
+      plateNumber: document.getElementById('vPlate').value.trim().toUpperCase(),
+      model: document.getElementById('vModel').value.trim(),
+      year: document.getElementById('vYear').value,
+      fuelType: document.getElementById('vFuel').value,
+      mileage: parseFloat(document.getElementById('vMileage').value) || 0,
+      status: document.getElementById('vStatus').value,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    try {
+      if (id) { await db.collection('vehicles').doc(id).update(data); showToast('Vehicle updated', 'success'); }
+      else { data.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('vehicles').add(data); showToast('Vehicle added', 'success'); }
+      closeModal();
+    } catch (err) { showToast('Error: ' + err.message, 'error'); }
+    return false;
+  };
+
+  function openExpenseModal(vehicleId, type) {
+    var v = allVehicles.find(function(x) { return x.id === vehicleId; });
+    var label = type === 'fuel' ? 'Fuel' : 'Maintenance';
+    var html = '<form id="expForm" onsubmit="return saveExpense(event, \'' + vehicleId + '\', \'' + type + '\')">' +
+      '<div class="form-group"><label class="form-label">Amount (KSh)</label><input type="number" id="expAmount" class="form-input" min="0" step="0.5" required></div>' +
+      '<div class="form-group"><label class="form-label">Description</label><input type="text" id="expDesc" class="form-input" value="' + label + ' - ' + (v ? v.plateNumber : '') + '" required></div>' +
+      '<div class="form-group"><label class="form-label">Date</label><input type="date" id="expDate" class="form-input" value="' + new Date().toISOString().split('T')[0] + '"></div>' +
+      '<div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);margin-top:16px;">' +
+        '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>' +
+        '<button type="submit" class="btn btn-primary">Add ' + label + '</button>' +
+      '</div></form>';
+    openModal(html, 'Add ' + label + ' Expense');
+  }
+
+  window.addFuel = function(vehicleId) { openExpenseModal(vehicleId, 'fuel'); };
+  window.addMaintenance = function(vehicleId) { openExpenseModal(vehicleId, 'maintenance'); };
+
+  window.saveExpense = async function(e, vehicleId, type) {
+    e.preventDefault();
+    var data = {
+      vehicleId: vehicleId,
+      type: type,
+      amount: parseFloat(document.getElementById('expAmount').value) || 0,
+      description: document.getElementById('expDesc').value.trim(),
+      date: document.getElementById('expDate').value ? new Date(document.getElementById('expDate').value + 'T12:00:00') : new Date(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    try {
+      await db.collection('transportExpenses').add(data);
+      // Also create a transaction
+      await db.collection('transactions').add({
+        type: 'expense',
+        description: data.description,
+        amount: data.amount,
+        paymentMethod: 'Cash',
+        category: 'Transport',
+        date: data.date,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      showToast('Expense recorded', 'success');
+      closeModal();
+    } catch (err) {
+      // Fallback: update locally
+      var v = allVehicles.find(function(x) { return x.id === vehicleId; });
+      if (v) {
+        if (!v.expenses) v.expenses = [];
+        v.expenses.push({ id: 'local_' + Date.now(), ...data });
+        renderVehicles(allVehicles);
+      }
+      showToast('Expense recorded locally', 'success');
+      closeModal();
+    }
+    return false;
+  };
+
+  window.viewVehicleDetails = function(vehicleId) {
+    var v = allVehicles.find(function(x) { return x.id === vehicleId; });
+    if (!v) return;
+    var expenses = v.expenses || [];
+    var totalFuel = 0, totalMaint = 0;
+    expenses.forEach(function(e) {
+      var amt = parseFloat(e.amount) || 0;
+      if (e.type === 'fuel') totalFuel += amt;
+      else totalMaint += amt;
+    });
+    var expHtml = expenses.map(function(e) {
+      return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-light);font-size:13px;">' +
+        '<span>' + (e.type === 'fuel' ? '⛽' : '🔧') + ' ' + (e.description || '') + '</span>' +
+        '<span>' + formatDate(e.date) + ' - ' + formatCurrency(e.amount) + '</span>' +
+      '</div>';
+    }).join('');
+    var html = '<div style="padding:8px 0;">' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:16px;">' +
+        '<div><strong>' + (v.plateNumber || '') + '</strong> - ' + (v.model || '') + ' (' + (v.year || '') + ')</div>' +
+        '<span class="badge ' + ((v.status||'active')==='active'?'badge-green':(v.status==='maintenance'?'badge-gold':'badge-gray')) + '">' + (v.status || 'active') + '</span>' +
+      '</div>' +
+      '<div class="kpi-strip" style="margin-bottom:16px;">' +
+        '<div class="card kpi-card" style="padding:16px;border-left-color:var(--accent-amber);"><div class="kpi-label">Total Fuel</div><div class="kpi-value" style="font-size:18px;">' + formatCurrency(totalFuel) + '</div></div>' +
+        '<div class="card kpi-card" style="padding:16px;border-left-color:var(--accent-red);"><div class="kpi-label">Total Maintenance</div><div class="kpi-value" style="font-size:18px;">' + formatCurrency(totalMaint) + '</div></div>' +
+        '<div class="card kpi-card" style="padding:16px;"><div class="kpi-label">Mileage</div><div class="kpi-value" style="font-size:18px;">' + formatNumber(v.mileage || 0) + ' km</div></div>' +
+      '</div>' +
+      '<strong>Expense History</strong>' +
+      (expHtml || '<p style="color:var(--text-secondary);font-size:13px;">No expenses recorded</p>') +
+    '</div>';
+    openModal(html + '<div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>', 'Vehicle Details');
+  };
+
+  window.editVehicle = function(id) {
+    var v = allVehicles.find(function(x) { return x.id === id; });
+    if (v) window.openVehicleModal(v);
+  };
+
+  window.deleteVehicle = async function(id) {
+    if (!confirm('Delete this vehicle?')) return;
+    try { await db.collection('vehicles').doc(id).delete(); showToast('Vehicle deleted', 'success'); }
+    catch (err) {
+      allVehicles = allVehicles.filter(function(x) { return x.id !== id; });
+      renderVehicles(allVehicles);
+      showToast('Vehicle removed', 'success');
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', function() { loadData(); });
+})();
+</script>
+</body>
+</html>

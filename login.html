@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - AgriLedger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <style>
+    .auth-form .auth-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary-green);
+      margin-bottom: 8px;
+    }
+    .auth-form h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .auth-form .subtitle {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+    .password-wrapper {
+      position: relative;
+    }
+    .password-wrapper .form-input {
+      padding-right: 44px;
+    }
+    .password-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-light);
+      font-size: 18px;
+      padding: 4px;
+      line-height: 1;
+    }
+    .password-toggle:hover {
+      color: var(--text-secondary);
+    }
+    .form-options {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .form-options a {
+      font-size: 13px;
+      color: var(--primary-green);
+      font-weight: 500;
+    }
+    .form-options a:hover {
+      text-decoration: underline;
+    }
+    .auth-error {
+      background: #FFEBEE;
+      color: #C62828;
+      border: 1px solid #EF9A9A;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .auth-error.visible {
+      display: block;
+    }
+    .btn-loading {
+      position: relative;
+      pointer-events: none;
+    }
+    .btn-loading .btn-text {
+      opacity: 0;
+    }
+    .btn-loading .btn-spinner {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @media (max-width: 768px) {
+      .auth-form {
+        padding: 32px 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-container">
+      <!-- FORM SIDE -->
+      <div class="auth-form">
+        <div class="auth-brand">
+          <img src="assets/images/3D%20Logo%20%27sam%20k%27%20with%20Nature%20tru%20one%20.png" alt="AgriLedger" style="height:32px;width:auto;">
+          <span>AgriLedger</span>
+        </div>
+        <h1>Welcome Back, Farmer</h1>
+        <p class="subtitle">Sign in to access your farm dashboard</p>
+
+        <div class="auth-error" id="authError"></div>
+
+        <form id="loginForm" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <div class="form-input-icon">
+              <span class="icon">&#9993;</span>
+              <input type="email" id="email" class="form-input" placeholder="farmer@example.com" required autocomplete="email">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <div class="form-input-icon password-wrapper">
+              <span class="icon">&#128274;</span>
+              <input type="password" id="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password">
+              <button type="button" class="password-toggle" id="passwordToggle" aria-label="Toggle password visibility">&#128065;</button>
+            </div>
+          </div>
+
+          <div class="form-options">
+            <label class="form-checkbox">
+              <input type="checkbox" id="rememberMe">
+              Remember me
+            </label>
+            <a href="#">Forgot Password?</a>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginBtn">
+            <span class="btn-text">Sign In</span>
+          </button>
+        </form>
+
+        <div class="auth-divider">OR</div>
+
+        <div class="auth-footer">
+          Don't have an account? <a href="register.html">Create Account</a>
+        </div>
+      </div>
+
+      <!-- IMAGE SIDE -->
+      <div class="auth-image">
+        <img src="https://images.unsplash.com/photo-1589923188900-85dae523342b?w=600" alt="Farmer in a maize field" loading="lazy">
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (function() {
+      var form = document.getElementById('loginForm');
+      var emailInput = document.getElementById('email');
+      var passwordInput = document.getElementById('password');
+      var loginBtn = document.getElementById('loginBtn');
+      var authError = document.getElementById('authError');
+      var passwordToggle = document.getElementById('passwordToggle');
+
+      // PASSWORD VISIBILITY TOGGLE
+      passwordToggle.addEventListener('click', function() {
+        var type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        passwordToggle.innerHTML = type === 'password' ? '&#128065;' : '&#128064;';
+      });
+
+      // FORM SUBMISSION
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        authError.classList.remove('visible');
+
+        var email = emailInput.value.trim();
+        var password = passwordInput.value;
+
+        if (!email || !password) {
+          authError.textContent = 'Please fill in all fields';
+          authError.classList.add('visible');
+          return;
+        }
+
+        // SHOW LOADING
+        loginBtn.disabled = true;
+        loginBtn.classList.add('btn-loading');
+        loginBtn.innerHTML = '<div class="btn-spinner"></div>';
+
+        var result = await loginUser(email, password);
+
+        if (result.success) {
+          // Redirect handled by auth.onAuthStateChanged in auth.js
+        } else {
+          authError.textContent = result.error;
+          authError.classList.add('visible');
+          loginBtn.disabled = false;
+          loginBtn.classList.remove('btn-loading');
+          loginBtn.innerHTML = '<span class="btn-text">Sign In</span>';
+        }
+      });
+
+      // ENTER KEY SUPPORT
+      passwordInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') form.dispatchEvent(new Event('submit'));
+      });
+
+    })();
+  </script>
+</body>
+</html>

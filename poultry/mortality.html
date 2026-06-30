@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Mortality</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <style>
+    .mort-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .mort-summary .card { padding: 16px; text-align: center; }
+    .mort-summary .val { font-size: 22px; font-weight: 700; }
+    .chart-placeholder { height: 200px; margin-bottom: 24px; }
+    .chart-placeholder canvas { width: 100% !important; height: 100% !important; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><span>🌱</span><span>AgriLedger</span></div>
+    <div class="sidebar-user"><div class="avatar user-avatar-text">J</div><div class="user-info"><div class="name sidebar-user-name">User</div><div class="role sidebar-user-role">general</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="../dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <div class="nav-section">POULTRY</div>
+      <a href="poultry-dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <a href="farm-setup.html"><span class="nav-icon">⚙️</span><span class="nav-text">Farm Setup</span></a>
+      <a href="flock-register.html"><span class="nav-icon">📋</span><span class="nav-text">Flock Register</span></a>
+      <a href="production-log.html"><span class="nav-icon">🥚</span><span class="nav-text">Production Log</span></a>
+      <a href="sales.html"><span class="nav-icon">💰</span><span class="nav-text">Sales</span></a>
+      <a href="other-income.html"><span class="nav-icon">💵</span><span class="nav-text">Other Income</span></a>
+      <a href="feed-expenses.html"><span class="nav-icon">🌾</span><span class="nav-text">Feed Expenses</span></a>
+      <a href="health-vet.html"><span class="nav-icon">💉</span><span class="nav-text">Health &amp; Vet</span></a>
+      <a href="mortality.html" class="active"><span class="nav-icon">⚰️</span><span class="nav-text">Mortality</span></a>
+      <a href="batch-summary.html"><span class="nav-icon">📈</span><span class="nav-text">Batch Summary</span></a>
+      <div class="nav-section">MAIN</div>
+      <a href="../farming/crops.html"><span class="nav-icon">🌾</span><span class="nav-text">Crops</span></a>
+      <a href="../farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+      <a href="../farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+      <a href="../inventory.html"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+      <a href="../cashbook.html"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+      <a href="../journal.html"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+    </nav>
+    <div class="sidebar-footer"><a href="../settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a><a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a></div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><button class="topbar-toggle" id="sidebar-toggle">☰</button><div class="breadcrumb"><a href="../dashboard.html">Dashboard</a><span class="sep">›</span><a href="poultry-dashboard.html">Poultry</a><span class="sep">›</span><span>Mortality</span></div></div>
+      <div class="topbar-right"><button class="notification-btn">🔔<span class="badge badge-red">3</span></button><button class="profile-btn" onclick="window.location.href='../settings.html'"><div class="avatar user-avatar-text">J</div><span class="sidebar-user-name" style="font-size:13px;">User</span></button></div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header"><div class="page-header-row"><div><h1>Mortality Tracking</h1><p style="font-size:14px;color:var(--text-secondary);">Record and monitor bird losses</p></div></div></div>
+
+      <div class="mort-summary" id="mortSummary">
+        <div class="card"><div class="val" style="color:var(--accent-red);" id="mortCount">0</div><div style="font-size:13px;color:var(--text-secondary);">This Month</div></div>
+        <div class="card"><div class="val" id="mortRate">0%</div><div style="font-size:13px;color:var(--text-secondary);">Mortality Rate</div></div>
+        <div class="card"><div class="val" id="mortTopCause">—</div><div style="font-size:13px;color:var(--text-secondary);">Top Cause</div></div>
+        <div class="card"><div class="val" style="color:var(--accent-blue);" id="mortVsLast">0</div><div style="font-size:13px;color:var(--text-secondary);">vs Last Month</div></div>
+      </div>
+
+      <div class="chart-container chart-placeholder">
+        <h3>📉 Mortality Trend (Last 30 Days)</h3>
+        <canvas id="mortChart"></canvas>
+      </div>
+
+      <div class="card" style="margin-bottom:24px;"><div class="card-body">
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:16px;">➕ Record Mortality</h3>
+        <form id="mortForm" onsubmit="return saveMortality(event)">
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Date</label><input type="date" id="mortDate" class="form-input" required></div>
+            <div class="form-group"><label class="form-label">Batch</label><select id="mortBatch" class="form-select" required><option value="">Select Batch</option></select></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Birds Lost</label><input type="number" id="mortLost" class="form-input" min="1" required></div>
+            <div class="form-group"><label class="form-label">Cause</label><select id="mortCause" class="form-select" required>
+              <option value="Disease">Disease</option>
+              <option value="Injury">Injury</option>
+              <option value="Predator">Predator</option>
+              <option value="Old Age">Old Age</option>
+              <option value="Cannibalism">Cannibalism</option>
+              <option value="Stress">Stress</option>
+              <option value="Unknown">Unknown</option>
+              <option value="Other">Other</option>
+            </select></div>
+          </div>
+          <div class="form-group"><label class="form-label">Description / Notes</label><textarea id="mortNotes" class="form-textarea" placeholder="Additional details..."></textarea></div>
+          <button type="submit" class="btn btn-primary">💾 Record Mortality</button>
+        </form>
+      </div></div>
+
+      <div class="table-container">
+        <table id="mortTable">
+          <thead><tr><th>Date</th><th>Batch</th><th>Birds Lost</th><th>Cause</th><th>Notes</th></tr></thead>
+          <tbody id="mortTableBody"><tr><td colspan="5"><div class="loading-spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="../js/firebase-config.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+(function() {
+  var allMort = [], allBatches = [];
+  var mortChart = null;
+
+  function load() {
+    db.collection('poultryBatches').onSnapshot(function(snap) {
+      allBatches = []; snap.forEach(function(d) { allBatches.push({ id: d.id, ...d.data() }); });
+      populateBatchSelect();
+    }, function() {});
+    db.collection('poultryMortality').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
+      allMort = []; snap.forEach(function(d) { allMort.push({ id: d.id, ...d.data() }); });
+      if (allMort.length === 0) loadDemo();
+      renderSummary();
+      renderTable();
+      drawChart();
+    }, function() { loadDemo(); });
+    document.getElementById('mortDate').value = new Date().toISOString().split('T')[0];
+  }
+
+  function loadDemo() {
+    allBatches = [
+      { id:'d1', name:'Batch A - Layers', birdType:'Layers', flockSize:500, status:'active' },
+      { id:'d2', name:'Batch B - Broilers', birdType:'Broilers', flockSize:300, status:'active' },
+      { id:'d3', name:'Batch C - Kienyeji', birdType:'Kienyeji', flockSize:200, status:'active' }
+    ];
+    populateBatchSelect();
+    allMort = [];
+    var now = new Date();
+    for (var i = 29; i >= 0; i--) {
+      var d = new Date(now); d.setDate(d.getDate() - i);
+      var causes = ['Disease','Injury','Unknown','Old Age','Predator'];
+      allMort.push({ id:'m'+i, date:d, batchId:'d1', batchName:'Batch A - Layers', lost:Math.floor(Math.random()*3)+1, cause:causes[Math.floor(Math.random()*causes.length)], notes:'' });
+    }
+    renderSummary(); renderTable(); drawChart();
+  }
+
+  function populateBatchSelect() {
+    var sel = document.getElementById('mortBatch');
+    sel.innerHTML = '<option value="">Select Batch</option>' + allBatches.filter(function(b) { return b.status === 'active'; }).map(function(b) {
+      return '<option value="' + b.id + '">' + (b.name||'Unnamed') + ' (' + (b.flockSize||0) + ' birds)</option>';
+    }).join('');
+  }
+
+  window.saveMortality = function(e) {
+    e.preventDefault();
+    var batchId = document.getElementById('mortBatch').value;
+    if (!batchId) { showToast('Select a batch', 'error'); return false; }
+    var b = allBatches.find(function(x) { return x.id === batchId; });
+    var data = {
+      date: new Date(document.getElementById('mortDate').value + 'T00:00:00'),
+      batchId: batchId,
+      batchName: b ? b.name : '',
+      lost: parseInt(document.getElementById('mortLost').value)||0,
+      cause: document.getElementById('mortCause').value,
+      notes: document.getElementById('mortNotes').value,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    db.collection('poultryMortality').add(data).then(function() {
+      showToast('Mortality recorded', 'success');
+      document.getElementById('mortLost').value = '';
+      document.getElementById('mortNotes').value = '';
+    }).catch(function(err) {
+      console.warn(err);
+      data.id = 'local_' + Date.now();
+      allMort.unshift(data);
+      renderSummary(); renderTable(); drawChart();
+      showToast('Saved locally', 'info');
+    });
+    return false;
+  };
+
+  function renderSummary() {
+    var now = new Date(), m = now.getMonth(), y = now.getFullYear();
+    var lm = m === 0 ? 11 : m - 1;
+    var ly = m === 0 ? y - 1 : y;
+    var thisMonth = allMort.filter(function(r) {
+      var d = r.date ? (r.date.toDate ? r.date.toDate() : new Date(r.date)) : new Date();
+      return d.getMonth() === m && d.getFullYear() === y;
+    });
+    var lastMonth = allMort.filter(function(r) {
+      var d = r.date ? (r.date.toDate ? r.date.toDate() : new Date(r.date)) : new Date();
+      return d.getMonth() === lm && d.getFullYear() === ly;
+    });
+    var count = thisMonth.reduce(function(s,r) { return s + (parseInt(r.lost)||0); }, 0);
+    var lastCount = lastMonth.reduce(function(s,r) { return s + (parseInt(r.lost)||0); }, 0);
+    document.getElementById('mortCount').textContent = count;
+    document.getElementById('mortVsLast').textContent = (count - lastCount) > 0 ? '+' + (count - lastCount) : (count - lastCount);
+
+    // Rate
+    var totalBirds = allBatches.filter(function(b) { return b.status === 'active'; }).reduce(function(s,b) { return s + (parseInt(b.flockSize)||0); }, 0);
+    var rate = totalBirds > 0 ? ((count / totalBirds) * 100).toFixed(1) : '0';
+    document.getElementById('mortRate').textContent = rate + '%';
+
+    // Top cause
+    var causes = {};
+    thisMonth.forEach(function(r) { causes[r.cause] = (causes[r.cause]||0) + (parseInt(r.lost)||0); });
+    var topCause = Object.keys(causes).sort(function(a,b) { return causes[b] - causes[a]; })[0] || '—';
+    document.getElementById('mortTopCause').textContent = topCause;
+  }
+
+  function renderTable() {
+    var tbody = document.getElementById('mortTableBody');
+    if (!tbody) return;
+    if (allMort.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="icon">⚰️</div><h3>No mortality records</h3></div></td></tr>';
+      return;
+    }
+    var sorted = allMort.slice().sort(function(a,b) {
+      var da = a.date ? (a.date.toDate ? a.date.toDate() : new Date(a.date)) : new Date(0);
+      var db = b.date ? (b.date.toDate ? b.date.toDate() : new Date(b.date)) : new Date(0);
+      return db - da;
+    });
+    tbody.innerHTML = sorted.map(function(r) {
+      var d = r.date ? (r.date.toDate ? r.date.toDate() : new Date(r.date)) : new Date();
+      var causeBadge = r.cause === 'Disease' ? 'badge-red' : r.cause === 'Predator' ? 'badge-gold' : 'badge-gray';
+      return '<tr><td>' + formatDate(d) + '</td><td>' + (r.batchName||'—') + '</td><td><strong style="color:var(--accent-red);">' + (r.lost||0) + '</strong></td><td><span class="badge ' + causeBadge + '">' + (r.cause||'—') + '</span></td><td>' + (r.notes||'') + '</td></tr>';
+    }).join('');
+  }
+
+  function drawChart() {
+    var canvas = document.getElementById('mortChart');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var parent = canvas.parentElement;
+    canvas.width = parent.offsetWidth || 700;
+    canvas.height = parent.offsetHeight || 200;
+
+    var now = new Date();
+    var labels = [], data = [];
+    for (var i = 29; i >= 0; i--) {
+      var d = new Date(now); d.setDate(d.getDate() - i);
+      labels.push(d.getDate() + '/' + (d.getMonth()+1));
+      var ds = d.toDateString();
+      var total = 0;
+      allMort.forEach(function(r) {
+        var rd = r.date ? (r.date.toDate ? r.date.toDate() : new Date(r.date)) : new Date();
+        if (rd.toDateString() === ds) total += (parseInt(r.lost)||0);
+      });
+      data.push(total);
+    }
+
+    if (mortChart && typeof mortChart.destroy === 'function') mortChart.destroy();
+    var w = canvas.width, h = canvas.height;
+    var pad = { top: 20, bottom: 30, left: 40, right: 20 };
+    var chartW = w - pad.left - pad.right, chartH = h - pad.top - pad.bottom;
+    ctx.clearRect(0, 0, w, h);
+    var maxVal = Math.max(1, Math.max.apply(null, data));
+    ctx.strokeStyle = '#E5E7EB'; ctx.lineWidth = 1;
+    for (var i = 0; i <= 4; i++) {
+      var y = pad.top + (chartH / 4) * i;
+      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+      ctx.fillStyle = '#9CA3AF'; ctx.font = '10px Inter, sans-serif'; ctx.textAlign = 'right';
+      ctx.fillText(Math.round(maxVal - (maxVal / 4) * i), pad.left - 6, y + 3);
+    }
+    var stepX = chartW / (labels.length - 1 || 1);
+    ctx.fillStyle = '#E53935'; ctx.strokeStyle = '#E53935'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    data.forEach(function(val, idx) {
+      var x = pad.left + idx * stepX;
+      var y = pad.top + chartH - (val / maxVal) * chartH;
+      if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }); ctx.stroke();
+    ctx.fillStyle = '#E53935';
+    data.forEach(function(val, idx) {
+      var x = pad.left + idx * stepX;
+      var y = pad.top + chartH - (val / maxVal) * chartH;
+      ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.fillStyle = '#9CA3AF'; ctx.font = '9px Inter, sans-serif'; ctx.textAlign = 'center';
+    var skip = Math.max(1, Math.floor(labels.length / 10));
+    labels.forEach(function(label, idx) {
+      if (idx % skip === 0 || idx === labels.length - 1) ctx.fillText(label, pad.left + idx * stepX, h - pad.bottom + 14);
+    });
+    ctx.fillStyle = '#E53935'; ctx.fillRect(pad.left, 8, 10, 10);
+    ctx.fillStyle = '#6B7280'; ctx.font = '10px Inter, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('Mortality', pad.left + 14, 16);
+    mortChart = { destroy: function() { ctx.clearRect(0, 0, w, h); } };
+  }
+
+  var resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(drawChart, 500);
+  });
+
+  document.addEventListener('DOMContentLoaded', function() { setTimeout(load, 300); });
+})();
+</script>
+</body>
+</html>

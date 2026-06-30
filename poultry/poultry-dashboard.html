@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Poultry Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <style>
+    .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px; }
+    @media (max-width: 768px) { .charts-row { grid-template-columns: 1fr; } }
+    .chart-placeholder { height: 250px; position: relative; }
+    .chart-placeholder canvas { width: 100% !important; height: 100% !important; }
+    .batch-overview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .batch-card-small { background: var(--surface-white); border-radius: var(--radius-md); border: 1px solid var(--border-light); padding: 16px; transition: var(--transition); }
+    .batch-card-small:hover { box-shadow: var(--shadow-md); }
+    .batch-card-small .bc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .batch-card-small .bc-name { font-weight: 600; font-size: 15px; }
+    .batch-card-small .bc-type { font-size: 12px; color: var(--text-secondary); }
+    .batch-card-small .bc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .batch-card-small .bc-stat { text-align: center; padding: 6px; background: var(--bg-cream); border-radius: var(--radius-sm); }
+    .batch-card-small .bc-stat .val { font-size: 16px; font-weight: 700; color: var(--primary-green); }
+    .batch-card-small .bc-stat .lbl { font-size: 10px; color: var(--text-secondary); }
+    .quick-actions { position: fixed; bottom: 24px; right: 24px; display: flex; gap: 8px; z-index: 50; }
+    .quick-actions .btn { box-shadow: var(--shadow-lg); padding: 12px 20px; border-radius: 50px; }
+    @media (max-width: 640px) {
+      .quick-actions { bottom: 80px; right: 12px; flex-direction: column; }
+      .quick-actions .btn { padding: 10px 16px; font-size: 13px; }
+      .batch-overview-grid { grid-template-columns: 1fr; }
+    }
+    .fin-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    @media (max-width: 640px) { .fin-summary { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><span>🌱</span><span>AgriLedger</span></div>
+    <div class="sidebar-user">
+      <div class="avatar user-avatar-text">J</div>
+      <div class="user-info">
+        <div class="name sidebar-user-name">User</div>
+        <div class="role sidebar-user-role">general</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="../dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <div class="nav-section">POULTRY</div>
+      <a href="poultry-dashboard.html" class="active"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <a href="farm-setup.html"><span class="nav-icon">⚙️</span><span class="nav-text">Farm Setup</span></a>
+      <a href="flock-register.html"><span class="nav-icon">📋</span><span class="nav-text">Flock Register</span></a>
+      <a href="production-log.html"><span class="nav-icon">🥚</span><span class="nav-text">Production Log</span></a>
+      <a href="sales.html"><span class="nav-icon">💰</span><span class="nav-text">Sales</span></a>
+      <a href="other-income.html"><span class="nav-icon">💵</span><span class="nav-text">Other Income</span></a>
+      <a href="feed-expenses.html"><span class="nav-icon">🌾</span><span class="nav-text">Feed Expenses</span></a>
+      <a href="health-vet.html"><span class="nav-icon">💉</span><span class="nav-text">Health &amp; Vet</span></a>
+      <a href="mortality.html"><span class="nav-icon">⚰️</span><span class="nav-text">Mortality</span></a>
+      <a href="batch-summary.html"><span class="nav-icon">📈</span><span class="nav-text">Batch Summary</span></a>
+      <div class="nav-section">MAIN</div>
+      <a href="../farming/crops.html"><span class="nav-icon">🌾</span><span class="nav-text">Crops</span></a>
+      <a href="../farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+      <a href="../farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+      <a href="../inventory.html"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+      <a href="../cashbook.html"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+      <a href="../journal.html"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="../settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a>
+      <a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle">☰</button>
+        <div class="breadcrumb">
+          <a href="../dashboard.html">Dashboard</a><span class="sep">›</span><span>Poultry Dashboard</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="notification-btn">🔔<span class="badge badge-red">3</span></button>
+        <button class="profile-btn" onclick="window.location.href='../settings.html'">
+          <div class="avatar user-avatar-text">J</div>
+          <span class="sidebar-user-name" style="font-size:13px;">User</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header">
+        <div class="page-header-row">
+          <div>
+            <h1>Poultry Dashboard</h1>
+            <p style="font-size:14px;color:var(--text-secondary);">Real-time overview of your poultry operations</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="window.location.href='production-log.html'">➕ Log Production</button>
+            <button class="btn btn-secondary" onclick="window.location.href='flock-register.html'">📋 Flock Register</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-strip" id="kpiStrip">
+        <div class="card kpi-card">
+          <div class="kpi-icon green">🐔</div>
+          <div class="kpi-label">Total Birds</div>
+          <div class="kpi-value" id="totalBirds">0</div>
+          <div class="kpi-change up" id="birdChange">Active flocks</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-icon green">🥚</div>
+          <div class="kpi-label">Daily Eggs</div>
+          <div class="kpi-value" id="dailyEggs">0</div>
+          <div class="kpi-change up" id="eggChange">Today</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-icon" style="background:#FFEBEE;">⚰️</div>
+          <div class="kpi-label">Mortality Rate</div>
+          <div class="kpi-value" id="mortalityRate">0%</div>
+          <div class="kpi-change down" id="mortChange">This month</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-icon" style="background:#FFF8E1;">🌾</div>
+          <div class="kpi-label">Feed Cost / Month</div>
+          <div class="kpi-value" id="feedCostMonth">KSh 0</div>
+          <div class="kpi-change" id="feedChange">This month</div>
+        </div>
+        <div class="card kpi-card income">
+          <div class="kpi-icon gold">💰</div>
+          <div class="kpi-label">Revenue This Month</div>
+          <div class="kpi-value" id="revenueMonth">KSh 0</div>
+          <div class="kpi-change up" id="revChange">Egg sales</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-icon" style="background:#E3F2FD;">📦</div>
+          <div class="kpi-label">Active Batches</div>
+          <div class="kpi-value" id="activeBatches">0</div>
+          <div class="kpi-change" id="batchChange">Currently active</div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-container">
+          <h3>Production Trend (Last 30 Days)</h3>
+          <div class="chart-placeholder">
+            <canvas id="productionChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-container">
+          <h3>Income vs Expenses</h3>
+          <div class="chart-placeholder" style="height:200px;">
+            <canvas id="finChart"></canvas>
+          </div>
+          <div id="finLegend" class="donut-legend" style="margin-top:12px;"></div>
+        </div>
+      </div>
+
+      <div class="fin-summary">
+        <div class="card" style="padding:16px;">
+          <div style="font-size:13px;color:var(--text-secondary);">Income This Month</div>
+          <div style="font-size:24px;font-weight:700;color:var(--primary-green);" id="finIncome">KSh 0</div>
+        </div>
+        <div class="card" style="padding:16px;">
+          <div style="font-size:13px;color:var(--text-secondary);">Expenses This Month</div>
+          <div style="font-size:24px;font-weight:700;color:var(--accent-red);" id="finExpenses">KSh 0</div>
+        </div>
+        <div class="card" style="padding:16px;">
+          <div style="font-size:13px;color:var(--text-secondary);">Net Profit</div>
+          <div style="font-size:24px;font-weight:700;color:var(--accent-gold);" id="finNet">KSh 0</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-header">
+          <h3>Batch Overview</h3>
+          <a href="flock-register.html" style="font-size:13px;color:var(--primary-green);font-weight:500;">View All</a>
+        </div>
+        <div class="card-body" id="batchOverview">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="quick-actions">
+    <button class="btn btn-primary" onclick="window.location.href='production-log.html'">🥚 Log Eggs</button>
+    <button class="btn btn-secondary" style="background:var(--accent-gold);color:white;" onclick="window.location.href='sales.html'">💰 Add Sale</button>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="../js/firebase-config.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+(function() {
+  var allBatches = [], allProduction = [], allFeedExpenses = [], allSales = [];
+  var prodChart = null, finChart = null;
+
+  function loadData() {
+    var hasData = false;
+
+    db.collection('poultryBatches').onSnapshot(function(snap) {
+      allBatches = [];
+      snap.forEach(function(d) { allBatches.push({ id: d.id, ...d.data() }); });
+      if (allBatches.length > 0 || hasData) { hasData = true; renderDashboard(); }
+    }, function() { loadDemoData(); });
+
+    db.collection('poultryProduction').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
+      allProduction = [];
+      snap.forEach(function(d) { allProduction.push({ id: d.id, ...d.data() }); });
+      if (allBatches.length > 0 || allProduction.length > 0) { hasData = true; renderDashboard(); }
+    }, function() {});
+
+    db.collection('feedExpenses').onSnapshot(function(snap) {
+      allFeedExpenses = [];
+      snap.forEach(function(d) { allFeedExpenses.push({ id: d.id, ...d.data() }); });
+    }, function() {});
+
+    db.collection('poultrySales').onSnapshot(function(snap) {
+      allSales = [];
+      snap.forEach(function(d) { allSales.push({ id: d.id, ...d.data() }); });
+    }, function() {});
+
+    setTimeout(function() { if (!hasData) loadDemoData(); }, 2000);
+  }
+
+  function loadDemoData() {
+    allBatches = [
+      { id:'d1', name:'Batch A - Layers', birdType:'Layers', status:'active', flockSize:500, eggsPerDay:420, mortality:3, feedPerDay:60, startDate:new Date(2026,2,1) },
+      { id:'d2', name:'Batch B - Broilers', birdType:'Broilers', status:'active', flockSize:300, eggsPerDay:0, mortality:5, feedPerDay:85, startDate:new Date(2026,3,15) },
+      { id:'d3', name:'Batch C - Kienyeji', birdType:'Kienyeji', status:'active', flockSize:200, eggsPerDay:140, mortality:2, feedPerDay:25, startDate:new Date(2026,0,10) }
+    ];
+    allProduction = [];
+    var now = new Date();
+    for (var i = 29; i >= 0; i--) {
+      var d = new Date(now); d.setDate(d.getDate() - i);
+      allProduction.push({ date:d, batchId:'d1', flockSize:500, morning:Math.floor(200+Math.random()*50), afternoon:Math.floor(180+Math.random()*50), birdType:'Layers' });
+      allProduction.push({ date:d, batchId:'d3', flockSize:200, morning:Math.floor(60+Math.random()*30), afternoon:Math.floor(50+Math.random()*30), birdType:'Kienyeji' });
+    }
+    allFeedExpenses = [
+      { date:new Date(2026,5,1), amount:45000, type:'purchase' },
+      { date:new Date(2026,5,15), amount:38000, type:'purchase' }
+    ];
+    allSales = [
+      { date:new Date(2026,5,5), total:24000, type:'Egg Sales' },
+      { date:new Date(2026,5,12), total:18500, type:'Egg Sales' },
+      { date:new Date(2026,5,20), total:32000, type:'Bird Sales' }
+    ];
+    renderDashboard();
+  }
+
+  function renderDashboard() {
+    var activeBatches = allBatches.filter(function(b) { return b.status === 'active'; });
+    var totalBirds = activeBatches.reduce(function(s,b) { return s + (parseInt(b.flockSize)||0); }, 0);
+    var totalDailyEggs = activeBatches.reduce(function(s,b) { return s + (parseInt(b.eggsPerDay)||0); }, 0);
+    var totalMort = activeBatches.reduce(function(s,b) { return s + (parseInt(b.mortality)||0); }, 0);
+    var mortRate = totalBirds > 0 ? ((totalMort / totalBirds) * 100).toFixed(1) + '%' : '0%';
+
+    var thisMonth = new Date().getMonth();
+    var thisYear = new Date().getFullYear();
+    var feedCost = allFeedExpenses.filter(function(f) {
+      var d = f.date ? (f.date.toDate ? f.date.toDate() : new Date(f.date)) : new Date();
+      return d.getMonth() === thisMonth && d.getFullYear() === thisYear && f.type === 'purchase';
+    }).reduce(function(s,f) { return s + (parseFloat(f.amount)||0); }, 0);
+
+    var revenue = allSales.filter(function(s) {
+      var d = s.date ? (s.date.toDate ? s.date.toDate() : new Date(s.date)) : new Date();
+      return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+    }).reduce(function(sum,s) { return sum + (parseFloat(s.total)||0); }, 0);
+
+    document.getElementById('totalBirds').textContent = formatNumber(totalBirds);
+    document.getElementById('dailyEggs').textContent = formatNumber(totalDailyEggs);
+    document.getElementById('mortalityRate').textContent = mortRate;
+    document.getElementById('feedCostMonth').textContent = formatCurrency(feedCost);
+    document.getElementById('revenueMonth').textContent = formatCurrency(revenue);
+    document.getElementById('activeBatches').textContent = activeBatches.length;
+    document.getElementById('birdChange').textContent = activeBatches.length + ' active flocks';
+    document.getElementById('eggChange').textContent = 'Today\'s estimate';
+
+    var feedCostAll = allFeedExpenses.filter(function(f) { return f.type === 'purchase'; }).reduce(function(s,f) { return s + (parseFloat(f.amount)||0); }, 0);
+    document.getElementById('finIncome').textContent = formatCurrency(revenue);
+    document.getElementById('finExpenses').textContent = formatCurrency(feedCostAll);
+    document.getElementById('finNet').textContent = formatCurrency(revenue - feedCostAll);
+
+    renderBatchCards(activeBatches);
+    drawProductionChart();
+    drawFinChart();
+  }
+
+  function renderBatchCards(batches) {
+    var el = document.getElementById('batchOverview');
+    if (!el) return;
+    if (batches.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">🐔</div><h3>No active batches</h3><p>Add a batch in Flock Register to get started.</p></div>';
+      return;
+    }
+    var html = '<div class="batch-overview-grid">';
+    batches.forEach(function(b) {
+      var eggs = parseInt(b.eggsPerDay)||0;
+      var hd = calculateHenDay(eggs, b.flockSize).toFixed(1);
+      var trays = calculateTrays(eggs).toFixed(1);
+      var feed = parseFloat(b.feedPerDay)||0;
+      html += '<div class="batch-card-small"><div class="bc-header"><div><div class="bc-name">' + (b.name||'Unnamed') + '</div><div class="bc-type">' + (b.birdType||'—') + '</div></div><span class="badge badge-green">Active</span></div><div class="bc-stats"><div class="bc-stat"><div class="val">' + formatNumber(eggs) + '</div><div class="lbl">Eggs/Day</div></div><div class="bc-stat"><div class="val">' + hd + '%</div><div class="lbl">Hen Day %</div></div><div class="bc-stat"><div class="val">' + trays + '</div><div class="lbl">Trays</div></div><div class="bc-stat"><div class="val">' + feed + ' kg</div><div class="lbl">Feed/Day</div></div><div class="bc-stat"><div class="val">' + formatNumber(b.flockSize||0) + '</div><div class="lbl">Birds</div></div><div class="bc-stat"><div class="val">' + (parseInt(b.mortality)||0) + '</div><div class="lbl">Mortality</div></div></div></div>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
+  }
+
+  function drawProductionChart() {
+    var canvas = document.getElementById('productionChart');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var parent = canvas.parentElement;
+    canvas.width = parent.offsetWidth || 600;
+    canvas.height = parent.offsetHeight || 250;
+
+    var now = new Date();
+    var labels = [], layerData = [], kienyejiData = [];
+    for (var i = 29; i >= 0; i--) {
+      var d = new Date(now); d.setDate(d.getDate() - i);
+      labels.push(d.getDate() + '/' + (d.getMonth()+1));
+      var layerTotal = 0, kienTotal = 0;
+      allProduction.forEach(function(p) {
+        var pd = p.date ? (p.date.toDate ? p.date.toDate() : new Date(p.date)) : new Date();
+        if (pd.toDateString() === d.toDateString()) {
+          var total = (parseInt(p.morning)||0) + (parseInt(p.afternoon)||0);
+          if ((p.birdType||'').toLowerCase().includes('layer')) layerTotal += total;
+          else kienTotal += total;
+        }
+      });
+      layerData.push(layerTotal);
+      kienyejiData.push(kienTotal);
+    }
+
+    if (prodChart && typeof prodChart.destroy === 'function') prodChart.destroy();
+    prodChart = drawLineChart(ctx, labels, [
+      { label: 'Layers', data: layerData, color: '#2D7A3E' },
+      { label: 'Kienyeji', data: kienyejiData, color: '#F5A623' }
+    ]);
+  }
+
+  function drawFinChart() {
+    var canvas = document.getElementById('finChart');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var parent = canvas.parentElement;
+    canvas.width = parent.offsetWidth || 300;
+    canvas.height = parent.offsetHeight || 200;
+
+    var income = allSales.reduce(function(s, x) { return s + (parseFloat(x.total)||0); }, 0);
+    var expense = allFeedExpenses.reduce(function(s, x) { return s + (parseFloat(x.amount)||0); }, 0);
+    if (income === 0 && expense === 0) { income = 65000; expense = 42000; }
+    var total = income + expense;
+    var cats = [
+      { label: 'Income', value: total > 0 ? Math.round((income/total)*100) : 50, color: '#2D7A3E' },
+      { label: 'Expenses', value: total > 0 ? Math.round((expense/total)*100) : 50, color: '#E53935' }
+    ];
+    if (finChart && typeof finChart.destroy === 'function') finChart.destroy();
+    finChart = drawDonutChart(ctx, cats);
+    var leg = document.getElementById('finLegend');
+    if (leg) leg.innerHTML = cats.map(function(c) {
+      return '<span class="donut-legend-item"><span class="swatch" style="background:' + c.color + '"></span>' + c.label + ' (' + c.value + '%)</span>';
+    }).join('');
+  }
+
+  function drawLineChart(ctx, labels, datasets) {
+    if (!ctx) return null;
+    var w = ctx.canvas.width, h = ctx.canvas.height;
+    var pad = { top: 20, bottom: 30, left: 40, right: 20 };
+    var chartW = w - pad.left - pad.right;
+    var chartH = h - pad.top - pad.bottom;
+    ctx.clearRect(0, 0, w, h);
+    var maxVal = 1;
+    datasets.forEach(function(ds) { ds.data.forEach(function(v) { if (v > maxVal) maxVal = v; }); });
+    maxVal = Math.ceil(maxVal / 100) * 100 + 50;
+    ctx.strokeStyle = '#E5E7EB'; ctx.lineWidth = 1;
+    for (var i = 0; i <= 4; i++) {
+      var y = pad.top + (chartH / 4) * i;
+      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+      ctx.fillStyle = '#9CA3AF'; ctx.font = '10px Inter, sans-serif'; ctx.textAlign = 'right';
+      ctx.fillText(Math.round(maxVal - (maxVal / 4) * i), pad.left - 6, y + 3);
+    }
+    var stepX = chartW / (labels.length - 1 || 1);
+    datasets.forEach(function(ds) {
+      ctx.strokeStyle = ds.color; ctx.lineWidth = 2; ctx.beginPath();
+      ds.data.forEach(function(val, idx) {
+        var x = pad.left + idx * stepX;
+        var y = pad.top + chartH - (val / maxVal) * chartH;
+        if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }); ctx.stroke();
+      ctx.fillStyle = ds.color;
+      ds.data.forEach(function(val, idx) {
+        var x = pad.left + idx * stepX;
+        var y = pad.top + chartH - (val / maxVal) * chartH;
+        ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
+      });
+    });
+    ctx.fillStyle = '#9CA3AF'; ctx.font = '9px Inter, sans-serif'; ctx.textAlign = 'center';
+    var skip = Math.max(1, Math.floor(labels.length / 10));
+    labels.forEach(function(label, idx) {
+      if (idx % skip === 0 || idx === labels.length - 1) ctx.fillText(label, pad.left + idx * stepX, h - pad.bottom + 14);
+    });
+    var legendY = 8, legendX = pad.left;
+    datasets.forEach(function(ds) {
+      ctx.fillStyle = ds.color; ctx.fillRect(legendX, legendY, 10, 10);
+      ctx.fillStyle = '#6B7280'; ctx.font = '10px Inter, sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText(ds.label, legendX + 14, legendY + 8);
+      legendX += ctx.measureText(ds.label).width + 30;
+    });
+    return { destroy: function() { ctx.clearRect(0, 0, w, h); } };
+  }
+
+  function drawDonutChart(ctx, categories) {
+    if (!ctx) return null;
+    var w = ctx.canvas.width, h = ctx.canvas.height;
+    var cx = w / 2, cy = h / 2, r = Math.min(cx, cy) - 20;
+    var total = categories.reduce(function(s, c) { return s + c.value; }, 0);
+    if (total === 0) total = 100;
+    ctx.clearRect(0, 0, w, h);
+    var startAngle = -Math.PI / 2;
+    categories.forEach(function(cat) {
+      var sliceAngle = (cat.value / total) * Math.PI * 2;
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, startAngle, startAngle + sliceAngle); ctx.closePath();
+      ctx.fillStyle = cat.color; ctx.fill();
+      startAngle += sliceAngle;
+    });
+    ctx.beginPath(); ctx.arc(cx, cy, r * 0.5, 0, Math.PI * 2); ctx.fillStyle = 'white'; ctx.fill();
+    ctx.fillStyle = '#1A1A2E'; ctx.font = 'bold 16px Inter, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('KSh', cx, cy - 10);
+    ctx.font = 'bold 14px Inter, sans-serif';
+    ctx.fillText(Math.round(total) + '', cx, cy + 14);
+    return { destroy: function() { ctx.clearRect(0, 0, w, h); } };
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(loadData, 300);
+  });
+
+  var resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() { drawProductionChart(); drawFinChart(); }, 500);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <style>
+    .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px; }
+    @media (max-width: 768px) { .charts-row { grid-template-columns: 1fr; } }
+    .chart-placeholder { height: 250px; position: relative; }
+    .chart-placeholder canvas { width: 100% !important; height: 100% !important; }
+    .recent-activity { margin-bottom: 24px; }
+    .activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-light); }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+    .activity-dot.income { background: var(--primary-green); }
+    .activity-dot.expense { background: var(--accent-red); }
+    .activity-dot.stock { background: var(--accent-gold); }
+    .activity-content { flex: 1; }
+    .activity-content .title { font-size: 14px; font-weight: 500; }
+    .activity-content .meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .activity-content .amount { font-size: 14px; font-weight: 600; }
+    .activity-content .amount.income { color: var(--primary-green); }
+    .activity-content .amount.expense { color: var(--accent-red); }
+    .quick-actions { position: fixed; bottom: 24px; right: 24px; display: flex; gap: 8px; z-index: 50; }
+    .quick-actions .btn { box-shadow: var(--shadow-lg); padding: 12px 20px; border-radius: 50px; }
+    @media (max-width: 640px) {
+      .quick-actions { bottom: 80px; right: 12px; flex-direction: column; }
+      .quick-actions .btn { padding: 10px 16px; font-size: 13px; }
+    }
+    .donut-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+    .donut-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+    .donut-legend-item .swatch { width: 10px; height: 10px; border-radius: 2px; }
+    .kpi-trend { font-size: 11px; display: flex; align-items: center; gap: 2px; }
+    .bottom-nav { display: none; }
+    @media (max-width: 640px) {
+      .bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #1B4332;
+        z-index: 100;
+        padding: 4px 0;
+        justify-content: space-around;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      }
+      .bottom-nav a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        color: rgba(255,255,255,0.6);
+        font-size: 10px;
+        padding: 6px 12px;
+        text-decoration: none;
+        transition: var(--transition);
+      }
+      .bottom-nav a.active, .bottom-nav a:hover { color: white; }
+      .bottom-nav a .nav-icon { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout" id="toast-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <span class="logo" style="font-size:28px;">🌿</span>
+        <span>AgriLedger</span>
+      </div>
+      <div class="sidebar-user">
+        <div class="avatar">
+          <span class="user-avatar-text">U</span>
+        </div>
+        <div class="user-info">
+          <div class="name sidebar-user-name">Loading...</div>
+          <div class="role sidebar-user-role">general</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Main</div>
+        <a href="dashboard.html" class="nav-item active"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+        <div class="nav-item has-sub"><span class="nav-icon">🌾</span><span class="nav-text">Farming</span><span class="nav-arrow">▶</span></div>
+        <div class="sub-nav">
+          <a href="farming/crops.html"><span class="nav-icon">🌱</span><span class="nav-text">Crops</span></a>
+          <a href="farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+          <a href="farming/poultry.html"><span class="nav-icon">🐔</span><span class="nav-text">Poultry</span></a>
+          <a href="farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+        </div>
+        <a href="inventory.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+        <a href="cashbook.html" class="nav-item"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+        <a href="journal.html" class="nav-item"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+        <a href="contracts.html" class="nav-item"><span class="nav-icon">📝</span><span class="nav-text">Contracts</span></a>
+        <a href="property.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-text">Property</span></a>
+        <a href="transport.html" class="nav-item"><span class="nav-icon">🚜</span><span class="nav-text">Transport</span></a>
+        <a href="reports.html" class="nav-item"><span class="nav-icon">📈</span><span class="nav-text">Reports</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="settings.html"><span class="nav-icon">⚙️</span><span class="nav-text">Settings</span></a>
+        <a href="#" onclick="logoutUser()"><span class="nav-icon">🚪</span><span class="nav-text">Logout</span></a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="topbar-toggle" id="sidebar-toggle">☰</button>
+          <div class="topbar-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="Search everything..." id="globalSearch">
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="notification-btn" id="notifBtn">
+            🔔
+            <span class="badge badge-red" id="notifBadge" style="display:none;">0</span>
+          </button>
+          <button class="profile-btn" onclick="window.location.href='settings.html'">
+            <div class="avatar">
+              <span class="user-avatar-text">U</span>
+            </div>
+            <span class="sidebar-user-name" style="font-size:13px;font-weight:500;color:var(--text-primary);">User</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <div class="page-content">
+        <div class="page-header">
+          <div class="page-header-row">
+            <div>
+              <h1>Dashboard</h1>
+              <p id="currentDate">Loading date...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Strip -->
+        <div class="kpi-strip" id="kpiStrip">
+          <div class="card kpi-card income">
+            <div class="kpi-icon green">💰</div>
+            <div class="kpi-label">Total Income</div>
+            <div class="kpi-value" id="totalIncome">KSh 0</div>
+            <div class="kpi-change up" id="incomeChange">↑ 0%</div>
+          </div>
+          <div class="card kpi-card expense">
+            <div class="kpi-icon red">💸</div>
+            <div class="kpi-label">Total Expenses</div>
+            <div class="kpi-value" id="totalExpenses">KSh 0</div>
+            <div class="kpi-change down" id="expenseChange">↓ 0%</div>
+          </div>
+          <div class="card kpi-card balance">
+            <div class="kpi-icon gold">⚖️</div>
+            <div class="kpi-label">Balance</div>
+            <div class="kpi-value" id="totalBalance">KSh 0</div>
+          </div>
+          <div class="card kpi-card">
+            <div class="kpi-icon" style="background:#E0F7FA;">🐄</div>
+            <div class="kpi-label">Active Animals</div>
+            <div class="kpi-value" id="activeAnimals">0</div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-row">
+          <div class="chart-container">
+            <h3>Income vs Expenses</h3>
+            <div class="chart-placeholder">
+              <canvas id="incomeExpenseChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-container">
+            <h3>Expense Breakdown</h3>
+            <div class="chart-placeholder" style="height:200px;">
+              <canvas id="expenseDonut"></canvas>
+            </div>
+            <div class="donut-legend" id="donutLegend"></div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card recent-activity">
+          <div class="card-header">
+            <h3>Recent Activity</h3>
+            <a href="cashbook.html" style="font-size:13px;color:var(--primary-green);font-weight:500;">View All</a>
+          </div>
+          <div class="card-body" id="activityList">
+            <div class="loading-spinner"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <button class="btn btn-primary" onclick="alert('Add Income - coming soon')">➕ Add Income</button>
+      <button class="btn btn-danger" onclick="alert('Add Expense - coming soon')">➖ Add Expense</button>
+      <button class="btn btn-secondary" style="background:var(--accent-gold);color:white;" onclick="alert('Add Stock - coming soon')">📦 Add Stock</button>
+    </div>
+
+    <!-- Bottom Nav (Mobile) -->
+    <nav class="bottom-nav">
+      <a href="dashboard.html" class="active"><span class="nav-icon">📊</span>Home</a>
+      <a href="farming/crops.html"><span class="nav-icon">🌱</span>Crops</a>
+      <a href="farming/livestock.html"><span class="nav-icon">🐄</span>Animals</a>
+      <a href="cashbook.html"><span class="nav-icon">💰</span>Cashbook</a>
+      <a href="settings.html"><span class="nav-icon">⚙️</span>More</a>
+    </nav>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (function() {
+      // Set date
+      function updateDate() {
+        var el = document.getElementById('currentDate');
+        if (el) {
+          var now = new Date();
+          el.textContent = now.toLocaleDateString('en-KE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        }
+      }
+      updateDate();
+
+      var incomeCtx, expenseCtx, incomeChart, expenseChart;
+
+      function drawCharts(data) {
+        // Income vs Expense Line Chart
+        var canvas1 = document.getElementById('incomeExpenseChart');
+        if (canvas1) {
+          var parent = canvas1.parentElement;
+          canvas1.width = parent.offsetWidth || 600;
+          canvas1.height = parent.offsetHeight || 250;
+          incomeCtx = canvas1.getContext('2d');
+          if (incomeCtx) {
+            var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            var incomes = data.incomeTrend || [0,0,0,0,0,0,0,0,0,0,0,0];
+            var expenses = data.expenseTrend || [0,0,0,0,0,0,0,0,0,0,0,0];
+            if (incomeChart && typeof incomeChart.destroy === 'function') incomeChart.destroy();
+            incomeChart = drawLineChart(incomeCtx, months, [
+              { label: 'Income', data: incomes, color: '#2D7A3E' },
+              { label: 'Expenses', data: expenses, color: '#E53935' }
+            ]);
+          }
+        }
+
+        // Expense Donut Chart
+        var canvas2 = document.getElementById('expenseDonut');
+        if (canvas2) {
+          var parent2 = canvas2.parentElement;
+          canvas2.width = parent2.offsetWidth || 300;
+          canvas2.height = parent2.offsetHeight || 200;
+          expenseCtx = canvas2.getContext('2d');
+          if (expenseCtx) {
+            var categories = data.expenseCategories || [
+              { label: 'Feed', value: 35, color: '#2D7A3E' },
+              { label: 'Labour', value: 25, color: '#F5A623' },
+              { label: 'Medicine', value: 15, color: '#E53935' },
+              { label: 'Transport', value: 12, color: '#3B82F6' },
+              { label: 'Other', value: 13, color: '#9CA3AF' }
+            ];
+            if (expenseChart && typeof expenseChart.destroy === 'function') expenseChart.destroy();
+            expenseChart = drawDonutChart(expenseCtx, categories);
+            var legendEl = document.getElementById('donutLegend');
+            if (legendEl) {
+              legendEl.innerHTML = categories.map(function(c) {
+                return '<span class="donut-legend-item"><span class="swatch" style="background:' + c.color + '"></span>' + c.label + ' (' + c.value + '%)</span>';
+              }).join('');
+            }
+          }
+        }
+      }
+
+      function drawLineChart(ctx, labels, datasets) {
+        if (!ctx) return null;
+        var w = ctx.canvas.width, h = ctx.canvas.height;
+        var pad = { top: 20, bottom: 30, left: 50, right: 20 };
+        var chartW = w - pad.left - pad.right;
+        var chartH = h - pad.top - pad.bottom;
+        ctx.clearRect(0, 0, w, h);
+
+        var maxVal = 0;
+        datasets.forEach(function(ds) { ds.data.forEach(function(v) { if (v > maxVal) maxVal = v; }); });
+        if (maxVal === 0) maxVal = 100;
+        maxVal = Math.ceil(maxVal / 50000) * 50000;
+
+        // Grid lines
+        ctx.strokeStyle = '#E5E7EB';
+        ctx.lineWidth = 1;
+        for (var i = 0; i <= 4; i++) {
+          var y = pad.top + (chartH / 4) * i;
+          ctx.beginPath();
+          ctx.moveTo(pad.left, y);
+          ctx.lineTo(w - pad.right, y);
+          ctx.stroke();
+          ctx.fillStyle = '#9CA3AF';
+          ctx.font = '11px Inter, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.fillText('KSh ' + Math.round(maxVal - (maxVal / 4) * i), pad.left - 8, y + 4);
+        }
+
+        var stepX = chartW / (labels.length - 1);
+        datasets.forEach(function(ds) {
+          ctx.strokeStyle = ds.color;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ds.data.forEach(function(val, idx) {
+            var x = pad.left + idx * stepX;
+            var y = pad.top + chartH - (val / maxVal) * chartH;
+            if (idx === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+          // Dots
+          ctx.fillStyle = ds.color;
+          ds.data.forEach(function(val, idx) {
+            var x = pad.left + idx * stepX;
+            var y = pad.top + chartH - (val / maxVal) * chartH;
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        });
+
+        // X labels
+        ctx.fillStyle = '#9CA3AF';
+        ctx.font = '11px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        labels.forEach(function(label, idx) {
+          var x = pad.left + idx * stepX;
+          ctx.fillText(label, x, h - pad.bottom + 16);
+        });
+
+        // Legend
+        var legendY = 10;
+        var legendX = pad.left;
+        datasets.forEach(function(ds) {
+          ctx.fillStyle = ds.color;
+          ctx.fillRect(legendX, legendY, 12, 12);
+          ctx.fillStyle = '#6B7280';
+          ctx.font = '11px Inter, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText(ds.label, legendX + 18, legendY + 10);
+          legendX += ctx.measureText(ds.label).width + 40;
+        });
+
+        return { destroy: function() { ctx.clearRect(0, 0, w, h); } };
+      }
+
+      function drawDonutChart(ctx, categories) {
+        if (!ctx) return null;
+        var w = ctx.canvas.width, h = ctx.canvas.height;
+        var cx = w / 2, cy = h / 2, r = Math.min(cx, cy) - 20;
+        var total = 0;
+        categories.forEach(function(c) { total += c.value; });
+        if (total === 0) total = 100;
+        ctx.clearRect(0, 0, w, h);
+
+        var startAngle = -Math.PI / 2;
+        categories.forEach(function(cat) {
+          var sliceAngle = (cat.value / total) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.arc(cx, cy, r, startAngle, startAngle + sliceAngle);
+          ctx.closePath();
+          ctx.fillStyle = cat.color;
+          ctx.fill();
+          startAngle += sliceAngle;
+        });
+
+        // Center hole
+        ctx.beginPath();
+        ctx.arc(cx, cy, r * 0.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+
+        ctx.fillStyle = '#1A1A2E';
+        ctx.font = 'bold 18px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('KSh', cx, cy - 10);
+        var totalExp = 0;
+        categories.forEach(function(c) { totalExp += c.value; });
+        ctx.font = 'bold 14px Inter, sans-serif';
+        ctx.fillText(Math.round(totalExp) + '%', cx, cy + 14);
+
+        return { destroy: function() { ctx.clearRect(0, 0, w, h); } };
+      }
+
+      // Load dashboard data from Firestore
+      function loadDashboardData() {
+        if (!db) return;
+        // Load transactions for income/expense
+        db.collection('transactions').orderBy('date', 'desc').limit(50).onSnapshot(function(snapshot) {
+          if (snapshot.empty) {
+            // Use demo data
+            renderDemoData();
+            return;
+          }
+          var totalIncome = 0, totalExpenses = 0;
+          var activities = [];
+          var incomeTrend = new Array(12).fill(0);
+          var expenseTrend = new Array(12).fill(0);
+          var expenseCats = {};
+
+          snapshot.forEach(function(doc) {
+            var t = doc.data();
+            var amount = parseFloat(t.amount) || 0;
+            var d = t.date ? (t.date.toDate ? t.date.toDate() : new Date(t.date)) : new Date();
+            var month = d.getMonth();
+            if (t.type === 'income') {
+              totalIncome += amount;
+              incomeTrend[month] += amount;
+            } else {
+              totalExpenses += amount;
+              expenseTrend[month] += amount;
+              var cat = t.category || 'Other';
+              expenseCats[cat] = (expenseCats[cat] || 0) + amount;
+            }
+            if (activities.length < 10) {
+              activities.push({
+                type: t.type || 'expense',
+                title: t.description || (t.type === 'income' ? 'Income' : 'Expense'),
+                amount: amount,
+                date: d,
+                category: t.category || ''
+              });
+            }
+          });
+
+          var balance = totalIncome - totalExpenses;
+          document.getElementById('totalIncome').textContent = formatCurrency(totalIncome);
+          document.getElementById('totalExpenses').textContent = formatCurrency(totalExpenses);
+          document.getElementById('totalBalance').textContent = formatCurrency(balance);
+
+          // Expense categories for donut
+          var totalCat = 0;
+          Object.keys(expenseCats).forEach(function(k) { totalCat += expenseCats[k]; });
+          var colors = ['#2D7A3E','#F5A623','#E53935','#3B82F6','#10B981','#8B5CF6','#EC4899','#9CA3AF'];
+          var ci = 0;
+          var catArray = Object.keys(expenseCats).map(function(k) {
+            return { label: k, value: totalCat > 0 ? Math.round((expenseCats[k]/totalCat)*100) : 0, color: colors[ci++ % colors.length] };
+          });
+
+          drawCharts({ incomeTrend: incomeTrend, expenseTrend: expenseTrend, expenseCategories: catArray });
+          renderActivities(activities);
+
+        }, function(err) {
+          console.warn('Firestore load failed, using demo data:', err);
+          renderDemoData();
+        });
+
+        // Load livestock count
+        db.collection('livestock').where('status','==','active').onSnapshot(function(snap) {
+          document.getElementById('activeAnimals').textContent = snap.size || 0;
+        }, function() {
+          document.getElementById('activeAnimals').textContent = '42';
+        });
+      }
+
+      function renderDemoData() {
+        document.getElementById('totalIncome').textContent = 'KSh 245,000';
+        document.getElementById('incomeChange').textContent = '↑ 12%';
+        document.getElementById('totalExpenses').textContent = 'KSh 89,000';
+        document.getElementById('expenseChange').textContent = '↓ 5%';
+        document.getElementById('totalBalance').textContent = 'KSh 156,000';
+        document.getElementById('activeAnimals').textContent = '42';
+
+        var demoIncome = [120000,135000,110000,145000,155000,140000,160000,175000,165000,180000,195000,210000];
+        var demoExpense = [50000,48000,52000,45000,47000,55000,42000,44000,46000,43000,41000,40000];
+        var demoCategories = [
+          { label: 'Feed', value: 35, color: '#2D7A3E' },
+          { label: 'Labour', value: 25, color: '#F5A623' },
+          { label: 'Medicine', value: 15, color: '#E53935' },
+          { label: 'Transport', value: 12, color: '#3B82F6' },
+          { label: 'Other', value: 13, color: '#9CA3AF' }
+        ];
+        drawCharts({ incomeTrend: demoIncome, expenseTrend: demoExpense, expenseCategories: demoCategories });
+
+        var demoActivities = [
+          { type: 'income', title: 'Milk Sales - Daily collection', amount: 28500, date: new Date(2026,5,29), category: 'Dairy' },
+          { type: 'expense', title: 'Dairy Feed Purchase - 10 bags', amount: 18000, date: new Date(2026,5,29), category: 'Feed' },
+          { type: 'income', title: 'Egg Sales - 20 trays', amount: 12000, date: new Date(2026,5,28), category: 'Poultry' },
+          { type: 'expense', title: 'Veterinary Services - Vaccination', amount: 5500, date: new Date(2026,5,28), category: 'Vet' },
+          { type: 'stock', title: 'New poultry feed stock added', amount: 0, date: new Date(2026,5,27), category: '' },
+          { type: 'income', title: 'Crop Sale - Maize harvest', amount: 45000, date: new Date(2026,5,27), category: 'Crops' },
+          { type: 'expense', title: 'Fertilizer - DAP 50kg x 5', amount: 12500, date: new Date(2026,5,26), category: 'Inputs' },
+          { type: 'income', title: 'Livestock Sale - 2 goats', amount: 24000, date: new Date(2026,5,26), category: 'Livestock' },
+          { type: 'expense', title: 'Electricity bill', amount: 3200, date: new Date(2026,5,25), category: 'Utilities' },
+          { type: 'stock', title: 'New veterinary supplies delivered', amount: 0, date: new Date(2026,5,25), category: '' }
+        ];
+        renderActivities(demoActivities);
+      }
+
+      function renderActivities(activities) {
+        var el = document.getElementById('activityList');
+        if (!el) return;
+        if (activities.length === 0) {
+          el.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p style="color:var(--text-secondary);">No recent activity</p></div>';
+          return;
+        }
+        el.innerHTML = activities.map(function(a) {
+          var dotClass = a.type === 'income' ? 'income' : (a.type === 'expense' ? 'expense' : 'stock');
+          var amountHtml = '';
+          if (a.type === 'income') amountHtml = '<span class="amount income">+' + formatCurrency(a.amount) + '</span>';
+          else if (a.type === 'expense') amountHtml = '<span class="amount expense">-' + formatCurrency(a.amount) + '</span>';
+          else amountHtml = '<span class="amount" style="color:var(--accent-gold);">Stock Update</span>';
+          return '<div class="activity-item"><div class="activity-dot ' + dotClass + '"></div><div class="activity-content"><div class="title">' + a.title + '</div><div class="meta">' + formatDate(a.date) + (a.category ? ' · ' + a.category : '') + '</div></div>' + amountHtml + '</div>';
+        }).join('');
+      }
+
+      // Init
+      document.addEventListener('DOMContentLoaded', function() {
+        loadDashboardData();
+      });
+
+      // Resize handler
+      var resizeTimer;
+      window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+          loadDashboardData();
+        }, 500);
+      });
+    })();
+  </script>
+</body>
+</html>

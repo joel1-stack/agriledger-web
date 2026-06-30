@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Farm Setup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <style>
+    .setup-section { margin-bottom: 32px; }
+    .setup-section h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .setup-section h2 .count { font-size: 12px; background: var(--primary-light); color: var(--primary-dark); padding: 2px 10px; border-radius: 10px; }
+    .bird-type-card { border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 16px; background: var(--surface-white); transition: var(--transition); }
+    .bird-type-card:hover { box-shadow: var(--shadow-md); }
+    .bird-type-card .bt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .bird-type-card .bt-name { font-size: 16px; font-weight: 600; }
+    .bird-type-card .bt-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .bird-type-card .bt-setting { font-size: 13px; }
+    .bird-type-card .bt-setting .lbl { color: var(--text-secondary); }
+    .bird-type-card .bt-setting .val { font-weight: 600; }
+    .house-card, .feed-card { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg-cream); border-radius: var(--radius-sm); margin-bottom: 8px; }
+    .house-card .info, .feed-card .info { font-size: 14px; }
+    .house-card .info small, .feed-card .info small { color: var(--text-secondary); font-size: 12px; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><span>🌱</span><span>AgriLedger</span></div>
+    <div class="sidebar-user"><div class="avatar user-avatar-text">J</div><div class="user-info"><div class="name sidebar-user-name">User</div><div class="role sidebar-user-role">general</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="../dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <div class="nav-section">POULTRY</div>
+      <a href="poultry-dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <a href="farm-setup.html" class="active"><span class="nav-icon">⚙️</span><span class="nav-text">Farm Setup</span></a>
+      <a href="flock-register.html"><span class="nav-icon">📋</span><span class="nav-text">Flock Register</span></a>
+      <a href="production-log.html"><span class="nav-icon">🥚</span><span class="nav-text">Production Log</span></a>
+      <a href="sales.html"><span class="nav-icon">💰</span><span class="nav-text">Sales</span></a>
+      <a href="other-income.html"><span class="nav-icon">💵</span><span class="nav-text">Other Income</span></a>
+      <a href="feed-expenses.html"><span class="nav-icon">🌾</span><span class="nav-text">Feed Expenses</span></a>
+      <a href="health-vet.html"><span class="nav-icon">💉</span><span class="nav-text">Health &amp; Vet</span></a>
+      <a href="mortality.html"><span class="nav-icon">⚰️</span><span class="nav-text">Mortality</span></a>
+      <a href="batch-summary.html"><span class="nav-icon">📈</span><span class="nav-text">Batch Summary</span></a>
+      <div class="nav-section">MAIN</div>
+      <a href="../farming/crops.html"><span class="nav-icon">🌾</span><span class="nav-text">Crops</span></a>
+      <a href="../farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+      <a href="../farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+      <a href="../inventory.html"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+      <a href="../cashbook.html"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+      <a href="../journal.html"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+    </nav>
+    <div class="sidebar-footer"><a href="../settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a><a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a></div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><button class="topbar-toggle" id="sidebar-toggle">☰</button><div class="breadcrumb"><a href="../dashboard.html">Dashboard</a><span class="sep">›</span><a href="poultry-dashboard.html">Poultry</a><span class="sep">›</span><span>Farm Setup</span></div></div>
+      <div class="topbar-right"><button class="notification-btn">🔔<span class="badge badge-red">3</span></button><button class="profile-btn" onclick="window.location.href='../settings.html'"><div class="avatar user-avatar-text">J</div><span class="sidebar-user-name" style="font-size:13px;">User</span></button></div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header"><div class="page-header-row"><div><h1>Farm Setup</h1><p style="font-size:14px;color:var(--text-secondary);">Configure your poultry farm settings</p></div><button class="btn btn-primary" onclick="saveAll()">💾 Save All</button></div></div>
+
+      <div class="setup-section">
+        <h2>🏠 Farm Profile</h2>
+        <div class="card"><div class="card-body">
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Farm Name</label><input type="text" id="farmName" class="form-input" placeholder="e.g. Green Acres Poultry Farm"></div>
+            <div class="form-group"><label class="form-label">Location</label><input type="text" id="farmLocation" class="form-input" placeholder="e.g. Nairobi, Kenya"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Farm Size (acres)</label><input type="number" id="farmSize" class="form-input" min="0" step="0.5" placeholder="e.g. 5"></div>
+            <div class="form-group"><label class="form-label">Financial Year Start</label><select id="finYear" class="form-select"><option value="0">January</option><option value="1">February</option><option value="2">March</option><option value="3">April</option><option value="4">May</option><option value="5">June</option><option value="6">July</option><option value="7">August</option><option value="8">September</option><option value="9">October</option><option value="10">November</option><option value="11">December</option></select></div>
+          </div>
+          <div class="form-group"><label class="form-label">Currency</label><select id="farmCurrency" class="form-input" style="max-width:200px;"><option value="KSh">KSh - Kenyan Shilling</option><option value="USD">USD - US Dollar</option><option value="UGX">UGX - Ugandan Shilling</option><option value="TZS">TZS - Tanzanian Shilling</option><option value="RWF">RWF - Rwandan Franc</option></select></div>
+        </div></div>
+      </div>
+
+      <div class="setup-section">
+        <h2>🐔 Bird Type Configuration <span class="count" id="birdCount">0</span></h2>
+        <div class="grid grid-3" id="birdTypeGrid">
+          <div class="loading-spinner" style="grid-column:1/-1;"></div>
+        </div>
+      </div>
+
+      <div class="setup-section">
+        <h2>🏘️ Housing / Sections <span class="count" id="houseCount">0</span></h2>
+        <div class="card"><div class="card-body">
+          <div id="houseList"></div>
+          <button class="btn btn-secondary btn-sm" onclick="addHouse()">➕ Add House</button>
+        </div></div>
+      </div>
+
+      <div class="setup-section">
+        <h2>🌾 Feed Types <span class="count" id="feedCount">0</span></h2>
+        <div class="card"><div class="card-body">
+          <div id="feedList"></div>
+          <button class="btn btn-secondary btn-sm" onclick="addFeedType()">➕ Add Feed Type</button>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="../js/firebase-config.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+(function() {
+  var farmDocId = 'poultryFarmSetup';
+  var birdTypes = [], houses = [], feedTypes = [];
+  var defaultBirdTypes = [
+    { name:'Layers', icon:'🐔', defaultFlockSize:500, ageAtPoint:18, layingCycle:52, feedPerBird:0.12, expectedHenDay:85, eggPrice:450, enabled:true },
+    { name:'Broilers', icon:'🍗', defaultFlockSize:300, growOutPeriod:6, targetWeight:2.0, feedPerBird:0.15, feedConversion:1.8, pricePerKg:350, enabled:true },
+    { name:'Kienyeji', icon:'🐓', defaultFlockSize:200, ageAtPoint:24, layingCycle:40, feedPerBird:0.08, expectedHenDay:65, eggPrice:600, enabled:true }
+  ];
+
+  function loadSetup() {
+    db.collection('farmSetup').doc(farmDocId).onSnapshot(function(doc) {
+      if (doc.exists) {
+        var data = doc.data();
+        if (data.farmName) document.getElementById('farmName').value = data.farmName;
+        if (data.location) document.getElementById('farmLocation').value = data.location;
+        if (data.farmSize) document.getElementById('farmSize').value = data.farmSize;
+        if (data.finYear !== undefined) document.getElementById('finYear').value = data.finYear;
+        if (data.currency) document.getElementById('farmCurrency').value = data.currency;
+        birdTypes = data.birdTypes && data.birdTypes.length ? data.birdTypes : JSON.parse(JSON.stringify(defaultBirdTypes));
+        houses = data.houses || [];
+        feedTypes = data.feedTypes || [];
+      } else {
+        birdTypes = JSON.parse(JSON.stringify(defaultBirdTypes));
+        houses = [];
+        feedTypes = [];
+      }
+      renderBirdTypes();
+      renderHouses();
+      renderFeedTypes();
+    }, function() {
+      birdTypes = JSON.parse(JSON.stringify(defaultBirdTypes));
+      renderBirdTypes();
+      renderHouses();
+      renderFeedTypes();
+    });
+  }
+
+  function renderBirdTypes() {
+    var grid = document.getElementById('birdTypeGrid');
+    if (!grid) return;
+    document.getElementById('birdCount').textContent = birdTypes.length;
+    grid.innerHTML = birdTypes.map(function(bt, i) {
+      return '<div class="bird-type-card"><div class="bt-header"><div class="bt-name">' + (bt.icon||'🐔') + ' ' + bt.name + '</div><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-secondary" onclick="editBirdType(' + i + ')">✏️</button><button class="btn btn-sm ' + (bt.enabled ? 'btn-primary' : 'btn-secondary') + '" onclick="toggleBirdType(' + i + ')">' + (bt.enabled ? 'Active' : 'Disabled') + '</button></div></div><div class="bt-settings">' +
+        Object.keys(bt).filter(function(k) { return k !== 'name' && k !== 'icon' && k !== 'enabled'; }).map(function(k) {
+          return '<div class="bt-setting"><span class="lbl">' + k.replace(/([A-Z])/g,' $1').replace(/^./,function(s){return s.toUpperCase();}) + ':</span> <span class="val">' + bt[k] + '</span></div>';
+        }).join('') +
+      '</div></div>';
+    }).join('');
+  }
+
+  window.editBirdType = function(idx) {
+    var bt = birdTypes[idx];
+    var fields = Object.keys(bt).filter(function(k) { return k !== 'name' && k !== 'icon' && k !== 'enabled'; });
+    var html = '<div class="form-group"><label class="form-label">Type Name</label><input type="text" id="ebtName" class="form-input" value="' + bt.name + '"></div>';
+    fields.forEach(function(k) {
+      html += '<div class="form-group"><label class="form-label">' + k.replace(/([A-Z])/g,' $1').replace(/^./,function(s){return s.toUpperCase();}) + '</label><input type="number" id="ebt_' + k + '" class="form-input" value="' + bt[k] + '" step="0.01"></div>';
+    });
+    html += '<div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);margin-top:16px;"><button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button><button type="button" class="btn btn-primary" onclick="saveBirdType(' + idx + ')">Save</button></div>';
+    openModal(html, 'Edit ' + bt.name);
+  };
+
+  window.saveBirdType = function(idx) {
+    var bt = birdTypes[idx];
+    bt.name = document.getElementById('ebtName').value || bt.name;
+    Object.keys(bt).filter(function(k) { return k !== 'name' && k !== 'icon' && k !== 'enabled'; }).forEach(function(k) {
+      bt[k] = parseFloat(document.getElementById('ebt_' + k).value) || bt[k];
+    });
+    birdTypes[idx] = bt;
+    renderBirdTypes();
+    closeModal();
+    showToast('Bird type updated', 'success');
+  };
+
+  window.toggleBirdType = function(idx) {
+    birdTypes[idx].enabled = !birdTypes[idx].enabled;
+    renderBirdTypes();
+  };
+
+  function renderHouses() {
+    var el = document.getElementById('houseList');
+    document.getElementById('houseCount').textContent = houses.length;
+    if (!houses.length) { el.innerHTML = '<p style="color:var(--text-secondary);font-size:14px;padding:8px 0;">No houses configured yet.</p>'; return; }
+    el.innerHTML = houses.map(function(h, i) {
+      return '<div class="house-card"><div class="info"><strong>' + h.name + '</strong> <small>' + h.type + ' · Capacity: ' + h.capacity + ' birds</small></div><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-secondary" onclick="editHouse(' + i + ')">✏️</button><button class="btn btn-sm btn-danger" onclick="removeHouse(' + i + ')">🗑️</button></div></div>';
+    }).join('');
+  }
+
+  window.addHouse = function() {
+    var html = '<div class="form-group"><label class="form-label">House Name</label><input type="text" id="houseName" class="form-input" placeholder="e.g. House A"></div><div class="form-group"><label class="form-label">House Type</label><select id="houseType" class="form-select"><option value="Deep Litter">Deep Litter</option><option value="Cage">Cage</option><option value="Free Range">Free Range</option><option value="Barn">Barn</option><option value="Other">Other</option></select></div><div class="form-group"><label class="form-label">Capacity (birds)</label><input type="number" id="houseCapacity" class="form-input" min="0" placeholder="e.g. 500"></div><div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);">' +
+      '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button><button type="button" class="btn btn-primary" onclick="saveHouse()">Add House</button></div>';
+    openModal(html, 'Add House');
+  };
+
+  window.saveHouse = function() {
+    houses.push({ name: document.getElementById('houseName').value, type: document.getElementById('houseType').value, capacity: parseInt(document.getElementById('houseCapacity').value)||0 });
+    renderHouses(); closeModal(); showToast('House added', 'success');
+  };
+
+  window.editHouse = function(idx) {
+    var h = houses[idx];
+    var html = '<div class="form-group"><label class="form-label">House Name</label><input type="text" id="houseName" class="form-input" value="' + h.name + '"></div><div class="form-group"><label class="form-label">House Type</label><select id="houseType" class="form-select"><option value="Deep Litter"' + (h.type==='Deep Litter'?' selected':'') + '>Deep Litter</option><option value="Cage"' + (h.type==='Cage'?' selected':'') + '>Cage</option><option value="Free Range"' + (h.type==='Free Range'?' selected':'') + '>Free Range</option><option value="Barn"' + (h.type==='Barn'?' selected':'') + '>Barn</option><option value="Other"' + (h.type==='Other'?' selected':'') + '>Other</option></select></div><div class="form-group"><label class="form-label">Capacity</label><input type="number" id="houseCapacity" class="form-input" value="' + h.capacity + '"></div><div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);">' +
+      '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button><button type="button" class="btn btn-primary" onclick="updateHouse(' + idx + ')">Update</button></div>';
+    openModal(html, 'Edit House');
+  };
+
+  window.updateHouse = function(idx) {
+    houses[idx].name = document.getElementById('houseName').value;
+    houses[idx].type = document.getElementById('houseType').value;
+    houses[idx].capacity = parseInt(document.getElementById('houseCapacity').value)||0;
+    renderHouses(); closeModal(); showToast('House updated', 'success');
+  };
+
+  window.removeHouse = function(idx) {
+    houses.splice(idx, 1);
+    renderHouses();
+    showToast('House removed', 'info');
+  };
+
+  function renderFeedTypes() {
+    var el = document.getElementById('feedList');
+    document.getElementById('feedCount').textContent = feedTypes.length;
+    if (!feedTypes.length) { el.innerHTML = '<p style="color:var(--text-secondary);font-size:14px;padding:8px 0;">No feed types configured yet.</p>'; return; }
+    el.innerHTML = feedTypes.map(function(f, i) {
+      return '<div class="feed-card"><div class="info"><strong>' + f.name + '</strong> <small>Unit: ' + f.unit + ' · Cost: KSh ' + formatNumber(f.costPerUnit) + '</small></div><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-secondary" onclick="editFeedType(' + i + ')">✏️</button><button class="btn btn-sm btn-danger" onclick="removeFeedType(' + i + ')">🗑️</button></div></div>';
+    }).join('');
+  }
+
+  window.addFeedType = function() {
+    var html = '<div class="form-group"><label class="form-label">Feed Name</label><input type="text" id="feedName" class="form-input" placeholder="e.g. Layers Mash"></div><div class="form-group"><label class="form-label">Unit</label><select id="feedUnit" class="form-select"><option value="kg">Kilogram (kg)</option><option value="bag">Bag (70kg)</option><option value="tonne">Tonne</option><option value="g">Gram (g)</option></select></div><div class="form-group"><label class="form-label">Cost per Unit (KSh)</label><input type="number" id="feedCost" class="form-input" step="0.5" placeholder="e.g. 2500"></div><div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);">' +
+      '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button><button type="button" class="btn btn-primary" onclick="saveFeedType()">Add Feed Type</button></div>';
+    openModal(html, 'Add Feed Type');
+  };
+
+  window.saveFeedType = function() {
+    feedTypes.push({ name: document.getElementById('feedName').value, unit: document.getElementById('feedUnit').value, costPerUnit: parseFloat(document.getElementById('feedCost').value)||0 });
+    renderFeedTypes(); closeModal(); showToast('Feed type added', 'success');
+  };
+
+  window.editFeedType = function(idx) {
+    var f = feedTypes[idx];
+    var html = '<div class="form-group"><label class="form-label">Feed Name</label><input type="text" id="feedName" class="form-input" value="' + f.name + '"></div><div class="form-group"><label class="form-label">Unit</label><select id="feedUnit" class="form-select"><option value="kg"' + (f.unit==='kg'?' selected':'') + '>kg</option><option value="bag"' + (f.unit==='bag'?' selected':'') + '>Bag (70kg)</option><option value="tonne"' + (f.unit==='tonne'?' selected':'') + '>Tonne</option></select></div><div class="form-group"><label class="form-label">Cost per Unit</label><input type="number" id="feedCost" class="form-input" step="0.5" value="' + f.costPerUnit + '"></div><div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);">' +
+      '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button><button type="button" class="btn btn-primary" onclick="updateFeedType(' + idx + ')">Update</button></div>';
+    openModal(html, 'Edit Feed Type');
+  };
+
+  window.updateFeedType = function(idx) {
+    feedTypes[idx].name = document.getElementById('feedName').value;
+    feedTypes[idx].unit = document.getElementById('feedUnit').value;
+    feedTypes[idx].costPerUnit = parseFloat(document.getElementById('feedCost').value)||0;
+    renderFeedTypes(); closeModal(); showToast('Feed type updated', 'success');
+  };
+
+  window.removeFeedType = function(idx) {
+    feedTypes.splice(idx, 1);
+    renderFeedTypes();
+    showToast('Feed type removed', 'info');
+  };
+
+  window.saveAll = function() {
+    var data = {
+      farmName: document.getElementById('farmName').value,
+      location: document.getElementById('farmLocation').value,
+      farmSize: parseFloat(document.getElementById('farmSize').value)||0,
+      finYear: parseInt(document.getElementById('finYear').value),
+      currency: document.getElementById('farmCurrency').value,
+      birdTypes: birdTypes,
+      houses: houses,
+      feedTypes: feedTypes,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    db.collection('farmSetup').doc(farmDocId).set(data, { merge: true }).then(function() {
+      showToast('All settings saved successfully', 'success');
+    }).catch(function(err) {
+      console.warn('Save failed:', err);
+      showToast('Saved locally (Firestore unavailable)', 'info');
+    });
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(loadSetup, 300);
+  });
+})();
+</script>
+</body>
+</html>

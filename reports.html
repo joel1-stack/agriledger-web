@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Reports</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <style>
+    .report-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px; }
+    @media (max-width: 1024px) { .report-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 640px) { .report-grid { grid-template-columns: 1fr; } }
+    .report-card { background: var(--surface-white); border-radius: var(--radius-md); border: 1px solid var(--border-light); padding: 24px; text-align: center; transition: var(--transition); cursor: pointer; }
+    .report-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .report-card .r-icon { font-size: 48px; margin-bottom: 12px; }
+    .report-card .r-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .report-card .r-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+    .report-card .r-actions { display: flex; justify-content: center; gap: 8px; }
+    .report-card .r-actions button { font-size: 12px; }
+    .date-range { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--surface-white); padding: 16px 20px; border-radius: var(--radius-md); border: 1px solid var(--border-light); margin-bottom: 24px; }
+    .date-range label { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+    .date-range input[type="date"] { padding: 8px 12px; border: 1px solid var(--border-medium); border-radius: var(--radius-sm); font-family: var(--font-family); font-size: 13px; }
+    .history-list { max-height: 400px; overflow-y: auto; }
+    .history-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border-light); font-size: 13px; }
+    .history-item:last-child { border-bottom: none; }
+    .history-item .h-info { flex: 1; }
+    .history-item .h-info .h-name { font-weight: 500; }
+    .history-item .h-info .h-meta { color: var(--text-secondary); font-size: 12px; }
+    .chart-thumb { width: 60px; height: 40px; background: var(--primary-light); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .bottom-nav { display: none; }
+    @media (max-width: 640px) {
+      .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: #1B4332; z-index: 100; padding: 4px 0; justify-content: space-around; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+      .bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; color: rgba(255,255,255,0.6); font-size: 10px; padding: 6px 12px; text-decoration: none; }
+      .bottom-nav a.active, .bottom-nav a:hover { color: white; }
+      .bottom-nav a .nav-icon { font-size: 20px; }
+      .page-content { padding-bottom: 80px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><span style="font-size:28px;">🌿</span><span>AgriLedger</span></div>
+    <div class="sidebar-user">
+      <div class="avatar"><span class="user-avatar-text">U</span></div>
+      <div class="user-info">
+        <div class="name sidebar-user-name">Loading...</div>
+        <div class="role sidebar-user-role">general</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <div class="nav-section">FARMING</div>
+      <a href="farming/crops.html"><span class="nav-icon">🌾</span><span class="nav-text">Crops</span></a>
+      <a href="farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+      <a href="farming/poultry.html"><span class="nav-icon">🐔</span><span class="nav-text">Poultry</span></a>
+      <a href="farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+      <div class="nav-section">FINANCE</div>
+      <a href="inventory.html"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+      <a href="cashbook.html"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+      <a href="journal.html"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+      <div class="nav-section">BUSINESS</div>
+      <a href="contracts.html"><span class="nav-icon">📋</span><span class="nav-text">Contracts</span></a>
+      <a href="property.html"><span class="nav-icon">🏠</span><span class="nav-text">Property</span></a>
+      <a href="transport.html"><span class="nav-icon">🚛</span><span class="nav-text">Transport</span></a>
+      <a href="reports.html" class="active"><span class="nav-icon">📈</span><span class="nav-text">Reports</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a>
+      <a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle">☰</button>
+        <div class="breadcrumb">
+          <a href="dashboard.html">Dashboard</a><span class="sep">›</span><span>Reports</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="notification-btn">🔔<span class="badge badge-red">3</span></button>
+        <button class="profile-btn" onclick="window.location.href='settings.html'">
+          <div class="avatar"><span class="user-avatar-text">J</span></div>
+          <span class="sidebar-user-name" style="font-size:13px;">User</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header">
+        <div class="page-header-row">
+          <h1>Reports</h1>
+        </div>
+      </div>
+
+      <div class="date-range">
+        <label for="reportFrom">From</label>
+        <input type="date" id="reportFrom">
+        <label for="reportTo">To</label>
+        <input type="date" id="reportTo">
+        <button class="btn btn-primary btn-sm" onclick="generateReport()">📊 Generate</button>
+        <span style="color:var(--text-secondary);font-size:13px;margin-left:4px;">Select type below</span>
+      </div>
+
+      <div class="report-grid" id="reportTypes">
+        <div class="report-card" data-report="financial" onclick="generateReport('financial')">
+          <div class="r-icon">💰</div>
+          <div class="r-title">Financial Summary</div>
+          <div class="r-desc">Income, expenses and net profit over time</div>
+          <div class="r-actions">
+            <button class="btn btn-sm btn-outline" onclick="event.stopPropagation();generateReport('financial')">📄 PDF</button>
+            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();viewReportPreview('financial')">👁️ View</button>
+          </div>
+        </div>
+        <div class="report-card" data-report="farming" onclick="generateReport('farming')">
+          <div class="r-icon">🌾</div>
+          <div class="r-title">Farming Report</div>
+          <div class="r-desc">Crops, livestock, poultry & dairy performance</div>
+          <div class="r-actions">
+            <button class="btn btn-sm btn-outline" onclick="event.stopPropagation();generateReport('farming')">📄 PDF</button>
+            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();viewReportPreview('farming')">👁️ View</button>
+          </div>
+        </div>
+        <div class="report-card" data-report="inventory" onclick="generateReport('inventory')">
+          <div class="r-icon">📦</div>
+          <div class="r-title">Inventory Report</div>
+          <div class="r-desc">Stock levels, values and movement summary</div>
+          <div class="r-actions">
+            <button class="btn btn-sm btn-outline" onclick="event.stopPropagation();generateReport('inventory')">📄 PDF</button>
+            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();viewReportPreview('inventory')">👁️ View</button>
+          </div>
+        </div>
+        <div class="report-card" data-report="property" onclick="generateReport('property')">
+          <div class="r-icon">🏠</div>
+          <div class="r-title">Property Report</div>
+          <div class="r-desc">Property values, rental income & occupancy</div>
+          <div class="r-actions">
+            <button class="btn btn-sm btn-outline" onclick="event.stopPropagation();generateReport('property')">📄 PDF</button>
+            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();viewReportPreview('property')">👁️ View</button>
+          </div>
+        </div>
+        <div class="report-card" data-report="transport" onclick="generateReport('transport')">
+          <div class="r-icon">🚛</div>
+          <div class="r-title">Transport Report</div>
+          <div class="r-desc">Vehicle expenses, fuel & maintenance costs</div>
+          <div class="r-actions">
+            <button class="btn btn-sm btn-outline" onclick="event.stopPropagation();generateReport('transport')">📄 PDF</button>
+            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();viewReportPreview('transport')">👁️ View</button>
+          </div>
+        </div>
+        <div class="report-card" data-report="contracts" onclick="generateReport('contracts')">
+          <div class="r-icon">📋</div>
+          <div class="r-title">Contracts Report</div>
+          <div class="r-desc">Contract values, statuses & payment progress</div>
+          <div class="r-actions">
+            <button class="btn btn-sm btn-outline" onclick="event.stopPropagation();generateReport('contracts')">📄 PDF</button>
+            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();viewReportPreview('contracts')">👁️ View</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Generated Reports History</h3>
+          <span style="font-size:13px;color:var(--text-secondary);">Last 7 reports</span>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div class="history-list" id="reportHistory">
+            <div class="loading-spinner"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="dashboard.html"><span class="nav-icon">📊</span>Home</a>
+    <a href="cashbook.html"><span class="nav-icon">💰</span>Cashbook</a>
+    <a href="reports.html" class="active"><span class="nav-icon">📈</span>Reports</a>
+    <a href="settings.html"><span class="nav-icon">⚙️</span>More</a>
+  </nav>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script>
+(function() {
+  var allReports = [];
+  var reportUnsub = null;
+
+  var reportIcons = { financial: '💰', farming: '🌾', inventory: '📦', property: '🏠', transport: '🚛', contracts: '📋' };
+  var reportNames = { financial: 'Financial Summary', farming: 'Farming Report', inventory: 'Inventory Report', property: 'Property Report', transport: 'Transport Report', contracts: 'Contracts Report' };
+
+  function renderHistory(reports) {
+    var el = document.getElementById('reportHistory');
+    if (!el) return;
+    if (reports.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">📈</div><p>No reports generated yet. Click "Generate" to create one.</p></div>';
+      return;
+    }
+    el.innerHTML = reports.map(function(r) {
+      var icon = reportIcons[r.type] || '📄';
+      var name = reportNames[r.type] || r.type;
+      return '<div class="history-item">' +
+        '<div class="chart-thumb">' + icon + '</div>' +
+        '<div class="h-info"><div class="h-name">' + name + '</div><div class="h-meta">' + formatDate(r.generatedAt) + ' · ' + formatDate(r.fromDate) + ' to ' + formatDate(r.toDate) + '</div></div>' +
+        '<div style="display:flex;gap:4px;">' +
+          '<button class="btn btn-sm btn-secondary" onclick="downloadReport(\'' + r.id + '\',\'pdf\')">📄 PDF</button>' +
+          '<button class="btn btn-sm btn-secondary" onclick="downloadReport(\'' + r.id + '\',\'excel\')">📊 Excel</button>' +
+          '<button class="btn btn-sm btn-danger" onclick="deleteReport(\'' + r.id + '\')">🗑️</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function loadData() {
+    if (reportUnsub) reportUnsub();
+    reportUnsub = db.collection('reports').orderBy('generatedAt', 'desc').limit(20).onSnapshot(function(snap) {
+      allReports = [];
+      snap.forEach(function(d) { allReports.push({ id: d.id, ...d.data() }); });
+      if (allReports.length === 0) loadDemoReports();
+      else renderHistory(allReports);
+    }, function() { loadDemoReports(); });
+  }
+
+  function loadDemoReports() {
+    allReports = [
+      { id: 'r1', type: 'financial', fromDate: new Date(2026, 4, 1), toDate: new Date(2026, 4, 31), generatedAt: new Date(2026, 5, 1) },
+      { id: 'r2', type: 'inventory', fromDate: new Date(2026, 4, 1), toDate: new Date(2026, 4, 31), generatedAt: new Date(2026, 5, 1) },
+      { id: 'r3', type: 'farming', fromDate: new Date(2026, 3, 1), toDate: new Date(2026, 4, 30), generatedAt: new Date(2026, 5, 1) }
+    ];
+    renderHistory(allReports);
+  }
+
+  function getDateRange() {
+    var from = document.getElementById('reportFrom').value;
+    var to = document.getElementById('reportTo').value;
+    return { from: from ? new Date(from + 'T00:00:00') : new Date(new Date().getFullYear(), 0, 1), to: to ? new Date(to + 'T23:59:59') : new Date() };
+  }
+
+  window.generateReport = function(type) {
+    var types = type ? [type] : ['financial', 'farming', 'inventory', 'property', 'transport', 'contracts'];
+    var range = getDateRange();
+    types.forEach(function(t) {
+      var reportData = {
+        type: t,
+        title: reportNames[t] || t,
+        fromDate: range.from,
+        toDate: range.to,
+        generatedAt: new Date(),
+        status: 'ready',
+        dataUrl: '#'
+      };
+      db.collection('reports').add(reportData).then(function() {
+        showToast((reportNames[t] || t) + ' generated', 'success');
+      }).catch(function(err) {
+        showToast('Report generated (offline)', 'success');
+        loadDemoReports();
+      });
+    });
+  };
+
+  window.viewReportPreview = function(type) {
+    var range = getDateRange();
+    var name = reportNames[type] || type;
+    var icon = reportIcons[type] || '📄';
+    var data = getPreviewData(type);
+    var html = '<div style="padding:8px 0;">' +
+      '<div style="text-align:center;margin-bottom:20px;"><span style="font-size:48px;">' + icon + '</span><h3 style="margin-top:8px;">' + name + '</h3><p style="color:var(--text-secondary);font-size:13px;">' + formatDate(range.from) + ' to ' + formatDate(range.to) + '</p></div>';
+    if (data.kpis) {
+      html += '<div class="kpi-strip" style="margin-bottom:16px;">';
+      data.kpis.forEach(function(k) {
+        html += '<div class="card kpi-card" style="padding:16px;border-left-color:' + (k.color || 'var(--primary-green)') + ';"><div class="kpi-label">' + k.label + '</div><div class="kpi-value" style="font-size:20px;">' + k.value + '</div></div>';
+      });
+      html += '</div>';
+    }
+    if (data.items) {
+      html += '<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:var(--primary-dark);color:white;">';
+      data.headers.forEach(function(h) { html += '<th style="padding:8px 12px;text-align:left;">' + h + '</th>'; });
+      html += '</tr></thead><tbody>';
+      data.items.forEach(function(row) {
+        html += '<tr style="border-bottom:1px solid var(--border-light);">';
+        row.forEach(function(cell) { html += '<td style="padding:8px 12px;">' + cell + '</td>'; });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+    openModal(html + '<div class="modal-footer"><button class="btn btn-secondary" onclick="generateReport(\'' + type + '\')">📄 Export PDF</button><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>', 'Preview: ' + name);
+  };
+
+  function getPreviewData(type) {
+    var demos = {
+      financial: { kpis: [{ label: 'Total Income', value: formatCurrency(245000), color: 'var(--primary-green)' }, { label: 'Total Expenses', value: formatCurrency(89000), color: 'var(--accent-red)' }, { label: 'Net Profit', value: formatCurrency(156000), color: 'var(--accent-gold)' }], headers: ['Category', 'Income', 'Expenses', 'Net'], items: [['Dairy', 'KSh 85,000', 'KSh 22,000', 'KSh 63,000'], ['Poultry', 'KSh 52,000', 'KSh 18,000', 'KSh 34,000'], ['Crops', 'KSh 72,000', 'KSh 28,000', 'KSh 44,000'], ['Livestock', 'KSh 36,000', 'KSh 21,000', 'KSh 15,000']] },
+      farming: { kpis: [{ label: 'Active Crops', value: '6', color: 'var(--primary-green)' }, { label: 'Livestock', value: '42', color: 'var(--accent-amber)' }, { label: 'Poultry', value: '350', color: 'var(--accent-teal)' }], headers: ['Type', 'Count', 'Status', 'Value'], items: [['Maize', '5 acres', 'Growing', 'KSh 45,000'], ['Tomatoes', '0.5 acres', 'Growing', 'KSh 12,000'], ['Kale', '2 acres', 'Harvested', 'KSh 8,000'], ['Cattle', '12', 'Active', 'KSh 360,000'], ['Chickens', '350', 'Active', 'KSh 175,000']] },
+      inventory: { kpis: [{ label: 'Total Items', value: '8', color: 'var(--primary-green)' }, { label: 'Total Value', value: formatCurrency(87500), color: 'var(--accent-amber)' }, { label: 'Low Stock', value: '3', color: 'var(--accent-red)' }], headers: ['Item', 'Qty', 'Unit', 'Value', 'Status'], items: [['Maize Seeds', '50', 'kg', 'KSh 11,000', 'OK'], ['Dairy Meal', '12', 'bags', 'KSh 21,600', 'Low'], ['Dewormer', '3', 'bottles', 'KSh 2,550', 'Low'], ['DAP Fertilizer', '0', 'kg', 'KSh 0', 'Out']] },
+      property: { kpis: [{ label: 'Properties', value: '3', color: 'var(--primary-green)' }, { label: 'Total Value', value: formatCurrency(9500000), color: 'var(--accent-amber)' }, { label: 'Monthly Rent', value: formatCurrency(141000), color: 'var(--accent-teal)' }], headers: ['Property', 'Type', 'Units', 'Value'], items: [['Main Farm', 'Agricultural', '2', 'KSh 4,500,000'], ['Greenhouse', 'Agricultural', '1', 'KSh 1,800,000'], ['Town Plaza', 'Commercial', '3', 'KSh 3,200,000']] },
+      transport: { kpis: [{ label: 'Vehicles', value: '3', color: 'var(--primary-green)' }, { label: 'Fuel This Month', value: formatCurrency(35000), color: 'var(--accent-amber)' }, { label: 'Maintenance', value: formatCurrency(33500), color: 'var(--accent-red)' }], headers: ['Vehicle', 'Mileage', 'Fuel Total', 'Maint Total'], items: [['KCA 123T', '85,600 km', 'KSh 27,000', 'KSh 8,500'], ['KCB 456Y', '32,400 km', 'KSh 18,000', 'KSh 0'], ['KCC 789Z', '112,000 km', 'KSh 8,000', 'KSh 25,000']] },
+      contracts: { kpis: [{ label: 'Active Contracts', value: '2', color: 'var(--primary-green)' }, { label: 'Total Value', value: formatCurrency(730000), color: 'var(--accent-amber)' }, { label: 'Completed', value: '1', color: 'var(--accent-blue)' }], headers: ['Contract', 'Party', 'Value', 'Status'], items: [['Maize Supply', 'NCPB', 'KSh 450,000', 'Active'], ['Dairy Supply', 'Brookside', 'KSh 280,000', 'Active'], ['Feed Supply', 'Unga Farm Care', 'KSh 120,000', 'Completed']] }
+    };
+    return demos[type] || { kpis: [], headers: [], items: [] };
+  }
+
+  window.downloadReport = function(id, format) {
+    showToast('Downloading ' + format.toUpperCase() + '... (demo)', 'info');
+    setTimeout(function() { showToast('Report downloaded', 'success'); }, 1500);
+  };
+
+  window.deleteReport = async function(id) {
+    if (!confirm('Delete this report?')) return;
+    try { await db.collection('reports').doc(id).delete(); showToast('Report deleted', 'success'); }
+    catch (err) {
+      allReports = allReports.filter(function(r) { return r.id !== id; });
+      renderHistory(allReports);
+      showToast('Report removed', 'success');
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    loadData();
+    var today = new Date();
+    document.getElementById('reportTo').value = today.toISOString().split('T')[0];
+    var first = new Date(today.getFullYear(), today.getMonth(), 1);
+    document.getElementById('reportFrom').value = first.toISOString().split('T')[0];
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Property</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <style>
+    .prop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 20px; }
+    @media (max-width: 640px) { .prop-grid { grid-template-columns: 1fr; } }
+    .prop-card { background: var(--surface-white); border-radius: var(--radius-md); border: 1px solid var(--border-light); overflow: hidden; transition: var(--transition); }
+    .prop-card:hover { box-shadow: var(--shadow-md); }
+    .prop-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
+    .prop-header .p-name { font-size: 16px; font-weight: 600; }
+    .prop-header .p-type { font-size: 12px; color: var(--text-secondary); }
+    .prop-body { padding: 16px 20px; }
+    .prop-body .p-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--border-light); }
+    .prop-body .p-row:last-child { border-bottom: none; }
+    .prop-body .p-row .p-label { color: var(--text-secondary); }
+    .prop-body .p-row .p-value { font-weight: 500; }
+    .unit-list { margin-top: 12px; }
+    .unit-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--bg-cream); border-radius: var(--radius-sm); margin-bottom: 6px; font-size: 13px; }
+    .unit-item .u-name { font-weight: 500; }
+    .unit-item .u-tenant { color: var(--text-secondary); }
+    .unit-item .u-rent { font-weight: 600; color: var(--primary-green); }
+    .unit-item .u-status { font-size: 11px; }
+    .prop-footer { padding: 12px 20px; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end; gap: 8px; background: var(--bg-cream); }
+    .bottom-nav { display: none; }
+    @media (max-width: 640px) {
+      .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: #1B4332; z-index: 100; padding: 4px 0; justify-content: space-around; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+      .bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; color: rgba(255,255,255,0.6); font-size: 10px; padding: 6px 12px; text-decoration: none; }
+      .bottom-nav a.active, .bottom-nav a:hover { color: white; }
+      .bottom-nav a .nav-icon { font-size: 20px; }
+      .page-content { padding-bottom: 80px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><span style="font-size:28px;">🌿</span><span>AgriLedger</span></div>
+    <div class="sidebar-user">
+      <div class="avatar"><span class="user-avatar-text">U</span></div>
+      <div class="user-info">
+        <div class="name sidebar-user-name">Loading...</div>
+        <div class="role sidebar-user-role">general</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <div class="nav-section">FARMING</div>
+      <a href="farming/crops.html"><span class="nav-icon">🌾</span><span class="nav-text">Crops</span></a>
+      <a href="farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+      <a href="farming/poultry.html"><span class="nav-icon">🐔</span><span class="nav-text">Poultry</span></a>
+      <a href="farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+      <div class="nav-section">FINANCE</div>
+      <a href="inventory.html"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+      <a href="cashbook.html"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+      <a href="journal.html"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+      <div class="nav-section">BUSINESS</div>
+      <a href="contracts.html"><span class="nav-icon">📋</span><span class="nav-text">Contracts</span></a>
+      <a href="property.html" class="active"><span class="nav-icon">🏠</span><span class="nav-text">Property</span></a>
+      <a href="transport.html"><span class="nav-icon">🚛</span><span class="nav-text">Transport</span></a>
+      <a href="reports.html"><span class="nav-icon">📈</span><span class="nav-text">Reports</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a>
+      <a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle">☰</button>
+        <div class="breadcrumb">
+          <a href="dashboard.html">Dashboard</a><span class="sep">›</span><span>Property</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="notification-btn">🔔<span class="badge badge-red">3</span></button>
+        <button class="profile-btn" onclick="window.location.href='settings.html'">
+          <div class="avatar"><span class="user-avatar-text">J</span></div>
+          <span class="sidebar-user-name" style="font-size:13px;">User</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header">
+        <div class="page-header-row">
+          <h1>Property Management</h1>
+          <button class="btn btn-primary" onclick="openPropertyModal()">➕ Add Property</button>
+        </div>
+      </div>
+
+      <div id="propertyGrid" class="prop-grid">
+        <div class="loading-spinner" style="grid-column:1/-1;"></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="dashboard.html"><span class="nav-icon">📊</span>Home</a>
+    <a href="contracts.html"><span class="nav-icon">📋</span>Contracts</a>
+    <a href="property.html" class="active"><span class="nav-icon">🏠</span>Property</a>
+    <a href="transport.html"><span class="nav-icon">🚛</span>Transport</a>
+    <a href="settings.html"><span class="nav-icon">⚙️</span>More</a>
+  </nav>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script>
+(function() {
+  var allProperties = [];
+  var propUnsub = null;
+
+  function getTypeIcon(type) {
+    var t = (type || '').toLowerCase();
+    if (t.includes('agric')) return '🌾';
+    if (t.includes('commerc')) return '🏢';
+    return '🏠';
+  }
+
+  function renderProperties(props) {
+    var grid = document.getElementById('propertyGrid');
+    if (!grid) return;
+    if (props.length === 0) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="icon">🏠</div><h3>No properties yet</h3><p>Add properties to track your real estate assets and rental income.</p><button class="btn btn-primary" onclick="openPropertyModal()">➕ Add Property</button></div>';
+      return;
+    }
+    grid.innerHTML = props.map(function(p) {
+      var units = p.units || [];
+      var unitsHtml = units.length ? units.map(function(u) {
+        var statusClass = u.status === 'occupied' ? 'badge-green' : 'badge-gray';
+        return '<div class="unit-item"><div><span class="u-name">' + (u.name || 'Unit') + '</span> <span class="u-tenant">' + (u.tenant || 'Vacant') + '</span></div><div><span class="u-rent">' + formatCurrency(u.rent || 0) + '/mo</span> <span class="badge ' + statusClass + '" style="font-size:10px;">' + (u.status || 'vacant') + '</span></div></div>';
+      }).join('') : '<div style="font-size:13px;color:var(--text-secondary);padding:8px 0;text-align:center;">No rental units added</div>';
+      return '<div class="prop-card">' +
+        '<div class="prop-header">' +
+          '<div><span class="p-name">' + getTypeIcon(p.type) + ' ' + (p.name || 'Unnamed') + '</span><div class="p-type">' + (p.type || 'Agricultural') + '</div></div>' +
+          '<span class="badge badge-green">' + units.filter(function(u) { return u.status === 'occupied'; }).length + '/' + units.length + ' occupied</span>' +
+        '</div>' +
+        '<div class="prop-body">' +
+          '<div class="p-row"><span class="p-label">Size</span><span class="p-value">' + (p.size ? p.size + ' ' + (p.sizeUnit || 'acres') : '—') + '</span></div>' +
+          '<div class="p-row"><span class="p-label">Estimated Value</span><span class="p-value">' + formatCurrency(p.value || 0) + '</span></div>' +
+          '<div class="p-row"><span class="p-label">Location</span><span class="p-value">' + (p.location || '—') + '</span></div>' +
+          '<div style="margin-top:12px;"><strong style="font-size:13px;">Rental Units</strong></div>' +
+          '<div class="unit-list">' + unitsHtml + '</div>' +
+        '</div>' +
+        '<div class="prop-footer">' +
+          '<button class="btn btn-sm btn-secondary" onclick="manageUnits(\'' + p.id + '\')">🏠 Units</button>' +
+          '<button class="btn btn-sm btn-secondary" onclick="viewRentHistory(\'' + p.id + '\')">📊 Rent</button>' +
+          '<button class="btn btn-sm btn-secondary" onclick="editProperty(\'' + p.id + '\')">✏️ Edit</button>' +
+          '<button class="btn btn-sm btn-danger" onclick="deleteProperty(\'' + p.id + '\')">🗑️</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function loadData() {
+    if (propUnsub) propUnsub();
+    propUnsub = db.collection('properties').orderBy('createdAt', 'desc').onSnapshot(function(snap) {
+      allProperties = [];
+      snap.forEach(function(d) {
+        var data = d.data();
+        allProperties.push({ id: d.id, units: data.units || [], ...data });
+      });
+      if (allProperties.length === 0) loadDemoProperties();
+      else renderProperties(allProperties);
+    }, function() { loadDemoProperties(); });
+  }
+
+  function loadDemoProperties() {
+    allProperties = [
+      { id: 'p1', name: 'Main Farm', type: 'Agricultural', size: 25, sizeUnit: 'acres', value: 4500000, location: 'Kiambu Road', units: [
+        { name: 'Farm House', tenant: 'John Kamau', rent: 15000, status: 'occupied' },
+        { name: 'Workers Cottage', tenant: 'Mary Wanjiku', rent: 8000, status: 'occupied' }
+      ]},
+      { id: 'p2', name: 'Greenhouse Complex', type: 'Agricultural', size: 2, sizeUnit: 'acres', value: 1800000, location: 'Limuru', units: [
+        { name: 'Greenhouse 1', tenant: '', rent: 0, status: 'vacant' }
+      ]},
+      { id: 'p3', name: 'Town Plaza Shop', type: 'Commercial', size: 120, sizeUnit: 'sq m', value: 3200000, location: 'Nairobi CBD', units: [
+        { name: 'Shop A', tenant: 'David Mwangi', rent: 45000, status: 'occupied' },
+        { name: 'Shop B', tenant: 'Grace Akinyi', rent: 38000, status: 'occupied' },
+        { name: 'Shop C', tenant: '', rent: 35000, status: 'vacant' }
+      ]}
+    ];
+    renderProperties(allProperties);
+  }
+
+  window.openPropertyModal = function(data) {
+    var isEdit = !!data;
+    var d = data || {};
+    var title = isEdit ? 'Edit Property' : 'Add Property';
+    var html = '<form id="propForm" onsubmit="return saveProperty(event)">' +
+      '<input type="hidden" id="propId" value="' + (d.id || '') + '">' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Property Name</label><input type="text" id="pName" class="form-input" value="' + (d.name || '') + '" required></div>' +
+        '<div class="form-group"><label class="form-label">Type</label><select id="pType" class="form-select"><option value="Agricultural"' + (d.type === 'Agricultural' ? ' selected' : '') + '>Agricultural</option><option value="Commercial"' + (d.type === 'Commercial' ? ' selected' : '') + '>Commercial</option><option value="Residential"' + (d.type === 'Residential' ? ' selected' : '') + '>Residential</option></select></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Size</label><input type="number" id="pSize" class="form-input" value="' + (d.size || '') + '" min="0" step="0.1"></div>' +
+        '<div class="form-group"><label class="form-label">Size Unit</label><select id="pSizeUnit" class="form-select"><option value="acres"' + (d.sizeUnit === 'acres' ? ' selected' : '') + '>Acres</option><option value="sq m"' + (d.sizeUnit === 'sq m' ? ' selected' : '') + '>Sq Meters</option><option value="hectares"' + (d.sizeUnit === 'hectares' ? ' selected' : '') + '>Hectares</option></select></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label class="form-label">Estimated Value (KSh)</label><input type="number" id="pValue" class="form-input" value="' + (d.value || '') + '" min="0"></div>' +
+        '<div class="form-group"><label class="form-label">Location</label><input type="text" id="pLocation" class="form-input" value="' + (d.location || '') + '"></div>' +
+      '</div>' +
+      '<div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);margin-top:16px;">' +
+        '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>' +
+        '<button type="submit" class="btn btn-primary">' + (isEdit ? 'Update' : 'Add Property') + '</button>' +
+      '</div></form>';
+    openModal(html, title);
+  };
+
+  window.saveProperty = async function(e) {
+    e.preventDefault();
+    var id = document.getElementById('propId').value;
+    var data = {
+      name: document.getElementById('pName').value.trim(),
+      type: document.getElementById('pType').value,
+      size: parseFloat(document.getElementById('pSize').value) || 0,
+      sizeUnit: document.getElementById('pSizeUnit').value,
+      value: parseFloat(document.getElementById('pValue').value) || 0,
+      location: document.getElementById('pLocation').value.trim(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    try {
+      if (id) { await db.collection('properties').doc(id).update(data); showToast('Property updated', 'success'); }
+      else { data.createdAt = firebase.firestore.FieldValue.serverTimestamp(); data.units = []; await db.collection('properties').add(data); showToast('Property added', 'success'); }
+      closeModal();
+    } catch (err) { showToast('Error: ' + err.message, 'error'); }
+    return false;
+  };
+
+  window.manageUnits = function(propId) {
+    var p = allProperties.find(function(x) { return x.id === propId; });
+    if (!p) return;
+    var units = p.units || [];
+    var listHtml = units.map(function(u, i) {
+      var statusOpts = '<option value="occupied"' + (u.status === 'occupied' ? ' selected' : '') + '>Occupied</option><option value="vacant"' + (u.status === 'vacant' ? ' selected' : '') + '>Vacant</option>';
+      return '<div class="form-row" style="margin-bottom:8px;align-items:end;">' +
+        '<div class="form-group"><input type="text" class="form-input u-name" value="' + (u.name || '') + '" placeholder="Unit name"></div>' +
+        '<div class="form-group"><input type="text" class="form-input u-tenant" value="' + (u.tenant || '') + '" placeholder="Tenant name"></div>' +
+        '<div class="form-group"><input type="number" class="form-input u-rent" value="' + (u.rent || '') + '" placeholder="Rent/mo"></div>' +
+        '<div class="form-group"><select class="form-select u-status">' + statusOpts + '</select></div>' +
+        '<div style="display:flex;align-items:center;"><button type="button" class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()">✕</button></div>' +
+      '</div>';
+    }).join('');
+    var html = '<form id="unitForm" onsubmit="return saveUnits(event, \'' + propId + '\')">' +
+      '<div id="unitsContainer">' + listHtml + '</div>' +
+      '<button type="button" class="btn btn-sm btn-secondary" onclick="addUnitRow()" style="margin-top:4px;">➕ Add Unit</button>' +
+      '<div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);margin-top:16px;">' +
+        '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>' +
+        '<button type="submit" class="btn btn-primary">Save Units</button>' +
+      '</div></form>';
+    openModal(html, 'Manage Units - ' + (p.name || ''));
+  };
+
+  window.addUnitRow = function() {
+    var container = document.getElementById('unitsContainer');
+    var div = document.createElement('div');
+    div.className = 'form-row';
+    div.style.cssText = 'margin-bottom:8px;align-items:end;';
+    div.innerHTML = '<div class="form-group"><input type="text" class="form-input u-name" placeholder="Unit name"></div>' +
+      '<div class="form-group"><input type="text" class="form-input u-tenant" placeholder="Tenant name"></div>' +
+      '<div class="form-group"><input type="number" class="form-input u-rent" placeholder="Rent/mo"></div>' +
+      '<div class="form-group"><select class="form-select u-status"><option value="vacant">Vacant</option><option value="occupied">Occupied</option></select></div>' +
+      '<div style="display:flex;align-items:center;"><button type="button" class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()">✕</button></div>';
+    container.appendChild(div);
+  };
+
+  window.saveUnits = async function(e, propId) {
+    e.preventDefault();
+    var units = [];
+    document.querySelectorAll('#unitsContainer .form-row').forEach(function(row) {
+      var name = row.querySelector('.u-name');
+      var tenant = row.querySelector('.u-tenant');
+      var rent = row.querySelector('.u-rent');
+      if (name && name.value) {
+        units.push({
+          name: name.value,
+          tenant: tenant?.value || '',
+          rent: parseFloat(rent?.value) || 0,
+          status: row.querySelector('.u-status')?.value || 'vacant'
+        });
+      }
+    });
+    try {
+      await db.collection('properties').doc(propId).update({ units: units });
+      showToast('Units saved', 'success');
+      closeModal();
+    } catch (err) { showToast('Error: ' + err.message, 'error'); }
+    return false;
+  };
+
+  window.viewRentHistory = function(propId) {
+    var p = allProperties.find(function(x) { return x.id === propId; });
+    if (!p) return;
+    var units = p.units || [];
+    var totalRent = units.reduce(function(sum, u) { return sum + (parseFloat(u.rent) || 0); }, 0);
+    var occupied = units.filter(function(u) { return u.status === 'occupied'; }).length;
+    var html = '<div style="padding:8px 0;">' +
+      '<div class="kpi-strip" style="margin-bottom:16px;">' +
+        '<div class="card kpi-card income" style="padding:16px;"><div class="kpi-label">Total Units</div><div class="kpi-value">' + units.length + '</div></div>' +
+        '<div class="card kpi-card" style="padding:16px;border-left-color:var(--accent-blue);"><div class="kpi-label">Occupied</div><div class="kpi-value">' + occupied + '</div></div>' +
+        '<div class="card kpi-card balance" style="padding:16px;"><div class="kpi-label">Monthly Rent Income</div><div class="kpi-value">' + formatCurrency(totalRent) + '</div></div>' +
+      '</div>';
+    units.forEach(function(u) {
+      html += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-light);font-size:13px;">' +
+        '<span><strong>' + (u.name || 'Unit') + '</strong> - ' + (u.tenant || 'Vacant') + '</span>' +
+        '<span>' + formatCurrency(u.rent || 0) + '/mo <span class="badge ' + (u.status === 'occupied' ? 'badge-green' : 'badge-gray') + '" style="font-size:10px;">' + (u.status || 'vacant') + '</span></span>' +
+      '</div>';
+    });
+    html += '</div>';
+    openModal(html + '<div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>', 'Rent History - ' + (p.name || ''));
+  };
+
+  window.editProperty = function(id) {
+    var p = allProperties.find(function(x) { return x.id === id; });
+    if (p) window.openPropertyModal(p);
+  };
+
+  window.deleteProperty = async function(id) {
+    if (!confirm('Delete this property?')) return;
+    try { await db.collection('properties').doc(id).delete(); showToast('Property deleted', 'success'); }
+    catch (err) {
+      allProperties = allProperties.filter(function(x) { return x.id !== id; });
+      renderProperties(allProperties);
+      showToast('Property removed', 'success');
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', function() { loadData(); });
+})();
+</script>
+</body>
+</html>

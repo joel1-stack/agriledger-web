@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Feed Expenses</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <style>
+    .feed-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .feed-summary .card { padding: 16px; text-align: center; }
+    .feed-summary .val { font-size: 22px; font-weight: 700; }
+    .dual-form { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+    @media (max-width: 768px) { .dual-form { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><span>🌱</span><span>AgriLedger</span></div>
+    <div class="sidebar-user"><div class="avatar user-avatar-text">J</div><div class="user-info"><div class="name sidebar-user-name">User</div><div class="role sidebar-user-role">general</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="../dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <div class="nav-section">POULTRY</div>
+      <a href="poultry-dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <a href="farm-setup.html"><span class="nav-icon">⚙️</span><span class="nav-text">Farm Setup</span></a>
+      <a href="flock-register.html"><span class="nav-icon">📋</span><span class="nav-text">Flock Register</span></a>
+      <a href="production-log.html"><span class="nav-icon">🥚</span><span class="nav-text">Production Log</span></a>
+      <a href="sales.html"><span class="nav-icon">💰</span><span class="nav-text">Sales</span></a>
+      <a href="other-income.html"><span class="nav-icon">💵</span><span class="nav-text">Other Income</span></a>
+      <a href="feed-expenses.html" class="active"><span class="nav-icon">🌾</span><span class="nav-text">Feed Expenses</span></a>
+      <a href="health-vet.html"><span class="nav-icon">💉</span><span class="nav-text">Health &amp; Vet</span></a>
+      <a href="mortality.html"><span class="nav-icon">⚰️</span><span class="nav-text">Mortality</span></a>
+      <a href="batch-summary.html"><span class="nav-icon">📈</span><span class="nav-text">Batch Summary</span></a>
+      <div class="nav-section">MAIN</div>
+      <a href="../farming/crops.html"><span class="nav-icon">🌾</span><span class="nav-text">Crops</span></a>
+      <a href="../farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+      <a href="../farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+      <a href="../inventory.html"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+      <a href="../cashbook.html"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+      <a href="../journal.html"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+    </nav>
+    <div class="sidebar-footer"><a href="../settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a><a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a></div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><button class="topbar-toggle" id="sidebar-toggle">☰</button><div class="breadcrumb"><a href="../dashboard.html">Dashboard</a><span class="sep">›</span><a href="poultry-dashboard.html">Poultry</a><span class="sep">›</span><span>Feed Expenses</span></div></div>
+      <div class="topbar-right"><button class="notification-btn">🔔<span class="badge badge-red">3</span></button><button class="profile-btn" onclick="window.location.href='../settings.html'"><div class="avatar user-avatar-text">J</div><span class="sidebar-user-name" style="font-size:13px;">User</span></button></div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header"><div class="page-header-row"><div><h1>Feed Expenses</h1><p style="font-size:14px;color:var(--text-secondary);">Track feed purchases and daily usage</p></div></div></div>
+
+      <div class="feed-summary" id="feedSummary">
+        <div class="card"><div class="val" style="color:var(--accent-red);" id="sumPurchased">KSh 0</div><div style="font-size:13px;color:var(--text-secondary);">Purchased This Month</div></div>
+        <div class="card"><div class="val" style="color:var(--primary-green);" id="sumUsed">0 kg</div><div style="font-size:13px;color:var(--text-secondary);">Feed Used This Month</div></div>
+        <div class="card"><div class="val" id="sumRemaining">0 kg</div><div style="font-size:13px;color:var(--text-secondary);">Remaining Stock</div></div>
+        <div class="card"><div class="val" style="color:var(--accent-gold);" id="sumCostPerEgg">KSh 0</div><div style="font-size:13px;color:var(--text-secondary);">Cost Per Egg</div></div>
+      </div>
+
+      <div class="dual-form">
+        <div class="card"><div class="card-header"><h3 style="font-size:15px;">📦 Feed Purchase</h3></div><div class="card-body">
+          <form id="purchaseForm" onsubmit="return saveFeedPurchase(event)">
+            <div class="form-group"><label class="form-label">Date</label><input type="date" id="purchDate" class="form-input" required></div>
+            <div class="form-group"><label class="form-label">Supplier</label><input type="text" id="purchSupplier" class="form-input" placeholder="Supplier name" required></div>
+            <div class="form-group"><label class="form-label">Feed Type</label><input type="text" id="purchType" class="form-input" placeholder="e.g. Layers Mash" required></div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Quantity (kg)</label><input type="number" id="purchQty" class="form-input" min="0" step="0.5" oninput="calcPurchTotal()" required></div>
+              <div class="form-group"><label class="form-label">Unit Price (KSh)</label><input type="number" id="purchPrice" class="form-input" min="0" step="0.5" oninput="calcPurchTotal()" required></div>
+            </div>
+            <div class="form-group"><label class="form-label">Total (Auto)</label><input type="text" id="purchTotal" class="form-input" style="background:var(--bg-cream);" readonly></div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Payment Method</label><select id="purchPay" class="form-select"><option value="Cash">Cash</option><option value="M-Pesa">M-Pesa</option><option value="Bank Transfer">Bank Transfer</option><option value="Credit">Credit</option></select></div>
+              <div class="form-group"><label class="form-label">Payment Status</label><select id="purchStatus" class="form-select"><option value="Paid">Paid</option><option value="Outstanding">Outstanding</option></select></div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">💾 Record Purchase</button>
+          </form>
+        </div></div>
+
+        <div class="card"><div class="card-header"><h3 style="font-size:15px;">🌾 Daily Feed Usage</h3></div><div class="card-body">
+          <form id="usageForm" onsubmit="return saveFeedUsage(event)">
+            <div class="form-group"><label class="form-label">Date</label><input type="date" id="useDate" class="form-input" required></div>
+            <div class="form-group"><label class="form-label">Batch</label><select id="useBatch" class="form-select" required><option value="">Select Batch</option></select></div>
+            <div class="form-group"><label class="form-label">Feed Type</label><input type="text" id="useType" class="form-input" placeholder="e.g. Layers Mash" required></div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Quantity Used (kg)</label><input type="number" id="useQty" class="form-input" min="0" step="0.5" required></div>
+              <div class="form-group"><label class="form-label">Cost (KSh)</label><input type="number" id="useCost" class="form-input" min="0" step="0.5"></div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">💾 Record Usage</button>
+          </form>
+        </div></div>
+      </div>
+
+      <div class="table-container">
+        <table id="feedTable">
+          <thead><tr><th>Date</th><th>Type</th><th>Supplier/Batch</th><th>Item</th><th>Qty (kg)</th><th>Unit Price</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead>
+          <tbody id="feedTableBody"><tr><td colspan="9"><div class="loading-spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="../js/firebase-config.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+(function() {
+  var allFeed = [], allBatches = [], allProduction = [];
+
+  function load() {
+    db.collection('poultryBatches').onSnapshot(function(snap) {
+      allBatches = []; snap.forEach(function(d) { allBatches.push({ id: d.id, ...d.data() }); });
+      populateBatchSelect();
+    }, function() {});
+    db.collection('feedExpenses').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
+      allFeed = []; snap.forEach(function(d) { allFeed.push({ id: d.id, ...d.data() }); });
+      if (allFeed.length === 0) loadDemo();
+      renderSummary(); renderTable();
+    }, function() { loadDemo(); });
+    db.collection('poultryProduction').limit(500).onSnapshot(function(snap) {
+      allProduction = []; snap.forEach(function(d) { allProduction.push({ id: d.id, ...d.data() }); });
+    }, function() {});
+    document.getElementById('purchDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('useDate').value = new Date().toISOString().split('T')[0];
+  }
+
+  function loadDemo() {
+    allFeed = [
+      { id:'f1', date:new Date(2026,5,1), recordType:'purchase', supplier:'Chic Feed Ltd', feedType:'Layers Mash', qty:500, unitPrice:65, total:32500, payment:'Bank Transfer', status:'Paid' },
+      { id:'f2', date:new Date(2026,5,8), recordType:'purchase', supplier:'Farmers Choice', feedType:'Broiler Starter', qty:300, unitPrice:72, total:21600, payment:'M-Pesa', status:'Paid' },
+      { id:'f3', date:new Date(2026,5,10), recordType:'usage', batchName:'Batch A - Layers', feedType:'Layers Mash', qty:60, cost:3900 },
+      { id:'f4', date:new Date(2026,5,11), recordType:'usage', batchName:'Batch B - Broilers', feedType:'Broiler Starter', qty:85, cost:6120 },
+      { id:'f5', date:new Date(2026,5,15), recordType:'purchase', supplier:'AgriVet Supplies', feedType:'Kienyeji Layers', qty:200, unitPrice:68, total:13600, payment:'Credit', status:'Outstanding' }
+    ];
+    populateBatchSelect();
+    renderSummary(); renderTable();
+  }
+
+  function populateBatchSelect() {
+    var sel = document.getElementById('useBatch');
+    sel.innerHTML = '<option value="">Select Batch</option>' + allBatches.filter(function(b) { return b.status === 'active'; }).map(function(b) {
+      return '<option value="' + b.id + '">' + (b.name||'Unnamed') + ' (' + (b.flockSize||0) + ' birds)</option>';
+    }).join('');
+  }
+
+  window.calcPurchTotal = function() {
+    var qty = parseFloat(document.getElementById('purchQty').value)||0;
+    var price = parseFloat(document.getElementById('purchPrice').value)||0;
+    document.getElementById('purchTotal').value = 'KSh ' + formatNumber(qty * price);
+  };
+
+  window.saveFeedPurchase = function(e) {
+    e.preventDefault();
+    var qty = parseFloat(document.getElementById('purchQty').value)||0;
+    var price = parseFloat(document.getElementById('purchPrice').value)||0;
+    var data = {
+      date: new Date(document.getElementById('purchDate').value + 'T00:00:00'),
+      recordType: 'purchase',
+      supplier: document.getElementById('purchSupplier').value,
+      feedType: document.getElementById('purchType').value,
+      qty: qty,
+      unitPrice: price,
+      total: qty * price,
+      payment: document.getElementById('purchPay').value,
+      status: document.getElementById('purchStatus').value,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    db.collection('feedExpenses').add(data).then(function() {
+      showToast('Purchase recorded', 'success');
+      document.getElementById('purchSupplier').value = '';
+      document.getElementById('purchQty').value = '';
+      document.getElementById('purchPrice').value = '';
+      document.getElementById('purchTotal').value = '';
+    }).catch(function(err) {
+      console.warn(err);
+      data.id = 'local_' + Date.now();
+      allFeed.unshift(data);
+      renderSummary(); renderTable();
+      showToast('Saved locally', 'info');
+    });
+    return false;
+  };
+
+  window.saveFeedUsage = function(e) {
+    e.preventDefault();
+    var batchId = document.getElementById('useBatch').value;
+    if (!batchId) { showToast('Select a batch', 'error'); return false; }
+    var b = allBatches.find(function(x) { return x.id === batchId; });
+    var data = {
+      date: new Date(document.getElementById('useDate').value + 'T00:00:00'),
+      recordType: 'usage',
+      batchId: batchId,
+      batchName: b ? b.name : '',
+      feedType: document.getElementById('useType').value,
+      qty: parseFloat(document.getElementById('useQty').value)||0,
+      cost: parseFloat(document.getElementById('useCost').value)||0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    db.collection('feedExpenses').add(data).then(function() {
+      showToast('Feed usage recorded', 'success');
+      document.getElementById('useType').value = '';
+      document.getElementById('useQty').value = '';
+      document.getElementById('useCost').value = '';
+    }).catch(function(err) {
+      console.warn(err);
+      data.id = 'local_' + Date.now();
+      allFeed.unshift(data);
+      renderSummary(); renderTable();
+      showToast('Saved locally', 'info');
+    });
+    return false;
+  };
+
+  function renderSummary() {
+    var now = new Date(), m = now.getMonth(), y = now.getFullYear();
+    var monthFeed = allFeed.filter(function(f) {
+      var d = f.date ? (f.date.toDate ? f.date.toDate() : new Date(f.date)) : new Date();
+      return d.getMonth() === m && d.getFullYear() === y;
+    });
+    var purchased = monthFeed.filter(function(f) { return f.recordType === 'purchase'; }).reduce(function(s,f) { return s + (parseFloat(f.total)||0); }, 0);
+    var used = monthFeed.filter(function(f) { return f.recordType === 'usage'; }).reduce(function(s,f) { return s + (parseFloat(f.qty)||0); }, 0);
+    var totalPurchQty = monthFeed.filter(function(f) { return f.recordType === 'purchase'; }).reduce(function(s,f) { return s + (parseFloat(f.qty)||0); }, 0);
+    var remaining = totalPurchQty - used;
+
+    document.getElementById('sumPurchased').textContent = formatCurrency(purchased);
+    document.getElementById('sumUsed').textContent = formatNumber(used, 1) + ' kg';
+
+    // Estimate remaining
+    var allUsed = allFeed.filter(function(f) { return f.recordType === 'usage'; }).reduce(function(s,f) { return s + (parseFloat(f.qty)||0); }, 0);
+    var allPurchQty = allFeed.filter(function(f) { return f.recordType === 'purchase'; }).reduce(function(s,f) { return s + (parseFloat(f.qty)||0); }, 0);
+    document.getElementById('sumRemaining').textContent = formatNumber(Math.max(0, allPurchQty - allUsed), 1) + ' kg';
+
+    // Cost per egg
+    var monthProds = allProduction.filter(function(p) {
+      var d = p.date ? (p.date.toDate ? p.date.toDate() : new Date(p.date)) : new Date();
+      return d.getMonth() === m && d.getFullYear() === y;
+    });
+    var totalEggs = monthProds.reduce(function(s,p) { return s + (parseInt(p.total)||0); }, 0);
+    var costPerEgg = totalEggs > 0 ? (purchased / totalEggs) : 0;
+    document.getElementById('sumCostPerEgg').textContent = formatCurrency(costPerEgg);
+  }
+
+  function renderTable() {
+    var tbody = document.getElementById('feedTableBody');
+    if (!tbody) return;
+    if (allFeed.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="icon">🌾</div><h3>No feed records</h3></div></td></tr>';
+      return;
+    }
+    var sorted = allFeed.slice().sort(function(a,b) {
+      var da = a.date ? (a.date.toDate ? a.date.toDate() : new Date(a.date)) : new Date(0);
+      var db = b.date ? (b.date.toDate ? b.date.toDate() : new Date(b.date)) : new Date(0);
+      return db - da;
+    });
+    tbody.innerHTML = sorted.map(function(f) {
+      var d = f.date ? (f.date.toDate ? f.date.toDate() : new Date(f.date)) : new Date();
+      if (f.recordType === 'purchase') {
+        var badgeCls = f.status === 'Paid' ? 'badge-green' : 'badge-red';
+        return '<tr><td>' + formatDate(d) + '</td><td><span class="badge badge-blue">Purchase</span></td><td>' + (f.supplier||'—') + '</td><td>' + (f.feedType||'—') + '</td><td>' + formatNumber(f.qty||0) + '</td><td>KSh ' + formatNumber(f.unitPrice||0) + '</td><td><strong>' + formatCurrency(f.total||0) + '</strong></td><td>' + (f.payment||'—') + '</td><td><span class="badge ' + badgeCls + '">' + f.status + '</span></td></tr>';
+      } else {
+        return '<tr><td>' + formatDate(d) + '</td><td><span class="badge badge-green">Usage</span></td><td>' + (f.batchName||'—') + '</td><td>' + (f.feedType||'—') + '</td><td>' + formatNumber(f.qty||0, 1) + '</td><td>—</td><td><strong>' + formatCurrency(f.cost||0) + '</strong></td><td>—</td><td>—</td></tr>';
+      }
+    }).join('');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() { setTimeout(load, 300); });
+})();
+</script>
+</body>
+</html>
