@@ -1,6 +1,5 @@
-
 # Firebase config (contains API keys)
-js/config.js
+js/firebase-config.js
 
 # Local env
 .env
