@@ -1,6 +1,7 @@
-node_modules/
-.vscode/
-.idea/
-*.log
-.DS_Store
-Thumbs.db
+
+# Firebase config (contains API keys)
+js/config.js
+
+# Local env
+.env
+.env.local
