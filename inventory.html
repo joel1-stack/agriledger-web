@@ -20,6 +20,20 @@
     .status-badge.ok { background: var(--primary-light); color: var(--primary-dark); }
     .status-badge.low { background: #FFF8E1; color: #F57F17; }
     .status-badge.out { background: #FFEBEE; color: #C62828; }
+    .status-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+    .status-pill.approved { background: #E8F5E9; color: #2E7D32; }
+    .status-pill.rejected { background: #FFEBEE; color: #C62828; }
+    .status-pill.pending { background: #FFF8E1; color: #F57F17; }
+    .row-pending { border-left: 3px solid var(--accent-gold); }
+    .row-approved { border-left: 3px solid var(--primary-green); }
+    .row-rejected { border-left: 3px solid var(--accent-red); }
+    .approval-actions { display: flex; gap: 4px; }
+    .approval-actions button { padding: 4px 8px; font-size: 11px; border: none; border-radius: 4px; cursor: pointer; }
+    .approval-actions .btn-approve { background: #E8F5E9; color: #2E7D32; }
+    .approval-actions .btn-approve:hover { background: #2E7D32; color: white; }
+    .approval-actions .btn-reject { background: #FFEBEE; color: #C62828; }
+    .approval-actions .btn-reject:hover { background: #C62828; color: white; }
+    .approval-badge.pending-count { background: #FFF8E1; color: #F57F17; display:inline-block;margin-left:8px;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:600; }
     .inv-stock-btn { position: relative; }
     .movement-history { max-height: 300px; overflow-y: auto; }
     .movement-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid var(--border-light); font-size: 13px; }
@@ -94,17 +108,21 @@
       </div>
     </header>
 
-    <div class="page-content">
+      <div class="page-content">
       <div class="page-header">
         <div class="page-header-row">
-          <h1>Inventory Management</h1>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div>
+            <h1>Inventory Management</h1>
+            <p id="itemCount" style="font-size:13px;color:var(--text-secondary);">0 items</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;" id="invActions">
             <button class="btn btn-secondary" onclick="toggleMovementHistory()">📜 Movement History</button>
             <button class="btn btn-secondary" onclick="openStockMovementModal()">📦 Stock Movement</button>
             <button class="btn btn-primary" onclick="openAddItemModal()">➕ Add Item</button>
           </div>
         </div>
       </div>
+      <div id="viewAdminBanner" style="display:none;background:#E3F2FD;color:#1565C0;padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:13px;">👁️ Read-Only Mode — You are viewing inventory as a View Administrator.</div>
 
       <div class="category-pills" id="categoryPills">
         <span class="category-pill active" data-cat="All">All</span>
@@ -134,11 +152,12 @@
                     <th>Unit Price</th>
                     <th>Value</th>
                     <th>Status</th>
+                    <th>Approval</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody id="inventoryBody">
-                  <tr><td colspan="8"><div class="loading-spinner"></div></td></tr>
+                  <tbody id="inventoryBody">
+                  <tr><td colspan="9"><div class="loading-spinner"></div></td></tr>
                 </tbody>
               </table>
             </div>
@@ -189,11 +208,20 @@
     return '<span class="status-badge ' + cls + '">' + (status === 'OK' ? '● OK' : (status === 'Low' ? '● Low' : '● Out')) + '</span>';
   }
 
+  var currentUser = null;
+
+  function getApprovalBadge(status) {
+    var icons = { approved: '✅', rejected: '❌', pending: '⏳' };
+    return '<span class="status-pill ' + (status || 'pending') + '">' + (icons[status] || '⏳') + ' ' + ((status || 'pending').charAt(0).toUpperCase() + (status || 'pending').slice(1)) + '</span>';
+  }
+
   function renderItems(items) {
     var tbody = document.getElementById('inventoryBody');
     if (!tbody) return;
+    var isSuper = currentUser && currentUser.role === 'superAdmin';
+    var isView = currentUser && currentUser.role === 'viewAdmin';
     if (items.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon">📦</div><h3>No inventory items</h3><p>Add items to start tracking your stock.</p></div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="icon">📦</div><h3>No inventory items</h3><p>Add items to start tracking your stock.</p></div></td></tr>';
       document.getElementById('itemCount').textContent = '0 items';
       return;
     }
@@ -202,7 +230,17 @@
       var price = parseFloat(item.unitPrice) || 0;
       var value = qty * price;
       var status = item.status || (qty <= 0 ? 'Out' : qty < 10 ? 'Low' : 'OK');
-      return '<tr>' +
+      var rowClass = 'row-' + (item.approval || 'pending');
+      var editBtn = isView ? '' : '<button class="edit-btn" onclick="editItem(\'' + item.id + '\')">✏️</button>';
+      var delBtn = isSuper ? '<button class="delete-btn" onclick="deleteItem(\'' + item.id + '\')">🗑️</button>' : '';
+      var approveBtns = '';
+      if (isSuper && item.approval !== 'approved') {
+        approveBtns = '<div class="approval-actions" style="justify-content:center;">' +
+          '<button class="btn-approve" onclick="approveItem(\'' + item.id + '\')">✅</button>' +
+          '<button class="btn-reject" onclick="rejectItem(\'' + item.id + '\')">❌</button>' +
+        '</div>';
+      }
+      return '<tr class="' + rowClass + '">' +
         '<td><strong>' + (item.name || 'Unnamed') + '</strong></td>' +
         '<td>' + (item.category || 'Other') + '</td>' +
         '<td class="inv-qty">' + formatNumber(qty) + '</td>' +
@@ -210,10 +248,12 @@
         '<td>' + formatCurrency(price) + '</td>' +
         '<td class="inv-value">' + formatCurrency(value) + '</td>' +
         '<td>' + getStatusBadge(status) + '</td>' +
-        '<td><div class="actions"><button class="edit-btn" onclick="editItem(\'' + item.id + '\')">✏️</button><button class="delete-btn" onclick="deleteItem(\'' + item.id + '\')">🗑️</button></div></td>' +
+        '<td style="text-align:center;">' + getApprovalBadge(item.approval || 'pending') + '</td>' +
+        '<td style="text-align:center;"><div style="display:flex;gap:4px;justify-content:center;align-items:center;">' + editBtn + delBtn + approveBtns + '</div></td>' +
       '</tr>';
     }).join('');
-    document.getElementById('itemCount').textContent = items.length + ' items';
+    var pendingCount = items.filter(function(i) { return i.approval !== 'approved'; }).length;
+    document.getElementById('itemCount').innerHTML = items.length + ' items' + (pendingCount > 0 ? ' <span class="approval-badge pending-count">' + pendingCount + ' pending</span>' : '');
   }
 
   function renderMovements(movements) {
@@ -242,44 +282,36 @@
   }
 
   function loadData() {
+    currentUser = getCurrentUser();
+    if (currentUser && currentUser.role === 'viewAdmin') {
+      document.getElementById('viewAdminBanner').style.display = 'block';
+      document.getElementById('invActions').style.display = 'none';
+    }
     if (itemUnsub) itemUnsub();
     if (movUnsub) movUnsub();
     itemUnsub = db.collection('inventory').onSnapshot(function(snap) {
       allItems = [];
       snap.forEach(function(d) { allItems.push({ id: d.id, ...d.data() }); });
-      if (allItems.length === 0) { loadDemoItems(); }
-      else { filterByCategory(activeCat); }
-    }, function() { loadDemoItems(); });
+      filterByCategory(activeCat);
+    }, function() {
+      document.getElementById('inventoryBody').innerHTML = '<tr><td colspan="9"><div class="empty-state"><div style="font-size:48px;">⚠️</div><h3>Could not load data</h3></div></td></tr>';
+    });
     movUnsub = db.collection('stockMovements').orderBy('date', 'desc').limit(100).onSnapshot(function(snap) {
       allMovements = [];
       snap.forEach(function(d) { allMovements.push({ id: d.id, ...d.data() }); });
-      if (allMovements.length === 0) loadDemoMovements();
-      else renderMovements(allMovements);
-    }, function() { loadDemoMovements(); });
+      renderMovements(allMovements);
+    }, function() {});
   }
 
-  function loadDemoItems() {
-    allItems = [
-      { id: 'd1', name: 'Maize Seeds H513', category: 'Seeds', quantity: 50, unit: 'kg', unitPrice: 220, status: 'OK' },
-      { id: 'd2', name: 'Dairy Meal', category: 'Feed', quantity: 12, unit: 'bags', unitPrice: 1800, status: 'Low' },
-      { id: 'd3', name: 'Dewormer', category: 'Medicine', quantity: 3, unit: 'bottles', unitPrice: 850, status: 'Low' },
-      { id: 'd4', name: 'DAP Fertilizer', category: 'Fertilizer', quantity: 0, unit: 'kg', unitPrice: 3200, status: 'Out' },
-      { id: 'd5', name: 'Poultry Feed Layers', category: 'Feed', quantity: 30, unit: 'bags', unitPrice: 1400, status: 'OK' },
-      { id: 'd6', name: 'Sprayer 16L', category: 'Equipment', quantity: 4, unit: 'pcs', unitPrice: 2500, status: 'OK' },
-      { id: 'd7', name: 'Urea Fertilizer', category: 'Fertilizer', quantity: 8, unit: 'kg', unitPrice: 2800, status: 'Low' },
-      { id: 'd8', name: 'Milking Gloves', category: 'Other', quantity: 20, unit: 'pairs', unitPrice: 180, status: 'OK' }
-    ];
-    filterByCategory(activeCat);
-  }
+  window.approveItem = async function(id) {
+    try { await db.collection('inventory').doc(id).update({ approval: 'approved', approvedAt: firebase.firestore.FieldValue.serverTimestamp(), approvedBy: (currentUser ? currentUser.name || currentUser.email : 'admin') }); showToast('Approved ✅', 'success'); }
+    catch (err) { showToast('Error: ' + err.message, 'error'); }
+  };
 
-  function loadDemoMovements() {
-    allMovements = [
-      { id: 'm1', itemName: 'Dairy Meal', type: 'in', quantity: 20, unit: 'bags', date: new Date(2026, 5, 28) },
-      { id: 'm2', itemName: 'Maize Seeds H513', type: 'out', quantity: 10, unit: 'kg', date: new Date(2026, 5, 27) },
-      { id: 'm3', itemName: 'Dewormer', type: 'out', quantity: 1, unit: 'bottles', date: new Date(2026, 5, 25) }
-    ];
-    renderMovements(allMovements);
-  }
+  window.rejectItem = async function(id) {
+    try { await db.collection('inventory').doc(id).update({ approval: 'rejected', rejectedAt: firebase.firestore.FieldValue.serverTimestamp(), rejectedBy: (currentUser ? currentUser.name || currentUser.email : 'admin') }); showToast('Rejected ❌', 'success'); }
+    catch (err) { showToast('Error: ' + err.message, 'error'); }
+  };
 
   window.openAddItemModal = function(data) {
     var isEdit = !!data;
@@ -315,6 +347,7 @@
   window.saveItem = async function(e) {
     e.preventDefault();
     var id = document.getElementById('itemId').value;
+    var user = getCurrentUser();
     var data = {
       name: document.getElementById('itemName').value.trim(),
       category: document.getElementById('itemCategory').value,
@@ -326,7 +359,7 @@
     };
     try {
       if (id) { await db.collection('inventory').doc(id).update(data); showToast('Item updated', 'success'); }
-      else { data.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('inventory').add(data); showToast('Item added', 'success'); }
+      else { data.createdAt = firebase.firestore.FieldValue.serverTimestamp(); data.approval = 'pending'; data.recordedBy = user ? user.name || user.email : 'unknown'; data.userId = user ? user.id : ''; await db.collection('inventory').add(data); showToast('Item added! Pending approval.', 'success'); }
       closeModal();
     } catch (err) {
       showToast('Error: ' + err.message, 'error');

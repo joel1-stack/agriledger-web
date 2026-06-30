@@ -10,19 +10,28 @@
   <link rel="stylesheet" href="../css/components.css">
   <link rel="stylesheet" href="../css/layout.css">
   <style>
-    .batch-card { background: var(--surface-white); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); overflow: hidden; transition: var(--transition); }
-    .batch-card:hover { box-shadow: var(--shadow-md); }
-    .batch-header { padding: 16px 20px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; }
-    .batch-header .batch-name { font-size: 16px; font-weight: 600; }
-    .batch-header .batch-type { font-size: 12px; color: var(--text-secondary); }
-    .batch-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 12px 20px; }
-    .batch-kpi { text-align: center; padding: 8px; background: var(--bg-cream); border-radius: var(--radius-sm); }
-    .batch-kpi .bk-value { font-size: 18px; font-weight: 700; color: var(--primary-green); }
-    .batch-kpi .bk-label { font-size: 11px; color: var(--text-secondary); }
-    .batch-footer { padding: 12px 20px; border-top: 1px solid var(--border-light); background: var(--bg-cream); display: flex; justify-content: space-between; align-items: center; }
-    .batch-sub-links { display: flex; gap: 8px; flex-wrap: wrap; }
-    .batch-sub-links a { font-size: 12px; color: var(--primary-green); padding: 4px 10px; border: 1px solid var(--primary-green); border-radius: 20px; text-decoration: none; transition: var(--transition); }
-    .batch-sub-links a:hover { background: var(--primary-green); color: white; }
+    .sheet-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .sheet-table th { background: var(--primary-dark); color: white; padding: 10px 12px; text-align: left; font-weight: 600; white-space: nowrap; position: sticky; top: 0; z-index: 2; }
+    .sheet-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+    .sheet-table tr:hover td { background: var(--primary-light); }
+    .sheet-table .row-pending { border-left: 3px solid var(--accent-gold); }
+    .sheet-table .row-approved { border-left: 3px solid var(--primary-green); }
+    .sheet-table .row-rejected { border-left: 3px solid var(--accent-red); }
+    .sheet-table .row-pending td:first-child { padding-left: 9px; }
+    .status-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+    .status-pill.approved { background: #E8F5E9; color: #2E7D32; }
+    .status-pill.rejected { background: #FFEBEE; color: #C62828; }
+    .status-pill.pending { background: #FFF8E1; color: #F57F17; }
+    .status-pill.pending_sync { background: #F3E5F5; color: #7B1FA2; }
+    .approval-actions { display: flex; gap: 4px; }
+    .approval-actions button { padding: 4px 8px; font-size: 11px; border: none; border-radius: 4px; cursor: pointer; transition: var(--transition); }
+    .approval-actions .btn-approve { background: #E8F5E9; color: #2E7D32; }
+    .approval-actions .btn-approve:hover { background: #2E7D32; color: white; }
+    .approval-actions .btn-reject { background: #FFEBEE; color: #C62828; }
+    .approval-actions .btn-reject:hover { background: #C62828; color: white; }
+    .table-wrap { overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border-light); max-height: 70vh; overflow-y: auto; }
+    .table-wrap table { min-width: 1100px; }
+    @media (max-width: 640px) { .table-wrap table { min-width: 800px; } }
     .bottom-nav { display: none; }
     @media (max-width: 640px) {
       .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: #1B4332; z-index: 100; padding: 4px 0; justify-content: space-around; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
@@ -30,14 +39,18 @@
       .bottom-nav a.active, .bottom-nav a:hover { color: white; }
       .bottom-nav a .nav-icon { font-size: 20px; }
       .page-content { padding-bottom: 80px; }
-      .batch-kpis { grid-template-columns: repeat(2, 1fr); }
+      .quick-add-fab { position: fixed; bottom: 72px; right: 16px; z-index: 50; }
     }
-    .batch-age { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: var(--primary-light); color: var(--primary-dark); }
+    .quick-add-fab .btn { box-shadow: var(--shadow-lg); padding: 12px 20px; border-radius: 50px; font-size: 13px; }
+    .filter-strip { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+    .filter-strip .form-input, .filter-strip .form-select { width: auto; min-width: 160px; }
+    .record-count { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+    .approval-badge { display: inline-block; margin-left: 8px; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .approval-badge.pending-count { background: #FFF8E1; color: #F57F17; }
   </style>
 </head>
 <body>
   <div class="app-layout">
-    <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
         <span class="logo" style="font-size:28px;">🌿</span>
@@ -74,14 +87,13 @@
       </div>
     </aside>
 
-    <!-- Main -->
     <main class="main-content">
       <header class="topbar">
         <div class="topbar-left">
           <button class="topbar-toggle" id="sidebar-toggle">☰</button>
           <div class="topbar-search">
             <span class="search-icon">🔍</span>
-            <input type="text" placeholder="Search batches..." id="searchBatch">
+            <input type="text" placeholder="Search poultry..." id="searchPoultry">
           </div>
         </div>
         <div class="topbar-right">
@@ -104,37 +116,64 @@
 
         <div class="page-header">
           <div class="page-header-row">
-            <h1>Poultry Management</h1>
-            <button class="btn btn-primary" onclick="openBatchModal()">➕ Add Batch</button>
-          </div>
-          <p style="margin-top:8px;font-size:14px;color:var(--text-secondary);">
-            Manage your poultry batches, track production, and monitor flock health.
-          </p>
-        </div>
-
-        <!-- Poultry Sub-page Links -->
-        <div style="margin-bottom:20px;">
-          <div class="batch-sub-links">
-            <a href="../poultry/poultry-dashboard.html">📊 Dashboard</a>
-            <a href="../poultry/flock-register.html">📋 Flock Register</a>
-            <a href="../poultry/production-log.html">🥚 Production Log</a>
-            <a href="../poultry/sales.html">💰 Sales</a>
-            <a href="../poultry/other-income.html">💵 Other Income</a>
-            <a href="../poultry/feed-expenses.html">🌾 Feed Expenses</a>
-            <a href="../poultry/health-vet.html">💉 Health & Vet</a>
-            <a href="../poultry/mortality.html">📉 Mortality</a>
-            <a href="../poultry/batch-summary.html">📈 Batch Summary</a>
+            <div>
+              <h1>Poultry Management</h1>
+              <p id="recordCount" class="record-count">Loading...</p>
+            </div>
+            <button class="btn btn-primary" id="addPoultryBtn" onclick="openPoultryModal()">➕ Add New Poultry</button>
           </div>
         </div>
 
-        <!-- Batch Cards -->
-        <div class="grid" id="batchGrid">
-          <div class="loading-spinner" style="grid-column:1/-1;"></div>
+        <div id="viewAdminBanner" style="display:none;background:#E3F2FD;color:#1565C0;padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:13px;">👁️ Read-Only Mode — You are viewing poultry records as a View Administrator.</div>
+
+        <div class="filter-strip">
+          <input type="text" class="form-input" id="filterSearch" placeholder="Search by type, breed or batch..." style="flex:1;min-width:200px;">
+          <select class="form-select" id="filterStatus">
+            <option value="">All Statuses</option>
+            <option value="growing">Growing</option>
+            <option value="laying">Laying</option>
+            <option value="sold">Sold</option>
+          </select>
+          <select class="form-select" id="filterApproval">
+            <option value="">All Approval</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <select class="form-select" id="filterSort">
+            <option value="date-desc">Newest First</option>
+            <option value="date-asc">Oldest First</option>
+            <option value="name-asc">Name A-Z</option>
+          </select>
+        </div>
+
+        <div class="table-wrap">
+          <table class="sheet-table" id="poultryTable">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Breed</th>
+                <th>Batch</th>
+                <th>Quantity</th>
+                <th>Age (Weeks)</th>
+                <th>Housing</th>
+                <th>Status</th>
+                <th>Approval</th>
+                <th style="text-align:center;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="poultryBody">
+              <tr><td colspan="9"><div class="loading-spinner"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="quick-add-fab" id="quickAddFab">
+          <button class="btn btn-primary" onclick="openPoultryModal()">➕ Add Poultry</button>
         </div>
       </div>
     </main>
 
-    <!-- Bottom Nav -->
     <nav class="bottom-nav">
       <a href="../dashboard.html"><span class="nav-icon">📊</span>Home</a>
       <a href="crops.html"><span class="nav-icon">🌱</span>Crops</a>
@@ -152,133 +191,140 @@
   <script src="../js/utils.js"></script>
   <script>
     (function() {
-      var allBatches = [];
-      var unsubscribe = null;
+      var allRecords = [], unsubscribe = null, currentUser = null;
 
-      function getBirdIcon(type) {
-        var t = (type || '').toLowerCase();
-        if (t.includes('layer')) return '🐔';
-        if (t.includes('broiler')) return '🍗';
-        if (t.includes('kienyeji') || t.includes('indigenous')) return '🐓';
-        return '🐔';
+      function getApprovalBadge(status) {
+        var icons = { approved: '✅', rejected: '❌', pending: '⏳', pending_sync: '🔄' };
+        return '<span class="status-pill ' + (status || 'pending') + '">' + (icons[status] || '⏳') + ' ' + ((status || 'pending').charAt(0).toUpperCase() + (status || 'pending').slice(1)) + '</span>';
       }
 
-      function calcBatchAge(startDate) {
-        if (!startDate) return '—';
-        var d = startDate.toDate ? startDate.toDate() : new Date(startDate);
-        var now = new Date();
-        var days = Math.floor((now - d) / (1000 * 60 * 60 * 24));
-        if (days < 1) return 'Today';
-        if (days < 30) return days + ' days';
-        var weeks = Math.floor(days / 7);
-        return weeks + ' weeks';
+      function getStatusBadge(status) {
+        var colors = { growing: 'gold', laying: 'green', sold: 'blue' };
+        return '<span class="badge badge-' + (colors[status] || 'gray') + '">' + (status || 'growing').charAt(0).toUpperCase() + (status || 'growing').slice(1) + '</span>';
       }
 
-      function renderBatches(batches) {
-        var grid = document.getElementById('batchGrid');
-        if (!grid) return;
-        if (batches.length === 0) {
-          grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="icon">🐔</div><h3>No poultry batches</h3><p>Start by adding a new batch to track your flock.</p><button class="btn btn-primary" onclick="openBatchModal()">➕ Add Batch</button></div>';
+      function renderTable(records) {
+        var tbody = document.getElementById('poultryBody');
+        var counter = document.getElementById('recordCount');
+        if (!tbody) return;
+        if (records.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="icon">🐔</div><h3>No poultry records yet</h3><p>Start by adding your first poultry batch.</p></div></td></tr>';
+          if (counter) counter.textContent = '0 records';
           return;
         }
-        grid.innerHTML = batches.map(function(b) {
-          var icon = getBirdIcon(b.birdType);
-          var age = calcBatchAge(b.startDate);
-          var status = b.status || 'active';
-          var statusBadge = status === 'active' ? 'badge-green' : (status === 'sold' ? 'badge-blue' : 'badge-gray');
-          return '<div class="batch-card" data-id="' + b.id + '">' +
-            '<div class="batch-header">' +
-              '<div><div class="batch-name">' + icon + ' ' + (b.name || 'Unnamed Batch') + '</div><div class="batch-type">' + (b.birdType || '—') + '</div></div>' +
-              '<div style="display:flex;align-items:center;gap:8px;"><span class="badge ' + statusBadge + '">' + status + '</span><span class="batch-age">' + age + '</span></div>' +
-            '</div>' +
-            '<div class="batch-kpis">' +
-              '<div class="batch-kpi"><div class="bk-value">' + formatNumber(b.flockSize || 0) + '</div><div class="bk-label">Birds</div></div>' +
-              '<div class="batch-kpi"><div class="bk-value">' + formatNumber(b.eggsPerDay || 0) + '</div><div class="bk-label">Eggs/Day</div></div>' +
-              '<div class="batch-kpi"><div class="bk-value" style="color:' + ((b.mortality || 0) > 5 ? 'var(--accent-red)' : 'var(--primary-green)') + ';">' + (b.mortality || 0) + '</div><div class="bk-label">Mortality</div></div>' +
-              '<div class="batch-kpi"><div class="bk-value">' + (b.feedPerDay || 0) + ' kg</div><div class="bk-label">Feed/Day</div></div>' +
-            '</div>' +
-            '<div class="batch-footer">' +
-              '<div class="batch-sub-links">' +
-                '<a href="../poultry/flock-register.html">📋 Register</a>' +
-                '<a href="../poultry/production-log.html">🥚 Production</a>' +
-                '<a href="../poultry/feed-expenses.html">🌾 Feed</a>' +
-              '</div>' +
-              '<div style="display:flex;gap:4px;">' +
-                '<button class="btn btn-sm btn-secondary" onclick="editBatch(\'' + b.id + '\')">✏️</button>' +
-                '<button class="btn btn-sm btn-danger" onclick="deleteBatch(\'' + b.id + '\')">🗑️</button>' +
-              '</div>' +
-            '</div>' +
-          '</div>';
+        var pendingCount = records.filter(function(r) { return r.approval !== 'approved'; }).length;
+        var isSuper = currentUser && currentUser.role === 'superAdmin';
+        var isView = currentUser && currentUser.role === 'viewAdmin';
+        if (counter) counter.textContent = records.length + ' records' + (pendingCount > 0 ? ' <span class="approval-badge pending-count">' + pendingCount + ' pending approval</span>' : '');
+
+        tbody.innerHTML = records.map(function(r) {
+          var rowClass = 'row-' + (r.approval || 'pending');
+          var editBtn = isView ? '' : '<button class="btn-sm" onclick="editRecord(\'' + r.id + '\')" style="background:var(--primary-light);color:var(--primary-green);border:none;border-radius:4px;cursor:pointer;padding:4px 8px;">✏️</button>';
+          var delBtn = isSuper ? '<button class="btn-sm" onclick="deleteRecord(\'' + r.id + '\')" style="background:#FFEBEE;color:#C62828;border:none;border-radius:4px;cursor:pointer;padding:4px 8px;">🗑️</button>' : '';
+          var approveBtns = '';
+          if (isSuper && r.approval !== 'approved') {
+            approveBtns = '<div class="approval-actions">' +
+              '<button class="btn-approve" onclick="approveRecord(\'' + r.id + '\')">✅ Approve</button>' +
+              '<button class="btn-reject" onclick="rejectRecord(\'' + r.id + '\')">❌ Reject</button>' +
+            '</div>';
+          }
+          return '<tr class="' + rowClass + '">' +
+            '<td><strong>' + (r.type || '—') + '</strong></td>' +
+            '<td>' + (r.breed || '—') + '</td>' +
+            '<td>' + (r.batch || '—') + '</td>' +
+            '<td>' + formatNumber(r.quantity || 0) + '</td>' +
+            '<td>' + (r.ageInWeeks != null ? r.ageInWeeks + ' wks' : '—') + '</td>' +
+            '<td>' + (r.housing || '—') + '</td>' +
+            '<td>' + getStatusBadge(r.status || 'growing') + '</td>' +
+            '<td>' + getApprovalBadge(r.approval || 'pending') + '</td>' +
+            '<td style="text-align:center;"><div style="display:flex;gap:4px;justify-content:center;align-items:center;">' + editBtn + delBtn + approveBtns + '</div></td>' +
+          '</tr>';
         }).join('');
       }
 
-      function loadBatches() {
-        if (unsubscribe) unsubscribe();
-        var grid = document.getElementById('batchGrid');
-        if (grid) grid.innerHTML = '<div class="loading-spinner" style="grid-column:1/-1;"></div>';
-
-        unsubscribe = db.collection('poultryBatches').orderBy('startDate', 'desc').onSnapshot(function(snapshot) {
-          allBatches = [];
-          snapshot.forEach(function(doc) { allBatches.push({ id: doc.id, ...doc.data() }); });
-          if (allBatches.length === 0) {
-            loadDemoBatches();
-          } else {
-            renderBatches(allBatches);
+      function filterAndRender() {
+        var search = (document.getElementById('filterSearch').value || '').toLowerCase();
+        var status = document.getElementById('filterStatus').value;
+        var approval = document.getElementById('filterApproval').value;
+        var sort = document.getElementById('filterSort').value;
+        var filtered = allRecords.filter(function(r) {
+          if (search && !(r.type || '').toLowerCase().includes(search) && !(r.breed || '').toLowerCase().includes(search) && !(r.batch || '').toLowerCase().includes(search)) return false;
+          if (status && r.status !== status) return false;
+          if (approval && (r.approval || 'pending') !== approval) return false;
+          return true;
+        });
+        filtered.sort(function(a, b) {
+          var aDate = a.dateAcquired ? (a.dateAcquired.toDate ? a.dateAcquired.toDate() : new Date(a.dateAcquired)) : new Date(0);
+          var bDate = b.dateAcquired ? (b.dateAcquired.toDate ? b.dateAcquired.toDate() : new Date(b.dateAcquired)) : new Date(0);
+          switch (sort) {
+            case 'date-asc': return aDate - bDate;
+            case 'name-asc': return (a.batch || '').localeCompare(b.batch || '');
+            default: return bDate - aDate;
           }
-        }, function(err) {
-          console.warn('Firestore error, loading demo:', err);
-          loadDemoBatches();
+        });
+        renderTable(filtered);
+      }
+
+      function loadRecords() {
+        if (unsubscribe) unsubscribe();
+        currentUser = getCurrentUser();
+        if (currentUser && currentUser.role === 'viewAdmin') {
+          document.getElementById('viewAdminBanner').style.display = 'block';
+          document.getElementById('addPoultryBtn').style.display = 'none';
+        }
+        db.collection('poultryLayers').orderBy('dateAcquired', 'desc').onSnapshot(function(snapshot) {
+          allRecords = [];
+          snapshot.forEach(function(doc) { allRecords.push({ id: doc.id, ...doc.data() }); });
+          filterAndRender();
+        }, function() {
+          document.getElementById('poultryBody').innerHTML = '<tr><td colspan="9"><div class="empty-state"><div style="font-size:48px;">⚠️</div><h3>Could not load data</h3><p>Please check your connection.</p></div></td></tr>';
         });
       }
 
-      function loadDemoBatches() {
-        allBatches = [
-          { id: 'demo1', name: 'Batch A - Layers', birdType: 'Layers', status: 'active', startDate: new Date(2026, 2, 1), flockSize: 500, eggsPerDay: 420, mortality: 3, feedPerDay: 60 },
-          { id: 'demo2', name: 'Batch B - Broilers', birdType: 'Broilers', status: 'active', startDate: new Date(2026, 3, 15), flockSize: 300, eggsPerDay: 0, mortality: 5, feedPerDay: 85 },
-          { id: 'demo3', name: 'Batch C - Kienyeji', birdType: 'Kienyeji', status: 'active', startDate: new Date(2026, 0, 10), flockSize: 200, eggsPerDay: 140, mortality: 2, feedPerDay: 25 },
-          { id: 'demo4', name: 'Batch D - Layers', birdType: 'Layers', status: 'sold', startDate: new Date(2025, 9, 1), flockSize: 0, eggsPerDay: 0, mortality: 12, feedPerDay: 0 }
-        ];
-        renderBatches(allBatches);
-      }
+      function openPoultryModal(recordData) {
+        var isEdit = !!recordData;
+        var r = recordData || {};
+        var isSuper = currentUser && currentUser.role === 'superAdmin';
+        var isView = currentUser && currentUser.role === 'viewAdmin';
+        if (isView) { showToast('Read-only mode: you cannot add records.', 'warning'); return; }
 
-      function openBatchModal(batchData) {
-        var isEdit = !!batchData;
-        var b = batchData || {};
-        var title = isEdit ? 'Edit Batch' : 'Add New Batch';
-        var html = '<form id="batchForm" onsubmit="return saveBatch(event)">' +
-          '<input type="hidden" id="batchId" value="' + (b.id || '') + '">' +
+        var html = '<form id="poultryForm" onsubmit="return saveRecord(event)">' +
+          '<input type="hidden" id="recordId" value="' + (r.id || '') + '">' +
           '<div class="form-row">' +
-            '<div class="form-group"><label class="form-label">Batch Name</label><input type="text" id="batchName" class="form-input" value="' + (b.name || '') + '" required placeholder="e.g. Batch A"></div>' +
-            '<div class="form-group"><label class="form-label">Bird Type</label><select id="batchType" class="form-select" required>' +
+            '<div class="form-group"><label class="form-label">Type</label><select id="poultryType" class="form-select" required>' +
               '<option value="">Select...</option>' +
-              '<option value="Layers"' + (b.birdType === 'Layers' ? ' selected' : '') + '>Layers</option>' +
-              '<option value="Broilers"' + (b.birdType === 'Broilers' ? ' selected' : '') + '>Broilers</option>' +
-              '<option value="Kienyeji"' + (b.birdType === 'Kienyeji' ? ' selected' : '') + '>Kienyeji (Indigenous)</option>' +
-              '<option value="Dual Purpose"' + (b.birdType === 'Dual Purpose' ? ' selected' : '') + '>Dual Purpose</option>' +
+              '<option value="Layers"' + (r.type === 'Layers' ? ' selected' : '') + '>Layers</option>' +
+              '<option value="Broilers"' + (r.type === 'Broilers' ? ' selected' : '') + '>Broilers</option>' +
+              '<option value="Kienyeji"' + (r.type === 'Kienyeji' ? ' selected' : '') + '>Kienyeji</option>' +
             '</select></div>' +
+            '<div class="form-group"><label class="form-label">Breed</label><input type="text" id="poultryBreed" class="form-input" value="' + (r.breed || '') + '" placeholder="e.g. ISA Brown"></div>' +
           '</div>' +
           '<div class="form-row">' +
-            '<div class="form-group"><label class="form-label">Start Date</label><input type="date" id="batchDate" class="form-input" value="' + (b.startDate ? formatDateInput(b.startDate) : '') + '" required></div>' +
-            '<div class="form-group"><label class="form-label">Status</label><select id="batchStatus" class="form-select">' +
-              '<option value="active"' + (b.status === 'active' ? ' selected' : '') + '>Active</option>' +
-              '<option value="sold"' + (b.status === 'sold' ? ' selected' : '') + '>Sold</option>' +
-              '<option value="depleted"' + (b.status === 'depleted' ? ' selected' : '') + '>Depleted</option>' +
+            '<div class="form-group"><label class="form-label">Batch</label><input type="text" id="poultryBatch" class="form-input" value="' + (r.batch || '') + '" placeholder="e.g. Batch A"></div>' +
+            '<div class="form-group"><label class="form-label">Quantity</label><input type="number" id="poultryQuantity" class="form-input" value="' + (r.quantity || '') + '" min="0" required></div>' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label class="form-label">Date Acquired</label><input type="date" id="poultryDate" class="form-input" value="' + (r.dateAcquired ? formatDateInput(r.dateAcquired) : '') + '" required></div>' +
+            '<div class="form-group"><label class="form-label">Age (Weeks)</label><input type="number" id="poultryAge" class="form-input" value="' + (r.ageInWeeks || '') + '" min="0" step="0.5"></div>' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label class="form-label">Cost Per Bird (KSh)</label><input type="number" id="poultryCostPerBird" class="form-input" value="' + (r.costPerBird || '') + '" min="0" step="0.5"></div>' +
+            '<div class="form-group"><label class="form-label">Total Cost (KSh)</label><input type="number" id="poultryTotalCost" class="form-input" value="' + (r.totalCost || '') + '" min="0" step="0.5"></div>' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<div class="form-group"><label class="form-label">Housing</label><input type="text" id="poultryHousing" class="form-input" value="' + (r.housing || '') + '" placeholder="e.g. House 1"></div>' +
+            '<div class="form-group"><label class="form-label">Status</label><select id="poultryStatus" class="form-select">' +
+              '<option value="growing"' + (r.status === 'growing' ? ' selected' : '') + '>Growing</option>' +
+              '<option value="laying"' + (r.status === 'laying' ? ' selected' : '') + '>Laying</option>' +
+              '<option value="sold"' + (r.status === 'sold' ? ' selected' : '') + '>Sold</option>' +
             '</select></div>' +
-          '</div>' +
-          '<div class="form-row">' +
-            '<div class="form-group"><label class="form-label">Flock Size</label><input type="number" id="batchFlock" class="form-input" value="' + (b.flockSize || '') + '" min="0" required></div>' +
-            '<div class="form-group"><label class="form-label">Eggs/Day</label><input type="number" id="batchEggs" class="form-input" value="' + (b.eggsPerDay || '') + '" min="0"></div>' +
-          '</div>' +
-          '<div class="form-row">' +
-            '<div class="form-group"><label class="form-label">Mortality</label><input type="number" id="batchMortality" class="form-input" value="' + (b.mortality || '') + '" min="0"></div>' +
-            '<div class="form-group"><label class="form-label">Feed/Day (kg)</label><input type="number" id="batchFeed" class="form-input" value="' + (b.feedPerDay || '') + '" min="0" step="0.5"></div>' +
           '</div>' +
           '<div class="modal-footer" style="padding:16px 0 0;border-top:1px solid var(--border-light);margin-top:16px;">' +
             '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>' +
-            '<button type="submit" class="btn btn-primary">' + (isEdit ? 'Update Batch' : 'Add Batch') + '</button>' +
+            '<button type="submit" class="btn btn-primary">' + (isEdit ? 'Update Record' : 'Add Record') + '</button>' +
           '</div>' +
         '</form>';
-        openModal(html, title);
+        openModal(html, (isEdit ? 'Edit Poultry Record' : 'Add New Poultry Record'));
       }
 
       function formatDateInput(date) {
@@ -288,62 +334,79 @@
         return date.toISOString().split('T')[0];
       }
 
-      window.saveBatch = async function(e) {
+      window.saveRecord = async function(e) {
         e.preventDefault();
-        var id = document.getElementById('batchId').value;
+        var id = document.getElementById('recordId').value;
+        var user = getCurrentUser();
         var data = {
-          name: document.getElementById('batchName').value.trim(),
-          birdType: document.getElementById('batchType').value,
-          startDate: new Date(document.getElementById('batchDate').value),
-          status: document.getElementById('batchStatus').value,
-          flockSize: parseInt(document.getElementById('batchFlock').value) || 0,
-          eggsPerDay: parseInt(document.getElementById('batchEggs').value) || 0,
-          mortality: parseInt(document.getElementById('batchMortality').value) || 0,
-          feedPerDay: parseFloat(document.getElementById('batchFeed').value) || 0,
+          type: document.getElementById('poultryType').value,
+          breed: document.getElementById('poultryBreed').value.trim(),
+          batch: document.getElementById('poultryBatch').value.trim(),
+          quantity: parseInt(document.getElementById('poultryQuantity').value) || 0,
+          dateAcquired: new Date(document.getElementById('poultryDate').value),
+          ageInWeeks: parseFloat(document.getElementById('poultryAge').value) || 0,
+          costPerBird: parseFloat(document.getElementById('poultryCostPerBird').value) || 0,
+          totalCost: parseFloat(document.getElementById('poultryTotalCost').value) || 0,
+          housing: document.getElementById('poultryHousing').value.trim(),
+          status: document.getElementById('poultryStatus').value,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         try {
           if (id) {
-            await db.collection('poultryBatches').doc(id).update(data);
-            showToast('Batch updated successfully', 'success');
+            await db.collection('poultryLayers').doc(id).update(data);
+            showToast('Record updated', 'success');
           } else {
             data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            await db.collection('poultryBatches').add(data);
-            showToast('Batch added successfully', 'success');
+            data.approval = 'pending';
+            data.recordedBy = user ? user.name || user.email : 'unknown';
+            data.userId = user ? user.id : '';
+            data.eggsPerDay = 0;
+            data.feedPerDay = 0;
+            data.mortality = 0;
+            data.healthRecords = [];
+            await db.collection('poultryLayers').add(data);
+            showToast('Record added! Pending approval.', 'success');
           }
           closeModal();
         } catch (err) {
-          console.error('Save error:', err);
-          showToast('Error saving batch: ' + err.message, 'error');
+          showToast('Error: ' + err.message, 'error');
         }
         return false;
       };
 
-      window.editBatch = function(id) {
-        var b = allBatches.find(function(x) { return x.id === id; });
-        if (b) openBatchModal(b);
+      window.editRecord = function(id) {
+        var rec = allRecords.find(function(r) { return r.id === id; });
+        if (rec) openPoultryModal(rec);
       };
 
-      window.deleteBatch = async function(id) {
-        if (!confirm('Delete this batch?')) return;
-        try {
-          await db.collection('poultryBatches').doc(id).delete();
-          showToast('Batch deleted', 'success');
-        } catch (err) {
-          allBatches = allBatches.filter(function(b) { return b.id !== id; });
-          renderBatches(allBatches);
-          showToast('Batch removed', 'success');
-        }
+      window.deleteRecord = async function(id) {
+        if (!confirm('Delete this poultry record?')) return;
+        try { await db.collection('poultryLayers').doc(id).delete(); showToast('Record deleted', 'success'); }
+        catch (err) { showToast('Error: ' + err.message, 'error'); }
+      };
+
+      window.approveRecord = async function(id) {
+        try { await db.collection('poultryLayers').doc(id).update({ approval: 'approved', approvedAt: firebase.firestore.FieldValue.serverTimestamp(), approvedBy: (currentUser ? currentUser.name || currentUser.email : 'superAdmin') }); showToast('Record approved ✅', 'success'); }
+        catch (err) { showToast('Error: ' + err.message, 'error'); }
+      };
+
+      window.rejectRecord = async function(id) {
+        try { await db.collection('poultryLayers').doc(id).update({ approval: 'rejected', rejectedAt: firebase.firestore.FieldValue.serverTimestamp(), rejectedBy: (currentUser ? currentUser.name || currentUser.email : 'superAdmin') }); showToast('Record rejected ❌', 'success'); }
+        catch (err) { showToast('Error: ' + err.message, 'error'); }
       };
 
       document.addEventListener('DOMContentLoaded', function() {
-        loadBatches();
-        document.getElementById('searchBatch') && document.getElementById('searchBatch').addEventListener('input', function(e) {
-          var q = e.target.value.toLowerCase();
-          var filtered = allBatches.filter(function(b) {
-            return (b.name || '').toLowerCase().includes(q) || (b.birdType || '').toLowerCase().includes(q);
-          });
-          renderBatches(filtered);
+        loadRecords();
+        document.getElementById('filterSearch').addEventListener('input', filterAndRender);
+        document.getElementById('filterStatus').addEventListener('change', filterAndRender);
+        document.getElementById('filterApproval').addEventListener('change', filterAndRender);
+        document.getElementById('filterSort').addEventListener('change', filterAndRender);
+        document.getElementById('searchPoultry').addEventListener('input', function(e) {
+          document.getElementById('filterSearch').value = e.target.value;
+          filterAndRender();
+        });
+        document.getElementById('sidebar-toggle').addEventListener('click', function() {
+          document.getElementById('sidebar').classList.toggle('open');
         });
       });
     })();

@@ -75,6 +75,7 @@
     .notif-dropdown-item .notif-text { flex: 1; }
     .notif-dropdown-item .notif-text .notif-title { font-weight: 500; }
     .notif-dropdown-item .notif-text .notif-time { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+    @media (max-width: 640px) { .module-stats { grid-template-columns: repeat(3,1fr) !important; } }
   </style>
 </head>
 <body>
@@ -215,10 +216,40 @@
             <div class="donut-legend" id="donutLegend"></div>
           </div>
         </div>
+        <div class="module-stats" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;">
+          <div class="card" style="padding:16px;text-align:center;cursor:pointer;" onclick="window.location.href='farming/crops.html'">
+            <div style="font-size:24px;margin-bottom:4px;">🌱</div>
+            <div style="font-size:20px;font-weight:700;" id="statCrops">0</div>
+            <div style="font-size:11px;color:var(--text-secondary);">Crops</div>
+          </div>
+          <div class="card" style="padding:16px;text-align:center;cursor:pointer;" onclick="window.location.href='farming/livestock.html'">
+            <div style="font-size:24px;margin-bottom:4px;">🐄</div>
+            <div style="font-size:20px;font-weight:700;" id="statLivestock">0</div>
+            <div style="font-size:11px;color:var(--text-secondary);">Livestock</div>
+          </div>
+          <div class="card" style="padding:16px;text-align:center;cursor:pointer;" onclick="window.location.href='farming/poultry.html'">
+            <div style="font-size:24px;margin-bottom:4px;">🐔</div>
+            <div style="font-size:20px;font-weight:700;" id="statPoultry">0</div>
+            <div style="font-size:11px;color:var(--text-secondary);">Poultry</div>
+          </div>
+          <div class="card" style="padding:16px;text-align:center;cursor:pointer;" onclick="window.location.href='farming/dairy.html'">
+            <div style="font-size:24px;margin-bottom:4px;">🥛</div>
+            <div style="font-size:20px;font-weight:700;" id="statDairy">0</div>
+            <div style="font-size:11px;color:var(--text-secondary);">Dairy</div>
+          </div>
+          <div class="card" style="padding:16px;text-align:center;cursor:pointer;" onclick="window.location.href='inventory.html'">
+            <div style="font-size:24px;margin-bottom:4px;">📦</div>
+            <div style="font-size:20px;font-weight:700;" id="statInventory">0</div>
+            <div style="font-size:11px;color:var(--text-secondary);">Inventory</div>
+          </div>
+        </div>
         <div class="card recent-activity" style="margin-bottom:24px;">
           <div class="card-header">
             <h3>Recent Activity</h3>
-            <a href="cashbook.html" style="font-size:13px;color:var(--primary-green);font-weight:500;">View All</a>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span id="pendingApprovalBadge" style="display:none;font-size:12px;background:#FFF8E1;color:#F57F17;padding:3px 10px;border-radius:20px;font-weight:500;">⏳ <span id="pendingCount">0</span> pending</span>
+              <a href="cashbook.html" style="font-size:13px;color:var(--primary-green);font-weight:500;">View All</a>
+            </div>
           </div>
           <div class="card-body" id="activityList">
             <div class="loading-spinner"></div>
@@ -315,6 +346,44 @@
           el.innerHTML = html;
         }, function() {
           el.innerHTML = '<div class="empty-state"><p>Could not load users.</p></div>';
+        });
+      }
+
+      function loadModuleStats() {
+        var modules = {
+          statCrops: { col: 'crops', field: null },
+          statLivestock: { col: 'livestock', field: null },
+          statPoultry: { col: 'poultryLayers', field: null },
+          statDairy: { col: 'dairy', field: null },
+          statInventory: { col: 'inventory', field: null }
+        };
+        Object.keys(modules).forEach(function(key) {
+          var cfg = modules[key];
+          db.collection(cfg.col).onSnapshot(function(snap) {
+            document.getElementById(key).textContent = snap.size || 0;
+          }, function() {});
+        });
+        // Pending approvals count across all modules
+        var pendingTotal = 0;
+        var pendingModules = ['crops', 'livestock', 'poultryLayers', 'dairy', 'inventory'];
+        var loaded = 0;
+        pendingModules.forEach(function(col) {
+          db.collection(col).where('approval', '==', 'pending').onSnapshot(function(snap) {
+            pendingTotal += snap.size || 0;
+            loaded++;
+            if (loaded === pendingModules.length) {
+              var badge = document.getElementById('pendingApprovalBadge');
+              var countEl = document.getElementById('pendingCount');
+              if (badge && countEl) {
+                if (pendingTotal > 0) {
+                  badge.style.display = 'inline-block';
+                  countEl.textContent = pendingTotal;
+                } else {
+                  badge.style.display = 'none';
+                }
+              }
+            }
+          }, function() { loaded++; });
         });
       }
 
@@ -706,6 +775,7 @@
       // ===== INIT =====
       document.addEventListener('DOMContentLoaded', function() {
         loadDashboardData();
+        loadModuleStats();
         setupSidebarBackdrop();
         setupNotifications();
         applyRoleUI();
