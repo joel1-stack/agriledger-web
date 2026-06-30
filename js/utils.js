@@ -136,7 +136,7 @@ function loadSidebarUser() {
     const roleEls = document.querySelectorAll('.sidebar-user-role');
     const avatarEls = document.querySelectorAll('.user-avatar-text');
     nameEls.forEach(el => el.textContent = user.name || user.email);
-    roleEls.forEach(el => el.textContent = user.role || 'general');
+    roleEls.forEach(el => { if (typeof getRoleBadge === 'function') { el.innerHTML = getRoleBadge(user.role || 'general'); } else { el.textContent = user.role || 'general'; } });
     avatarEls.forEach(el => el.textContent = (user.name || user.email)[0].toUpperCase());
   }
 }

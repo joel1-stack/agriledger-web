@@ -165,15 +165,17 @@
           </button>
         </div>
       </header>
-      <div class="page-content page-fade">
+        <div class="page-content page-fade">
         <div class="page-header">
           <div class="page-header-row">
             <div>
               <h1>Dashboard</h1>
               <p id="currentDate">Loading date...</p>
             </div>
+            <div id="roleBadgeArea"></div>
           </div>
         </div>
+        <div class="alert alert-info" id="viewAdminBanner" style="display:none;margin-bottom:16px;">👁️ <strong>Read-Only Mode</strong> — You are viewing data as a View Administrator. Editing is disabled.</div>
         <div class="kpi-strip" id="kpiStrip">
           <div class="card kpi-card income stagger-card">
             <div class="kpi-icon green"><img src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=80&h=80&fit=crop" alt="" loading="lazy"></div>
@@ -222,9 +224,18 @@
             <div class="loading-spinner"></div>
           </div>
         </div>
+        <div class="card" id="userManagementPanel" style="display:none;margin-bottom:24px;">
+          <div class="card-header">
+            <h3>👥 User Management</h3>
+            <a href="settings.html" style="font-size:13px;color:var(--primary-green);font-weight:500;">Manage All Users →</a>
+          </div>
+          <div class="card-body" id="userList">
+            <div class="loading-spinner"></div>
+          </div>
+        </div>
       </div>
     </main>
-    <div class="quick-actions">
+    <div class="quick-actions" id="quickActions">
       <button class="btn btn-primary" onclick="showIncomeModal()">➕ Add Income</button>
       <button class="btn btn-danger" onclick="showExpenseModal()">➖ Add Expense</button>
       <button class="btn btn-secondary" style="background:var(--accent-gold);color:white;" onclick="showStockModal()">📦 Add Stock</button>
@@ -256,6 +267,86 @@
         }
       }
       updateDate();
+
+      // ===== ROLE-BASED UI =====
+      function applyRoleUI() {
+        var user = getCurrentUser();
+        if (!user) return;
+        var role = user.role || 'general';
+        var banner = document.getElementById('viewAdminBanner');
+        var qa = document.getElementById('quickActions');
+        var um = document.getElementById('userManagementPanel');
+        var badgeArea = document.getElementById('roleBadgeArea');
+
+        if (badgeArea) {
+          badgeArea.innerHTML = getRoleBadge(role);
+        }
+
+        if (role === 'viewAdmin') {
+          if (banner) banner.style.display = 'block';
+          if (qa) qa.style.display = 'none';
+        } else {
+          if (banner) banner.style.display = 'none';
+          if (qa) qa.style.display = 'flex';
+        }
+
+        if (role === 'superAdmin') {
+          if (um) um.style.display = 'block';
+          loadUserList();
+        } else {
+          if (um) um.style.display = 'none';
+        }
+      }
+
+      function loadUserList() {
+        var el = document.getElementById('userList');
+        if (!el) return;
+        db.collection('users').orderBy('createdAt', 'desc').limit(5).onSnapshot(function(snap) {
+          if (snap.empty) {
+            el.innerHTML = '<div class="empty-state"><p>No users found</p></div>';
+            return;
+          }
+          var html = '<div style="overflow-x:auto;"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Unit</th></tr></thead><tbody>';
+          snap.forEach(function(doc) {
+            var d = doc.data();
+            html += '<tr><td>' + (d.name || '—') + '</td><td>' + (d.email || '—') + '</td><td>' + getRoleBadge(d.role || 'general') + '</td><td>' + (d.businessUnit || '—') + '</td></tr>';
+          });
+          html += '</tbody></table></div><div style="margin-top:12px;text-align:right;"><a href="settings.html" style="font-size:13px;color:var(--primary-green);font-weight:500;">View all users →</a></div>';
+          el.innerHTML = html;
+        }, function() {
+          el.innerHTML = '<div class="empty-state"><p>Could not load users.</p></div>';
+        });
+      }
+
+      // Override modal functions for viewAdmin
+      var _showIncomeModal = window.showIncomeModal;
+      var _showExpenseModal = window.showExpenseModal;
+      var _showStockModal = window.showStockModal;
+
+      window.showIncomeModal = function() {
+        var user = getCurrentUser();
+        if (user && user.role === 'viewAdmin') {
+          showToast('Read-only mode: you cannot add transactions.', 'warning');
+          return;
+        }
+        _showIncomeModal();
+      };
+      window.showExpenseModal = function() {
+        var user = getCurrentUser();
+        if (user && user.role === 'viewAdmin') {
+          showToast('Read-only mode: you cannot add transactions.', 'warning');
+          return;
+        }
+        _showExpenseModal();
+      };
+      window.showStockModal = function() {
+        var user = getCurrentUser();
+        if (user && user.role === 'viewAdmin') {
+          showToast('Read-only mode: you cannot add stock entries.', 'warning');
+          return;
+        }
+        _showStockModal();
+      };
 
       function drawCharts(data) {
         var incomeCtx = document.getElementById('incomeExpenseChart');
@@ -617,6 +708,11 @@
         loadDashboardData();
         setupSidebarBackdrop();
         setupNotifications();
+        applyRoleUI();
+        var user = getCurrentUser();
+        if (user) {
+          loadSidebarUser(user);
+        }
       });
     })();
   </script>
