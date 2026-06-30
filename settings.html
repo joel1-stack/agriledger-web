@@ -382,7 +382,7 @@
     var currentUserId = getCurrentUser()?.id;
     tbody.innerHTML = allUsers.map(function(u) {
       var isSelf = u.id === currentUserId;
-      var roleOpts = ['general', 'manager', 'superAdmin'].map(function(r) {
+      var roleOpts = ['general', 'viewAdmin', 'superAdmin'].map(function(r) {
         return '<option value="' + r + '"' + (u.role === r ? ' selected' : '') + (isSelf && r !== u.role ? ' disabled' : '') + '>' + r + '</option>';
       }).join('');
       return '<tr>' +
@@ -416,7 +416,7 @@
         '<div class="form-group"><label class="form-label">Email</label><input type="email" id="userEmail" class="form-input" required></div>' +
       '</div>' +
       '<div class="form-row">' +
-        '<div class="form-group"><label class="form-label">Role</label><select id="userRole" class="form-select"><option value="general">General</option><option value="manager">Manager</option><option value="superAdmin">Super Admin</option></select></div>' +
+        '<div class="form-group"><label class="form-label">Role</label><select id="userRole" class="form-select"><option value="general">General</option><option value="viewAdmin">View Only</option><option value="superAdmin">Super Admin</option></select></div>' +
         '<div class="form-group"><label class="form-label">Business Unit</label><select id="userUnit" class="form-select">' + unitOpts + '</select></div>' +
       '</div>' +
       '<div class="form-group"><label class="form-label">Phone</label><input type="tel" id="userPhone" class="form-input" placeholder="+2547XX XXX XXX"></div>' +

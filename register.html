@@ -446,28 +446,10 @@
         var farm = farmName.value.trim();
         var unit = businessUnit.value;
 
-        var result = await registerUser(email, password, name, phoneVal);
+        var result = await registerUser(email, password, name, phoneVal, farm, unit);
 
         if (result.success) {
-          // Save additional profile data (farm name, business unit)
-          var user = result.user;
-          try {
-            await db.collection('users').doc(user.uid).update({
-              farmName: farm,
-              businessUnit: unit
-            });
-            sessionStorage.setItem('agriUser', JSON.stringify({
-              id: user.uid,
-              email: email,
-              name: name,
-              phoneNumber: phoneVal,
-              role: 'general',
-              farmName: farm,
-              businessUnit: unit
-            }));
-          } catch (err) {
-            console.warn('Profile update:', err.message);
-          }
+          showToast('Account created successfully! Welcome to AgriLedger.', 'success');
           // Redirect handled by auth.onAuthStateChanged in auth.js
         } else {
           authError.textContent = result.error;

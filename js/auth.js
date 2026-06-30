@@ -72,19 +72,33 @@ async function loginUser(email, password) {
 }
 
 // Register
-async function registerUser(email, password, name, phone = '') {
+async function registerUser(email, password, name, phone = '', farmName = '', businessUnit = 'Main Farm') {
   try {
     const result = await auth.createUserWithEmailAndPassword(email, password);
-    // Create user profile
+    // Create user profile with all fields
     await db.collection('users').doc(result.user.uid).set({
       email: email,
       name: name,
       phoneNumber: phone,
       role: 'general',
-      businessUnit: 'Main Farm',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      farmName: farmName || name + "'s Farm",
+      businessUnit: businessUnit || 'Main Farm',
+      status: 'active',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    return { success: true, user: result.user };
+    // Store complete user in session
+    const userData = {
+      id: result.user.uid,
+      email: email,
+      name: name,
+      phoneNumber: phone,
+      role: 'general',
+      farmName: farmName || name + "'s Farm",
+      businessUnit: businessUnit || 'Main Farm'
+    };
+    sessionStorage.setItem('agriUser', JSON.stringify(userData));
+    return { success: true, user: result.user, userData: userData };
   } catch (error) {
     let message = 'Registration failed';
     switch (error.code) {
@@ -116,11 +130,50 @@ function hasRole(...roles) {
   return user && roles.includes(user.role);
 }
 
-function canWrite() {
-  const user = getCurrentUser();
-  return user && (user.role === 'general' || user.role === 'superAdmin');
+function isGeneralUser() {
+  return hasRole('general');
+}
+
+function isViewAdmin() {
+  return hasRole('viewAdmin');
 }
 
 function isSuperAdmin() {
   return hasRole('superAdmin');
+}
+
+function isAdmin() {
+  return isViewAdmin() || isSuperAdmin();
+}
+
+function canWrite() {
+  return isGeneralUser() || isSuperAdmin();
+}
+
+function canRead() {
+  return getCurrentUser() !== null;
+}
+
+// Get role badge HTML
+function getRoleBadge(role) {
+  const badges = {
+    'general': '<span class="badge badge-green">General</span>',
+    'viewAdmin': '<span class="badge badge-blue">View Only</span>',
+    'superAdmin': '<span class="badge badge-purple">Admin</span>'
+  };
+  return badges[role] || '<span class="badge badge-gray">Unknown</span>';
+}
+
+// Check if current user can access a page based on role
+function checkPageAccess(allowedRoles = ['general', 'viewAdmin', 'superAdmin']) {
+  const user = getCurrentUser();
+  if (!user) {
+    window.location.href = 'login.html';
+    return false;
+  }
+  if (!allowedRoles.includes(user.role)) {
+    window.location.href = 'dashboard.html';
+    return false;
+  }
+  return true;
 }
