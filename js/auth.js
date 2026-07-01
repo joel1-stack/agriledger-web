@@ -1,4 +1,7 @@
 // Auth state listener
+if (typeof auth === 'undefined') {
+  console.error('Firebase auth not initialized. Check firebase-config.js is present.');
+}
 let currentUser = null;
 let userModel = null;
 
