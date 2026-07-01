@@ -184,11 +184,11 @@
   var allSales = [], allBatches = [];
 
   function load() {
-    db.collection('poultryBatches').onSnapshot(function(snap) {
+    db.collection('flock_batches').onSnapshot(function(snap) {
       allBatches = []; snap.forEach(function(d) { allBatches.push({ id: d.id, ...d.data() }); });
       populateBatchSelects();
     }, function() {});
-    db.collection('poultrySales').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
+    db.collection('poultry_sales').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
       allSales = []; snap.forEach(function(d) { allSales.push({ id: d.id, ...d.data() }); });
       if (allSales.length === 0) loadDemo();
       renderSummary();
@@ -255,7 +255,7 @@
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
-    db.collection('poultrySales').add(data).then(function() {
+    db.collection('poultry_sales').add(data).then(function() {
       showToast(type + ' recorded', 'success');
       document.getElementById(prefix + 'Buyer').value = '';
       if (document.getElementById(prefix + 'Qty')) document.getElementById(prefix + 'Qty').value = '';

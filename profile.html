@@ -118,21 +118,29 @@
   }
 
   function loadRecentActivity(user) {
-    var collections = ['poultryProduction', 'poultryFeedExpenses', 'poultryFeedConsumption', 'poultryMortality', 'poultryVetHealth', 'poultrySales'];
+    var collections = ['egg_production', 'feed_expenses', 'vet_health', 'poultry_sales'];
     var allActivities = [];
     var loaded = 0;
+
+    var moduleNames = { egg_production:'Production', feed_expenses:'Feed', vet_health:'Vet Health', poultry_sales:'Sales' };
+    var moduleColors = { egg_production:'#3B82F6', feed_expenses:'#F59E0B', vet_health:'#10B981', poultry_sales:'#8B5CF6' };
 
     collections.forEach(function(col) {
       db.collection(col).where('userId', '==', user.id).orderBy('createdAt', 'desc').limit(5).get().then(function(snap) {
         snap.forEach(function(d) {
           var data = d.data();
+          var detail = '';
+          if (col === 'egg_production') detail = data.recordType === 'mortality' ? (data.causeOfDeath || 'Mortality') : (data.morningEggs !== undefined ? 'Production' : '');
+          else if (col === 'feed_expenses') detail = data.feedType || (data.recordType === 'usage' ? 'Feed Used' : 'Feed Purchase');
+          else if (col === 'vet_health') detail = data.treatment || data.vaccination || 'Health';
+          else if (col === 'poultry_sales') detail = data.saleType || 'Sale';
           allActivities.push({
             id: d.id,
             collection: col,
             date: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt)) : new Date(),
-            type: col.replace('poultry', '').replace(/([A-Z])/g, ' $1').trim(),
-            detail: data.feedType || data.treatment || data.saleType || (data.morningEggs !== undefined ? 'Production' : 'Record'),
-            color: col === 'poultryProduction' ? '#3B82F6' : col === 'poultryFeedExpenses' ? '#F59E0B' : col === 'poultryMortality' ? '#EF4444' : col === 'poultryVetHealth' ? '#10B981' : col === 'poultrySales' ? '#8B5CF6' : '#6B7280'
+            type: moduleNames[col] || col,
+            detail: detail,
+            color: moduleColors[col] || '#6B7280'
           });
         });
         loaded++;

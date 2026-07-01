@@ -130,23 +130,23 @@
       document.getElementById('adUsers').textContent = snap.size;
     }, function() {});
 
-    db.collection('poultryProduction').where('status','==','pending').onSnapshot(function(snap) {
+    db.collection('egg_production').where('status','==','pending').onSnapshot(function(snap) {
       var c = snap.size;
       updatePending(c);
     }, function() {});
-    db.collection('poultryFeedExpenses').where('status','==','pending').onSnapshot(function(snap) {
+    db.collection('feed_expenses').where('status','==','pending').onSnapshot(function(snap) {
       updatePending(snap.size);
     }, function() {});
-    db.collection('poultryMortality').where('status','==','pending').onSnapshot(function(snap) {
+    db.collection('egg_production').where('status','==','pending').onSnapshot(function(snap) {
       updatePending(snap.size);
     }, function() {});
-    db.collection('poultryVetHealth').where('status','==','pending').onSnapshot(function(snap) {
+    db.collection('vet_health').where('status','==','pending').onSnapshot(function(snap) {
       updatePending(snap.size);
     }, function() {});
-    db.collection('poultrySales').where('status','==','pending').onSnapshot(function(snap) {
+    db.collection('poultry_sales').where('status','==','pending').onSnapshot(function(snap) {
       updatePending(snap.size);
     }, function() {});
-    db.collection('poultryFeedConsumption').where('status','==','pending').onSnapshot(function(snap) {
+    db.collection('feed_expenses').where('status','==','pending').onSnapshot(function(snap) {
       updatePending(snap.size);
     }, function() {});
     db.collection('daily_records').where('status','==','pending').onSnapshot(function(snap) {
@@ -156,7 +156,7 @@
     var today = new Date();
     today.setHours(0,0,0,0);
     var todayEnd = new Date(today.getTime() + 86400000);
-    db.collection('poultryProduction').where('status','==','approved').where('updatedAt','>=',today).onSnapshot(function(snap) {
+    db.collection('egg_production').where('status','==','approved').where('updatedAt','>=',today).onSnapshot(function(snap) {
       document.getElementById('adApproved').textContent = snap.size;
     }, function() {});
 

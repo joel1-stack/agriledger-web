@@ -175,7 +175,7 @@
 <script src="../js/utils.js"></script>
 <script>
 (function() {
-  var COLLECTIONS = ['poultryProduction', 'poultryFeedExpenses', 'poultryFeedConsumption', 'poultryMortality', 'poultryVetHealth', 'poultrySales'];
+  var COLLECTIONS = ['egg_production', 'feed_expenses', 'vet_health', 'poultry_sales'];
   var unsubs = [];
 
   function updateDate() {
@@ -194,35 +194,32 @@
 
   function getModuleName(col) {
     var names = {
-      poultryProduction: 'Production',
-      poultryFeedExpenses: 'Feed Expense',
-      poultryFeedConsumption: 'Feed Consumption',
-      poultryMortality: 'Mortality',
-      poultryVetHealth: 'Vet Health',
-      poultrySales: 'Sales'
+      egg_production: 'Production',
+      feed_expenses: 'Feed',
+      vet_health: 'Vet Health',
+      poultry_sales: 'Sales'
     };
     return names[col] || col;
   }
 
   function getActivityDotClass(col) {
     var map = {
-      poultryProduction: 'production',
-      poultryFeedExpenses: 'feed',
-      poultryFeedConsumption: 'feed',
-      poultryMortality: 'mortality',
-      poultryVetHealth: 'health',
-      poultrySales: 'sales'
+      egg_production: 'production',
+      feed_expenses: 'feed',
+      vet_health: 'health',
+      poultry_sales: 'sales'
     };
     return map[col] || 'production';
   }
 
   function getActivityDetail(data, col) {
-    if (col === 'poultryProduction') return (data.morningEggs !== undefined ? 'Eggs: ' + (data.morningEggs + (data.afternoonEggs || 0)) : 'Production record');
-    if (col === 'poultryFeedExpenses') return data.feedType || data.description || 'Feed expense';
-    if (col === 'poultryFeedConsumption') return data.feedType || data.description || 'Feed consumption';
-    if (col === 'poultryMortality') return (data.cause || 'Mortality') + (data.count ? ' (' + data.count + ')' : '');
-    if (col === 'poultryVetHealth') return data.treatment || data.description || 'Vet visit';
-    if (col === 'poultrySales') return data.saleType || data.description || 'Sale';
+    if (col === 'egg_production') {
+      if (data.recordType === 'mortality') return (data.causeOfDeath || data.cause || 'Mortality') + (data.deaths || data.count ? ' (' + (data.deaths || data.count) + ')' : '');
+      return (data.morningEggs !== undefined ? 'Eggs: ' + (data.morningEggs + (data.afternoonEggs || 0)) : 'Production record');
+    }
+    if (col === 'feed_expenses') return (data.recordType === 'usage' ? data.feedType || 'Feed used' : data.feedType || data.description || 'Feed expense');
+    if (col === 'vet_health') return data.treatment || data.description || 'Vet visit';
+    if (col === 'poultry_sales') return data.saleType || data.description || 'Sale';
     return 'Record';
   }
 
@@ -250,7 +247,7 @@
       unsubs.push(unsub);
     });
 
-    db.collection('poultryBatches').where('userId', '==', user.id).where('status', '==', 'active').onSnapshot(function(snap) {
+    db.collection('flock_batches').where('userId', '==', user.id).where('status', '==', 'active').onSnapshot(function(snap) {
       document.getElementById('kpiBatches').textContent = snap.size || 0;
     }, function(err) { console.error('Batch count error:', err); });
   }
@@ -300,7 +297,7 @@
   }
 
   function loadActiveBatches(user) {
-    db.collection('poultryBatches').where('userId', '==', user.id).where('status', '==', 'active').orderBy('createdAt', 'desc').onSnapshot(function(snap) {
+    db.collection('flock_batches').where('userId', '==', user.id).where('status', '==', 'active').orderBy('createdAt', 'desc').onSnapshot(function(snap) {
       var el = document.getElementById('activeBatches');
       if (!el) return;
       if (snap.empty) {

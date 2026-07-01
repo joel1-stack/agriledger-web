@@ -115,12 +115,10 @@
         </select>
         <select class="form-select" id="moduleFilter" onchange="applyFilters()">
           <option value="all">All Modules</option>
-          <option value="poultryProduction">Production</option>
-          <option value="poultryFeedExpenses">Feed Expenses</option>
-          <option value="poultryFeedConsumption">Feed Consumption</option>
-          <option value="poultryMortality">Mortality</option>
-          <option value="poultryVetHealth">Vet / Health</option>
-          <option value="poultrySales">Sales</option>
+          <option value="egg_production">Production</option>
+          <option value="feed_expenses">Feed Expenses</option>
+          <option value="vet_health">Vet / Health</option>
+          <option value="poultry_sales">Sales</option>
         </select>
         <select class="form-select" id="statusFilter" onchange="applyFilters()">
           <option value="all">All Status</option>
@@ -170,7 +168,7 @@
 <script src="../js/utils.js"></script>
 <script>
 (function() {
-  var COLLECTIONS = ['poultryProduction', 'poultryFeedExpenses', 'poultryFeedConsumption', 'poultryMortality', 'poultryVetHealth', 'poultrySales'];
+  var COLLECTIONS = ['egg_production', 'feed_expenses', 'vet_health', 'poultry_sales'];
   var allRecords = [];
   var filteredRecords = [];
   var displayedCount = 0;
@@ -179,36 +177,35 @@
 
   function getModuleName(col) {
     var names = {
-      poultryProduction: 'Production',
-      poultryFeedExpenses: 'Feed Expense',
-      poultryFeedConsumption: 'Feed Consumption',
-      poultryMortality: 'Mortality',
-      poultryVetHealth: 'Vet / Health',
-      poultrySales: 'Sales'
+      egg_production: 'Production',
+      feed_expenses: 'Feed',
+      vet_health: 'Vet / Health',
+      poultry_sales: 'Sales'
     };
     return names[col] || col;
   }
 
   function getTypeLabel(data, col) {
-    if (col === 'poultryProduction') { if (data.recordType) return data.recordType; if (data.morningEggs !== undefined || data.afternoonEggs !== undefined) return 'Egg Production'; return 'Production'; }
-    if (col === 'poultryFeedExpenses') return data.feedType || 'Feed Purchase';
-    if (col === 'poultryFeedConsumption') return data.feedType || 'Feed Used';
-    if (col === 'poultryMortality') return data.cause || 'Mortality';
-    if (col === 'poultryVetHealth') return data.treatment || data.vaccination || 'Health';
-    if (col === 'poultrySales') return data.saleType || 'Sale';
+    if (col === 'egg_production') {
+      if (data.recordType) return data.recordType;
+      if (data.morningEggs !== undefined || data.afternoonEggs !== undefined) return 'Egg Production';
+      return 'Production';
+    }
+    if (col === 'feed_expenses') return data.recordType === 'usage' ? data.feedType || 'Feed Used' : data.feedType || 'Feed Purchase';
+    if (col === 'vet_health') return data.treatment || data.vaccination || 'Health';
+    if (col === 'poultry_sales') return data.saleType || 'Sale';
     return 'Record';
   }
 
   function getDetails(data, col) {
-    if (col === 'poultryProduction') {
+    if (col === 'egg_production') {
+      if (data.recordType === 'mortality') return (data.deaths || data.count ? (data.deaths || data.count) + ' bird' + ((data.deaths || data.count) > 1 ? 's' : '') : '') + (data.causeOfDeath || data.cause ? ' - ' + (data.causeOfDeath || data.cause) : '');
       var eggs = (data.morningEggs || 0) + (data.afternoonEggs || 0);
       return eggs > 0 ? eggs + ' eggs' : 'Production recorded';
     }
-    if (col === 'poultryFeedExpenses') return data.description || (data.amount ? 'KSh ' + Number(data.amount).toLocaleString() : '');
-    if (col === 'poultryFeedConsumption') return data.description || (data.quantity ? data.quantity + ' ' + (data.unit || 'kg') : '');
-    if (col === 'poultryMortality') return (data.count ? data.count + ' bird' + (data.count > 1 ? 's' : '') : '') + (data.cause ? ' - ' + data.cause : '');
-    if (col === 'poultryVetHealth') return data.description || data.treatment || data.vaccination || '';
-    if (col === 'poultrySales') return data.description || (data.amount ? 'KSh ' + Number(data.amount).toLocaleString() : '');
+    if (col === 'feed_expenses') return data.description || (data.recordType === 'usage' ? (data.quantity ? data.quantity + ' ' + (data.unit || 'kg') : '') : (data.amount ? 'KSh ' + Number(data.amount).toLocaleString() : ''));
+    if (col === 'vet_health') return data.description || data.treatment || data.vaccination || '';
+    if (col === 'poultry_sales') return data.description || (data.amount ? 'KSh ' + Number(data.amount).toLocaleString() : '');
     return '';
   }
 

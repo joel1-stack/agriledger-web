@@ -115,11 +115,11 @@
   var mortChart = null;
 
   function load() {
-    db.collection('poultryBatches').onSnapshot(function(snap) {
+    db.collection('flock_batches').onSnapshot(function(snap) {
       allBatches = []; snap.forEach(function(d) { allBatches.push({ id: d.id, ...d.data() }); });
       populateBatchSelect();
     }, function() {});
-    db.collection('poultryMortality').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
+    db.collection('egg_production').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
       allMort = []; snap.forEach(function(d) { allMort.push({ id: d.id, ...d.data() }); });
       if (allMort.length === 0) loadDemo();
       renderSummary();
@@ -173,7 +173,7 @@
       actionTaken: document.getElementById('mortNotes').value,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
-    db.collection('poultryMortality').add(data).then(function() {
+    data.recordType = 'mortality'; db.collection('egg_production').add(data).then(function() {
       showToast('Mortality recorded', 'success');
       document.getElementById('mortLost').value = '';
       document.getElementById('mortNotes').value = '';

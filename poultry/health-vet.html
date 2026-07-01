@@ -110,11 +110,11 @@
   var allHealth = [], allBatches = [];
 
   function load() {
-    db.collection('poultryBatches').onSnapshot(function(snap) {
+    db.collection('flock_batches').onSnapshot(function(snap) {
       allBatches = []; snap.forEach(function(d) { allBatches.push({ id: d.id, ...d.data() }); });
       populateBatchSelect();
     }, function() {});
-    db.collection('poultryVetHealth').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
+    db.collection('vet_health').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
       allHealth = []; snap.forEach(function(d) { allHealth.push({ id: d.id, ...d.data() }); });
       if (allHealth.length === 0) loadDemo();
       renderVacSchedule();
@@ -159,7 +159,7 @@
       cost: parseFloat(document.getElementById('healthCost').value)||0,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
-    db.collection('poultryVetHealth').add(data).then(function() {
+    db.collection('vet_health').add(data).then(function() {
       showToast('Health record saved', 'success');
       document.getElementById('healthDesc').value = '';
       document.getElementById('healthMedicine').value = '';

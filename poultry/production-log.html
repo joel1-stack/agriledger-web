@@ -152,14 +152,14 @@
   var trendChart = null;
 
   function loadData() {
-    db.collection('poultryBatches').onSnapshot(function(snap) {
+    db.collection('flock_batches').onSnapshot(function(snap) {
       allBatches = [];
       snap.forEach(function(d) { allBatches.push({ id: d.id, ...d.data() }); });
       if (allBatches.length === 0) loadDemo();
       else populateBatchSelects();
     }, function() { loadDemo(); });
 
-    db.collection('poultryProduction').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
+    db.collection('egg_production').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
       allProduction = [];
       snap.forEach(function(d) { allProduction.push({ id: d.id, ...d.data() }); });
       renderTable();
@@ -292,7 +292,7 @@
       notes: document.getElementById('prodNotes').value,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
-    db.collection('poultryProduction').add(data).then(function() {
+    db.collection('egg_production').add(data).then(function() {
       showToast('Production record saved', 'success');
       document.getElementById('prodMorning').value = '';
       document.getElementById('prodAfternoon').value = '';

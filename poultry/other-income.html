@@ -110,7 +110,7 @@
   var allIncome = [];
 
   function load() {
-    db.collection('poultryOtherIncome').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
+    db.collection('poultry_sales').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
       allIncome = []; snap.forEach(function(d) { allIncome.push({ id: d.id, ...d.data() }); });
       if (allIncome.length === 0) loadDemo();
       renderCats();
@@ -144,7 +144,7 @@
       status: document.getElementById('incPaid').value,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
-    db.collection('poultryOtherIncome').add(data).then(function() {
+    data.saleType = 'Other Income'; db.collection('poultry_sales').add(data).then(function() {
       showToast('Income recorded', 'success');
       document.getElementById('incDesc').value = '';
       document.getElementById('incAmount').value = '';

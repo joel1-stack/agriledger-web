@@ -208,13 +208,13 @@
   function loadData() {
     var hasData = false;
 
-    db.collection('poultryBatches').onSnapshot(function(snap) {
+    db.collection('flock_batches').onSnapshot(function(snap) {
       allBatches = [];
       snap.forEach(function(d) { allBatches.push({ id: d.id, ...d.data() }); });
       if (allBatches.length > 0 || hasData) { hasData = true; renderDashboard(); }
     }, function() { loadDemoData(); });
 
-    db.collection('poultryProduction').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
+    db.collection('egg_production').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
       allProduction = [];
       snap.forEach(function(d) { allProduction.push({ id: d.id, ...d.data() }); });
       if (allBatches.length > 0 || allProduction.length > 0) { hasData = true; renderDashboard(); }
@@ -225,7 +225,7 @@
       snap.forEach(function(d) { allFeedExpenses.push({ id: d.id, ...d.data() }); });
     }, function() {});
 
-    db.collection('poultrySales').onSnapshot(function(snap) {
+    db.collection('poultry_sales').onSnapshot(function(snap) {
       allSales = [];
       snap.forEach(function(d) { allSales.push({ id: d.id, ...d.data() }); });
     }, function() {});

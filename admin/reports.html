@@ -106,22 +106,22 @@
       });
     }
 
-    db.collection('poultryProduction').get().then(function(snap) {
+    db.collection('egg_production').get().then(function(snap) {
       processMonth(snap.docs, 'eggs');
       loaded++;
       if (loaded >= 4) renderReport();
     });
-    db.collection('poultryFeedExpenses').get().then(function(snap) {
+    db.collection('feed_expenses').get().then(function(snap) {
       processMonth(snap.docs, 'feed');
       loaded++;
       if (loaded >= 4) renderReport();
     });
-    db.collection('poultrySales').get().then(function(snap) {
+    db.collection('poultry_sales').get().then(function(snap) {
       processMonth(snap.docs, 'sales');
       loaded++;
       if (loaded >= 4) renderReport();
     });
-    db.collection('poultryMortality').get().then(function(snap) {
+    db.collection('egg_production').get().then(function(snap) {
       processMonth(snap.docs, 'mortality');
       loaded++;
       if (loaded >= 4) renderReport();

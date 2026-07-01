@@ -90,14 +90,14 @@
   var allBatches = [], allProduction = [];
 
   function loadBatches() {
-    db.collection('poultryBatches').orderBy('startDate','desc').onSnapshot(function(snap) {
+    db.collection('flock_batches').orderBy('startDate','desc').onSnapshot(function(snap) {
       allBatches = [];
       snap.forEach(function(d) { allBatches.push({ id: d.id, ...d.data() }); });
       if (allBatches.length === 0) loadDemoBatches();
       else renderTable();
     }, function() { loadDemoBatches(); });
 
-    db.collection('poultryProduction').limit(1000).onSnapshot(function(snap) {
+    db.collection('egg_production').limit(1000).onSnapshot(function(snap) {
       allProduction = [];
       snap.forEach(function(d) { allProduction.push({ id: d.id, ...d.data() }); });
     }, function() {});
@@ -251,8 +251,8 @@
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     try {
-      if (id) { await db.collection('poultryBatches').doc(id).update(data); showToast('Batch updated', 'success'); }
-      else { data.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('poultryBatches').add(data); showToast('Batch registered', 'success'); }
+      if (id) { await db.collection('flock_batches').doc(id).update(data); showToast('Batch updated', 'success'); }
+      else { data.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('flock_batches').add(data); showToast('Batch registered', 'success'); }
       closeModal();
     } catch(err) {
       console.error(err);
@@ -270,7 +270,7 @@
 
   window.deleteBatch = async function(id) {
     if (!confirm('Delete this batch and all associated data?')) return;
-    try { await db.collection('poultryBatches').doc(id).delete(); showToast('Batch deleted', 'success'); }
+    try { await db.collection('flock_batches').doc(id).delete(); showToast('Batch deleted', 'success'); }
     catch(err) { allBatches = allBatches.filter(function(b) { return b.id !== id; }); renderTable(); showToast('Batch removed locally', 'info'); }
   };
 

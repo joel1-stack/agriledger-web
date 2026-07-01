@@ -105,7 +105,7 @@
   var allBatches = [], allProduction = [], allSales = [], allFeed = [], allHealth = [], allMort = [];
 
   function load() {
-    db.collection('poultryBatches').onSnapshot(function(snap) {
+    db.collection('flock_batches').onSnapshot(function(snap) {
       allBatches = []; snap.forEach(function(d) { allBatches.push({ id: d.id, ...d.data() }); });
       populateSelects();
     }, function() {
@@ -117,11 +117,11 @@
       populateSelects();
     });
 
-    db.collection('poultryProduction').limit(2000).onSnapshot(function(snap) {
+    db.collection('egg_production').limit(2000).onSnapshot(function(snap) {
       allProduction = []; snap.forEach(function(d) { allProduction.push({ id: d.id, ...d.data() }); });
     }, function() {});
 
-    db.collection('poultrySales').limit(1000).onSnapshot(function(snap) {
+    db.collection('poultry_sales').limit(1000).onSnapshot(function(snap) {
       allSales = []; snap.forEach(function(d) { allSales.push({ id: d.id, ...d.data() }); });
     }, function() {});
 
@@ -133,7 +133,7 @@
       allHealth = []; snap.forEach(function(d) { allHealth.push({ id: d.id, ...d.data() }); });
     }, function() {});
 
-    db.collection('poultryMortality').limit(2000).onSnapshot(function(snap) {
+    db.collection('egg_production').limit(2000).onSnapshot(function(snap) {
       allMort = []; snap.forEach(function(d) { allMort.push({ id: d.id, ...d.data() }); });
     }, function() {});
   }
