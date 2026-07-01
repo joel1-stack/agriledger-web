@@ -19,7 +19,7 @@
 <body>
 <div class="app-layout">
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand"><span>🌱</span><span>AgriLedger</span></div>
+    <div class="sidebar-brand"><img src="../assets/images/3D%20Logo%20%27sam%20k%27%20with%20Nature%20tru%20one%20.png" alt="AgriLedger" class="brand-logo logo" style="height:32px;width:auto;"><span>AgriLedger</span></div>
     <div class="sidebar-user"><div class="avatar user-avatar-text">J</div><div class="user-info"><div class="name sidebar-user-name">User</div><div class="role sidebar-user-role">general</div></div></div>
     <nav class="sidebar-nav">
       <a href="../dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
@@ -114,7 +114,7 @@
       allBatches = []; snap.forEach(function(d) { allBatches.push({ id: d.id, ...d.data() }); });
       populateBatchSelect();
     }, function() {});
-    db.collection('poultryHealth').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
+    db.collection('poultryVetHealth').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
       allHealth = []; snap.forEach(function(d) { allHealth.push({ id: d.id, ...d.data() }); });
       if (allHealth.length === 0) loadDemo();
       renderVacSchedule();
@@ -125,10 +125,10 @@
 
   function loadDemo() {
     allHealth = [
-      { id:'h1', date:new Date(2026,5,1), type:'Vaccination', batchName:'Batch A - Layers', description:'Newcastle Disease', medicine:'Nobilis ND', dosage:'0.5ml/bird', cost:3500, vet:'Dr. Kamau' },
-      { id:'h2', date:new Date(2026,5,8), type:'Deworming', batchName:'Batch C - Kienyeji', description:'Deworming all birds', medicine:'Piperazine', dosage:'1g/litre water', cost:1800, vet:'Farm Staff' },
-      { id:'h3', date:new Date(2026,5,15), type:'Treatment', batchName:'Batch A - Layers', description:'Respiratory infection', medicine:'Tylosin', dosage:'1ml/litre', cost:4500, vet:'Dr. Kamau' },
-      { id:'h4', date:new Date(2026,5,20), type:'Checkup', batchName:'Batch B - Broilers', description:'Weekly health check', cost:2000, vet:'Dr. Wanjiku' }
+      { id:'h1', date:new Date(2026,5,1), birdType:'Vaccination', batchName:'Batch A - Layers', treatment:'Newcastle Disease', medicine:'Nobilis ND', dosage:'0.5ml/bird', cost:3500, vetSupplier:'Dr. Kamau' },
+      { id:'h2', date:new Date(2026,5,8), birdType:'Deworming', batchName:'Batch C - Kienyeji', treatment:'Deworming all birds', medicine:'Piperazine', dosage:'1g/litre water', cost:1800, vetSupplier:'Farm Staff' },
+      { id:'h3', date:new Date(2026,5,15), birdType:'Treatment', batchName:'Batch A - Layers', treatment:'Respiratory infection', medicine:'Tylosin', dosage:'1ml/litre', cost:4500, vetSupplier:'Dr. Kamau' },
+      { id:'h4', date:new Date(2026,5,20), birdType:'Checkup', batchName:'Batch B - Broilers', treatment:'Weekly health check', cost:2000, vetSupplier:'Dr. Wanjiku' }
     ];
     populateBatchSelect();
     renderVacSchedule();
@@ -146,20 +146,20 @@
     e.preventDefault();
     var batchId = document.getElementById('healthBatch').value;
     if (!batchId) { showToast('Select a batch', 'error'); return false; }
+    var user = getCurrentUser();
     var b = allBatches.find(function(x) { return x.id === batchId; });
     var data = {
+      userId: user ? user.id : '',
       date: new Date(document.getElementById('healthDate').value + 'T00:00:00'),
       batchId: batchId,
       batchName: b ? b.name : '',
-      type: document.getElementById('healthType').value,
-      description: document.getElementById('healthDesc').value,
-      medicine: document.getElementById('healthMedicine').value,
-      dosage: document.getElementById('healthDosage').value,
+      birdType: document.getElementById('healthType').value,
+      treatment: document.getElementById('healthDesc').value,
+      vetSupplier: document.getElementById('healthVet').value,
       cost: parseFloat(document.getElementById('healthCost').value)||0,
-      vet: document.getElementById('healthVet').value,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
-    db.collection('poultryHealth').add(data).then(function() {
+    db.collection('poultryVetHealth').add(data).then(function() {
       showToast('Health record saved', 'success');
       document.getElementById('healthDesc').value = '';
       document.getElementById('healthMedicine').value = '';
@@ -181,7 +181,7 @@
     var now = new Date();
     var upcoming = allHealth.filter(function(h) {
       var d = h.date ? (h.date.toDate ? h.date.toDate() : new Date(h.date)) : new Date();
-      return h.type === 'Vaccination' && d >= new Date(now.getTime() - 7*24*60*60*1000);
+      return (h.birdType || h.type) === 'Vaccination' && d >= new Date(now.getTime() - 7*24*60*60*1000);
     });
     document.getElementById('vacCount').textContent = upcoming.length + ' recent';
     if (upcoming.length === 0) {
@@ -195,7 +195,7 @@
     }).map(function(h) {
       var d = h.date ? (h.date.toDate ? h.date.toDate() : new Date(h.date)) : new Date();
       var isUpcoming = d >= now;
-      return '<div class="vac-card"><div class="vac-info"><strong>' + (h.description||'Vaccination') + '</strong> — ' + (h.batchName||'—') + '<br><small>' + (h.medicine||'') + (h.dosage ? ' · ' + h.dosage : '') + '</small></div><div style="display:flex;align-items:center;gap:12px;"><span class="vac-date">' + formatDate(d) + '</span>' + (isUpcoming ? '<button class="btn btn-sm btn-primary" onclick="markDone(\'' + h.id + '\')">✅ Done</button>' : '<span class="badge badge-green">Done</span>') + '</div></div>';
+      return '<div class="vac-card"><div class="vac-info"><strong>' + (h.treatment || h.description || 'Vaccination') + '</strong> — ' + (h.batchName||'—') + '<br><small>' + (h.medicine||'') + (h.dosage ? ' · ' + h.dosage : '') + '</small></div><div style="display:flex;align-items:center;gap:12px;"><span class="vac-date">' + formatDate(d) + '</span>' + (isUpcoming ? '<button class="btn btn-sm btn-primary" onclick="markDone(\'' + h.id + '\')">✅ Done</button>' : '<span class="badge badge-green">Done</span>') + '</div></div>';
     }).join('');
   }
 
@@ -218,7 +218,7 @@
     var typeColors = { Vaccination:'badge-blue', Treatment:'badge-red', Checkup:'badge-green', Deworming:'badge-gold', Other:'badge-gray' };
     tbody.innerHTML = sorted.map(function(h) {
       var d = h.date ? (h.date.toDate ? h.date.toDate() : new Date(h.date)) : new Date();
-      return '<tr><td>' + formatDate(d) + '</td><td>' + (h.batchName||'—') + '</td><td><span class="badge ' + (typeColors[h.type]||'badge-gray') + '">' + (h.type||'—') + '</span></td><td>' + (h.description||'—') + '</td><td>' + (h.medicine||'—') + '</td><td>' + (h.dosage||'—') + '</td><td>' + (h.cost ? formatCurrency(h.cost) : '—') + '</td><td>' + (h.vet||'—') + '</td></tr>';
+      return '<tr><td>' + formatDate(d) + '</td><td>' + (h.batchName||'—') + '</td><td><span class="badge ' + (typeColors[h.birdType || h.type]||'badge-gray') + '">' + (h.birdType || h.type || '—') + '</span></td><td>' + (h.treatment || h.description || '—') + '</td><td>' + (h.medicine||'—') + '</td><td>' + (h.dosage||'—') + '</td><td>' + (h.cost ? formatCurrency(h.cost) : '—') + '</td><td>' + (h.vetSupplier || h.vet || '—') + '</td></tr>';
     }).join('');
   }
 

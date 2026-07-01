@@ -32,7 +32,9 @@ auth.onAuthStateChanged(async (user) => {
       'poultry/poultry-dashboard.html', 'poultry/farm-setup.html', 'poultry/flock-register.html',
       'poultry/production-log.html', 'poultry/sales.html', 'poultry/other-income.html',
       'poultry/feed-expenses.html', 'poultry/health-vet.html', 'poultry/mortality.html',
-      'poultry/batch-summary.html'];
+      'poultry/batch-summary.html', 'profile.html', 'modules.html', 'notifications.html',
+      'admin/dashboard.html', 'admin/approvals.html', 'admin/reports.html',
+      'worker/dashboard.html', 'worker/history.html'];
     const currentPage = window.location.pathname.split('/').pop();
     const currentPath = window.location.pathname;
     const isProtected = protectedPages.some(p => currentPath.includes(p));
@@ -72,17 +74,20 @@ async function loginUser(email, password) {
 }
 
 // Register
-async function registerUser(email, password, name, phone = '', farmName = '', businessUnit = 'Main Farm') {
+async function registerUser(email, password, name, phone = '', farmName = '', businessUnit = 'Main Farm', role = 'general') {
   try {
     const result = await auth.createUserWithEmailAndPassword(email, password);
-    // Create user profile with all fields
+    // Create user profile with all fields matching mobile app UserModel
     await db.collection('users').doc(result.user.uid).set({
       email: email,
       name: name,
-      phoneNumber: phone,
-      role: 'general',
+      phone: phone,
+      role: role,
       farmName: farmName || name + "'s Farm",
       businessUnit: businessUnit || 'Main Farm',
+      assignedUnits: [],
+      moduleAccess: [],
+      isActive: true,
       status: 'active',
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -92,10 +97,13 @@ async function registerUser(email, password, name, phone = '', farmName = '', bu
       id: result.user.uid,
       email: email,
       name: name,
-      phoneNumber: phone,
-      role: 'general',
+      phone: phone,
+      role: role,
       farmName: farmName || name + "'s Farm",
-      businessUnit: businessUnit || 'Main Farm'
+      businessUnit: businessUnit || 'Main Farm',
+      assignedUnits: [],
+      moduleAccess: [],
+      isActive: true
     };
     sessionStorage.setItem('agriUser', JSON.stringify(userData));
     return { success: true, user: result.user, userData: userData };

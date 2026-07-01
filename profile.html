@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <style>
+    .profile-hero { position:relative; border-radius:var(--radius-md); overflow:hidden; margin-bottom:24px; min-height:200px; }
+    .profile-hero img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .profile-hero .overlay { position:absolute; inset:0; background:linear-gradient(135deg,rgba(27,67,50,0.9) 0%,rgba(45,122,62,0.6) 100%); }
+    .profile-hero .content { position:relative; padding:32px 28px; color:#fff; display:flex; align-items:center; gap:20px; }
+    .profile-avatar { width:72px; height:72px; border-radius:50%; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:700; border:3px solid rgba(255,255,255,0.4); }
+    .profile-meta h1 { font-size:24px; margin:0 0 4px; }
+    .profile-meta p { font-size:14px; opacity:0.85; margin:0; }
+    .profile-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    @media (max-width:768px) { .profile-grid { grid-template-columns:1fr; } }
+    .info-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-light); font-size:14px; }
+    .info-row:last-child { border-bottom:none; }
+    .info-row .label { color:var(--text-secondary); }
+    .info-row .value { font-weight:500; }
+    .activity-item { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border-light); font-size:13px; }
+    .activity-item .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><img src="assets/images/3D%20Logo%20%27sam%20k%27%20with%20Nature%20tru%20one%20.png" alt="AgriLedger" class="brand-logo logo" style="height:32px;width:auto;"><span>AgriLedger</span></div>
+    <div class="sidebar-user"><div class="avatar user-avatar-text">U</div><div class="user-info"><div class="name sidebar-user-name">User</div><div class="role sidebar-user-role">general</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <a href="modules.html"><span class="nav-icon">📱</span><span class="nav-text">All Modules</span></a>
+      <a href="profile.html" class="active"><span class="nav-icon">👤</span><span class="nav-text">Profile</span></a>
+      <a href="settings.html"><span class="nav-icon">⚙️</span><span class="nav-text">Settings</span></a>
+    </nav>
+    <div class="sidebar-footer"><a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a></div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><button class="topbar-toggle" id="sidebar-toggle">☰</button><div class="breadcrumb"><a href="dashboard.html">Dashboard</a><span class="sep">›</span><span>Profile</span></div></div>
+      <div class="topbar-right">
+        <button class="notification-btn" onclick="window.location.href='notifications.html'">🔔<span class="badge badge-red" id="notifBadge">0</span></button>
+        <button class="profile-btn" onclick="window.location.href='profile.html'"><div class="avatar user-avatar-text">U</div><span class="sidebar-user-name" style="font-size:13px;">User</span></button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="profile-hero">
+        <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200" alt="Farm" loading="lazy">
+        <div class="overlay"></div>
+        <div class="content">
+          <div class="profile-avatar" id="profileAvatar">U</div>
+          <div class="profile-meta">
+            <h1 id="profileName">User</h1>
+            <p id="profileEmail">user@example.com</p>
+            <span id="profileBadge"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-grid">
+        <div class="card">
+          <div class="card-header"><h3>Account Info</h3></div>
+          <div class="card-body">
+            <div class="info-row"><span class="label">Full Name</span><span class="value" id="pName">—</span></div>
+            <div class="info-row"><span class="label">Email</span><span class="value" id="pEmail">—</span></div>
+            <div class="info-row"><span class="label">Phone</span><span class="value" id="pPhone">—</span></div>
+            <div class="info-row"><span class="label">Role</span><span class="value" id="pRole">—</span></div>
+            <div class="info-row"><span class="label">Farm Name</span><span class="value" id="pFarm">—</span></div>
+            <div class="info-row"><span class="label">Business Unit</span><span class="value" id="pUnit">—</span></div>
+            <div class="info-row"><span class="label">Member Since</span><span class="value" id="pJoined">—</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>Recent Activity</h3></div>
+          <div class="card-body" id="recentActivity">
+            <div style="text-align:center;padding:20px;color:var(--text-light);">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script>
+(function() {
+  function loadProfile() {
+    var user = getCurrentUser();
+    if (!user) { window.location.href = 'login.html'; return; }
+
+    document.getElementById('profileAvatar').textContent = (user.name || 'U')[0].toUpperCase();
+    document.getElementById('profileName').textContent = user.name || 'User';
+    document.getElementById('profileEmail').textContent = user.email || '';
+    document.getElementById('profileBadge').innerHTML = getRoleBadge(user.role || 'general');
+    document.getElementById('pName').textContent = user.name || '—';
+    document.getElementById('pEmail').textContent = user.email || '—';
+    document.getElementById('pPhone').textContent = user.phone || user.phoneNumber || '—';
+    document.getElementById('pRole').innerHTML = getRoleBadge(user.role || 'general');
+    document.getElementById('pFarm').textContent = user.farmName || '—';
+    document.getElementById('pUnit').textContent = user.businessUnit || '—';
+    document.getElementById('pJoined').textContent = user.createdAt ? formatDate(user.createdAt.toDate ? user.createdAt.toDate() : new Date(user.createdAt)) : '—';
+
+    loadRecentActivity(user);
+  }
+
+  function loadRecentActivity(user) {
+    var collections = ['poultryProduction', 'poultryFeedExpenses', 'poultryFeedConsumption', 'poultryMortality', 'poultryVetHealth', 'poultrySales'];
+    var allActivities = [];
+    var loaded = 0;
+
+    collections.forEach(function(col) {
+      db.collection(col).where('userId', '==', user.id).orderBy('createdAt', 'desc').limit(5).get().then(function(snap) {
+        snap.forEach(function(d) {
+          var data = d.data();
+          allActivities.push({
+            id: d.id,
+            collection: col,
+            date: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt)) : new Date(),
+            type: col.replace('poultry', '').replace(/([A-Z])/g, ' $1').trim(),
+            detail: data.feedType || data.treatment || data.saleType || (data.morningEggs !== undefined ? 'Production' : 'Record'),
+            color: col === 'poultryProduction' ? '#3B82F6' : col === 'poultryFeedExpenses' ? '#F59E0B' : col === 'poultryMortality' ? '#EF4444' : col === 'poultryVetHealth' ? '#10B981' : col === 'poultrySales' ? '#8B5CF6' : '#6B7280'
+          });
+        });
+        loaded++;
+        if (loaded === collections.length) renderActivity(allActivities);
+      }, function() { loaded++; if (loaded === collections.length) renderActivity(allActivities); });
+    });
+  }
+
+  function renderActivity(activities) {
+    var el = document.getElementById('recentActivity');
+    if (activities.length === 0) {
+      el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);">No recent activity</div>';
+      return;
+    }
+    activities.sort(function(a, b) { return b.date - a.date; });
+    var show = activities.slice(0, 10);
+    el.innerHTML = show.map(function(a) {
+      return '<div class="activity-item"><div class="dot" style="background:' + a.color + '"></div><div style="flex:1;"><strong>' + a.type + '</strong><div style="font-size:12px;color:var(--text-secondary);">' + a.detail + '</div></div><div style="font-size:11px;color:var(--text-light);">' + formatDate(a.date) + '</div></div>';
+    }).join('');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initSidebar();
+    loadSidebarUser();
+    setTimeout(loadProfile, 300);
+  });
+})();
+</script>
+</body>
+</html>

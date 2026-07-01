@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - My Activity History</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <style>
+    :root { --sidebar-bg: #1B4332; }
+    .hero-history {
+      position: relative;
+      padding: 60px 24px;
+      background: linear-gradient(135deg, #1B4332 0%, #2D7A3E 100%);
+      color: white;
+      overflow: hidden;
+      border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+      margin-bottom: 24px;
+    }
+    .hero-history::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=1200') center/cover no-repeat;
+      opacity: 0.15;
+    }
+    .hero-history .hero-content { position: relative; z-index: 1; text-align: center; }
+    .hero-history h1 { font-size: 32px; font-weight: 800; margin-bottom: 6px; }
+    .hero-history p { font-size: 15px; color: rgba(255,255,255,0.8); }
+    .summary-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .summary-card { background: var(--surface-white); border-radius: var(--radius-md); padding: 16px; border: 1px solid var(--border-light); text-align: center; }
+    .summary-card .sum-value { font-size: 24px; font-weight: 700; color: var(--text-primary); }
+    .summary-card .sum-label { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .filter-strip { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; padding: 16px 20px; background: var(--surface-white); border-radius: var(--radius-md); border: 1px solid var(--border-light); }
+    .filter-strip .form-input, .filter-strip .form-select { width: auto; min-width: 150px; }
+    .filter-strip .filter-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+    .table-container { margin-bottom: 16px; }
+    .load-more-wrap { text-align: center; padding: 16px 0; }
+    .bottom-nav { display: none; }
+    @media (max-width: 768px) {
+      .summary-strip { grid-template-columns: repeat(2, 1fr); }
+      .filter-strip .form-input, .filter-strip .form-select { width: 100%; min-width: 0; }
+    }
+    @media (max-width: 640px) {
+      .hero-history { padding: 40px 16px; }
+      .hero-history h1 { font-size: 26px; }
+      .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: #1B4332; z-index: 100; padding: 4px 0; justify-content: space-around; box-shadow: 0 -2px 10px rgba(0,0,0,0.15); }
+      .bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; color: rgba(255,255,255,0.6); font-size: 10px; padding: 6px 12px; text-decoration: none; transition: var(--transition); }
+      .bottom-nav a.active, .bottom-nav a:hover { color: white; }
+      .bottom-nav a .nav-icon { font-size: 20px; }
+      body { padding-bottom: 56px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <img src="../assets/images/3D%20Logo%20%27sam%20k%27%20with%20Nature%20tru%20one%20.png" alt="AgriLedger" class="brand-logo logo">
+      <span>AgriLedger</span>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar"><span class="user-avatar-text">U</span></div>
+      <div class="user-info">
+        <div class="name sidebar-user-name">Loading...</div>
+        <div class="role sidebar-user-role">general</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Main</div>
+      <a href="dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <a href="modules.html"><span class="nav-icon">📱</span><span class="nav-text">All Modules</span></a>
+      <a href="../poultry/flock-register.html"><span class="nav-icon">📋</span><span class="nav-text">My Batches</span></a>
+      <a href="../profile.html"><span class="nav-icon">👤</span><span class="nav-text">Profile</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="../settings.html"><span class="nav-icon">⚙️</span><span class="nav-text">Settings</span></a>
+      <a href="#" onclick="event.preventDefault();logoutUser()"><span class="nav-icon">🚪</span><span class="nav-text">Logout</span></a>
+    </div>
+  </aside>
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle">☰</button>
+        <div class="breadcrumb"><a href="dashboard.html">Dashboard</a><span class="sep">›</span><span>My Activity History</span></div>
+      </div>
+      <div class="topbar-right">
+        <button class="notification-btn" onclick="window.location.href='../notifications.html'">🔔<span class="badge badge-red" id="notifBadge" style="display:none;">0</span></button>
+        <button class="profile-btn" onclick="window.location.href='../profile.html'"><div class="avatar"><span class="user-avatar-text">U</span></div><span class="sidebar-user-name" style="font-size:13px;font-weight:500;color:var(--text-primary);">User</span></button>
+      </div>
+    </header>
+    <div class="page-content">
+      <div class="hero-history">
+        <div class="hero-content">
+          <h1>My Activity History</h1>
+          <p>Track all your farm activities</p>
+        </div>
+      </div>
+      <div class="summary-strip" id="summaryStrip">
+        <div class="summary-card"><div class="sum-value" id="sumTotal">0</div><div class="sum-label">Total Records</div></div>
+        <div class="summary-card"><div class="sum-value" id="sumPending" style="color:var(--accent-gold);">0</div><div class="sum-label">Pending</div></div>
+        <div class="summary-card"><div class="sum-value" id="sumApproved" style="color:var(--primary-green);">0</div><div class="sum-label">Approved</div></div>
+        <div class="summary-card"><div class="sum-value" id="sumThisMonth">0</div><div class="sum-label">This Month</div></div>
+      </div>
+      <div class="filter-strip">
+        <span class="filter-label">Filter:</span>
+        <select class="form-select" id="dateFilter" onchange="applyFilters()">
+          <option value="7">Last 7 Days</option>
+          <option value="30" selected>Last 30 Days</option>
+          <option value="90">Last 90 Days</option>
+          <option value="all">All Time</option>
+        </select>
+        <select class="form-select" id="moduleFilter" onchange="applyFilters()">
+          <option value="all">All Modules</option>
+          <option value="poultryProduction">Production</option>
+          <option value="poultryFeedExpenses">Feed Expenses</option>
+          <option value="poultryFeedConsumption">Feed Consumption</option>
+          <option value="poultryMortality">Mortality</option>
+          <option value="poultryVetHealth">Vet / Health</option>
+          <option value="poultrySales">Sales</option>
+        </select>
+        <select class="form-select" id="statusFilter" onchange="applyFilters()">
+          <option value="all">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <span class="filter-label" id="recordCount" style="margin-left:auto;font-size:13px;color:var(--text-light);">0 records</span>
+      </div>
+      <div class="card">
+        <div style="overflow-x:auto;">
+          <table class="sheet-table" id="historyTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Module</th>
+                <th>Type</th>
+                <th>Details</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody">
+              <tr><td colspan="5"><div class="loading-spinner"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="load-more-wrap" id="loadMoreWrap">
+        <button class="btn btn-secondary" id="loadMoreBtn" onclick="loadMore()">Load More</button>
+      </div>
+    </div>
+  </main>
+  <nav class="bottom-nav">
+    <a href="dashboard.html"><span class="nav-icon">📊</span>Home</a>
+    <a href="history.html" class="active"><span class="nav-icon">📋</span>History</a>
+    <a href="../poultry/flock-register.html"><span class="nav-icon">🐔</span>Batches</a>
+    <a href="../profile.html"><span class="nav-icon">👤</span>Profile</a>
+    <a href="../settings.html"><span class="nav-icon">⚙️</span>More</a>
+  </nav>
+</div>
+<div id="toast-container"></div>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="../js/firebase-config.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+(function() {
+  var COLLECTIONS = ['poultryProduction', 'poultryFeedExpenses', 'poultryFeedConsumption', 'poultryMortality', 'poultryVetHealth', 'poultrySales'];
+  var allRecords = [];
+  var filteredRecords = [];
+  var displayedCount = 0;
+  var PAGE_SIZE = 20;
+  var unsubscribers = [];
+
+  function getModuleName(col) {
+    var names = {
+      poultryProduction: 'Production',
+      poultryFeedExpenses: 'Feed Expense',
+      poultryFeedConsumption: 'Feed Consumption',
+      poultryMortality: 'Mortality',
+      poultryVetHealth: 'Vet / Health',
+      poultrySales: 'Sales'
+    };
+    return names[col] || col;
+  }
+
+  function getTypeLabel(data, col) {
+    if (col === 'poultryProduction') { if (data.recordType) return data.recordType; if (data.morningEggs !== undefined || data.afternoonEggs !== undefined) return 'Egg Production'; return 'Production'; }
+    if (col === 'poultryFeedExpenses') return data.feedType || 'Feed Purchase';
+    if (col === 'poultryFeedConsumption') return data.feedType || 'Feed Used';
+    if (col === 'poultryMortality') return data.cause || 'Mortality';
+    if (col === 'poultryVetHealth') return data.treatment || data.vaccination || 'Health';
+    if (col === 'poultrySales') return data.saleType || 'Sale';
+    return 'Record';
+  }
+
+  function getDetails(data, col) {
+    if (col === 'poultryProduction') {
+      var eggs = (data.morningEggs || 0) + (data.afternoonEggs || 0);
+      return eggs > 0 ? eggs + ' eggs' : 'Production recorded';
+    }
+    if (col === 'poultryFeedExpenses') return data.description || (data.amount ? 'KSh ' + Number(data.amount).toLocaleString() : '');
+    if (col === 'poultryFeedConsumption') return data.description || (data.quantity ? data.quantity + ' ' + (data.unit || 'kg') : '');
+    if (col === 'poultryMortality') return (data.count ? data.count + ' bird' + (data.count > 1 ? 's' : '') : '') + (data.cause ? ' - ' + data.cause : '');
+    if (col === 'poultryVetHealth') return data.description || data.treatment || data.vaccination || '';
+    if (col === 'poultrySales') return data.description || (data.amount ? 'KSh ' + Number(data.amount).toLocaleString() : '');
+    return '';
+  }
+
+  function getStatus(row) {
+    return row.status || row.approval || 'pending';
+  }
+
+  function renderTable() {
+    var tbody = document.getElementById('historyBody');
+    var countEl = document.getElementById('recordCount');
+    var loadMoreBtn = document.getElementById('loadMoreBtn');
+    var loadMoreWrap = document.getElementById('loadMoreWrap');
+
+    var slice = filteredRecords.slice(0, displayedCount + PAGE_SIZE);
+    var showMore = slice.length > displayedCount;
+    if (showMore) displayedCount += PAGE_SIZE;
+
+    if (slice.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="icon">📋</div><p style="color:var(--text-secondary);">No records found</p></div></td></tr>';
+      countEl.textContent = '0 records';
+      loadMoreWrap.style.display = 'none';
+      return;
+    }
+
+    tbody.innerHTML = slice.map(function(r) {
+      var status = getStatus(r);
+      var statusClass = status === 'approved' ? 'approved' : (status === 'rejected' ? 'rejected' : 'pending');
+      var statusLabel = status === 'approved' ? '✓ Approved' : (status === 'rejected' ? '✗ Rejected' : '⏳ Pending');
+      return '<tr>' +
+        '<td>' + formatDate(r.date) + '</td>' +
+        '<td>' + getModuleName(r.collection) + '</td>' +
+        '<td>' + getTypeLabel(r, r.collection) + '</td>' +
+        '<td>' + getDetails(r, r.collection) + '</td>' +
+        '<td><span class="status-pill ' + statusClass + '">' + statusLabel + '</span></td>' +
+      '</tr>';
+    }).join('');
+
+    countEl.textContent = filteredRecords.length + ' record' + (filteredRecords.length !== 1 ? 's' : '');
+    loadMoreWrap.style.display = displayedCount >= filteredRecords.length ? 'none' : 'block';
+  }
+
+  window.loadMore = function() {
+    renderTable();
+  };
+
+  window.applyFilters = function() {
+    var dateVal = document.getElementById('dateFilter').value;
+    var moduleVal = document.getElementById('moduleFilter').value;
+    var statusVal = document.getElementById('statusFilter').value;
+
+    var now = new Date();
+    var cutoff = null;
+    if (dateVal !== 'all') {
+      cutoff = new Date(now);
+      cutoff.setDate(cutoff.getDate() - parseInt(dateVal));
+    }
+
+    filteredRecords = allRecords.filter(function(r) {
+      if (cutoff && r.date < cutoff) return false;
+      if (moduleVal !== 'all' && r.collection !== moduleVal) return false;
+      if (statusVal !== 'all' && getStatus(r) !== statusVal) return false;
+      return true;
+    });
+
+    filteredRecords.sort(function(a, b) { return b.date - a.date; });
+    displayedCount = 0;
+    renderTable();
+    updateSummary();
+  };
+
+  function updateSummary() {
+    var total = filteredRecords.length;
+    var pending = filteredRecords.filter(function(r) { return getStatus(r) === 'pending'; }).length;
+    var approved = filteredRecords.filter(function(r) { return getStatus(r) === 'approved'; }).length;
+    var now = new Date();
+    var monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    var thisMonth = filteredRecords.filter(function(r) { return r.date >= monthStart; }).length;
+
+    document.getElementById('sumTotal').textContent = total;
+    document.getElementById('sumPending').textContent = pending;
+    document.getElementById('sumApproved').textContent = approved;
+    document.getElementById('sumThisMonth').textContent = thisMonth;
+  }
+
+  function loadAllRecords(user) {
+    var loaded = 0;
+
+    COLLECTIONS.forEach(function(col) {
+      var q = db.collection(col).where('userId', '==', user.id).orderBy('createdAt', 'desc');
+      var unsub = q.onSnapshot(function(snap) {
+        allRecords = allRecords.filter(function(r) { return r.collection !== col; });
+        snap.forEach(function(d) {
+          var data = d.data();
+          allRecords.push({
+            id: d.id,
+            collection: col,
+            date: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt)) : new Date(),
+            status: data.status || data.approval || 'pending',
+            approval: data.approval,
+            morningEggs: data.morningEggs,
+            afternoonEggs: data.afternoonEggs,
+            recordType: data.recordType,
+            feedType: data.feedType,
+            description: data.description,
+            amount: data.amount,
+            quantity: data.quantity,
+            unit: data.unit,
+            count: data.count,
+            cause: data.cause,
+            treatment: data.treatment,
+            vaccination: data.vaccination,
+            saleType: data.saleType
+          });
+        });
+        loaded++;
+        if (loaded === COLLECTIONS.length) {
+          window.applyFilters();
+        }
+      }, function(err) {
+        loaded++;
+        if (loaded === COLLECTIONS.length) {
+          window.applyFilters();
+        }
+      });
+      unsubscribers.push(unsub);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var user = getCurrentUser();
+    if (!user) { window.location.href = '../login.html'; return; }
+    initSidebar();
+    loadSidebarUser();
+    loadAllRecords(user);
+  });
+})();
+</script>
+</body>
+</html>

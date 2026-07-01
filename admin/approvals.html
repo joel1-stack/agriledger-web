@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Approvals</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <style>
+    .approval-hero { position:relative; border-radius:var(--radius-md); overflow:hidden; margin-bottom:24px; min-height:180px; display:flex; align-items:center; }
+    .approval-hero img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .approval-hero .overlay { position:absolute; inset:0; background:linear-gradient(135deg,rgba(27,67,50,0.92) 0%,rgba(45,122,62,0.7) 100%); }
+    .approval-hero .content { position:relative; padding:32px 28px; color:#fff; }
+    .approval-hero .content h1 { font-size:26px; font-weight:700; margin:0 0 6px; }
+    .approval-hero .content p { font-size:14px; opacity:0.85; margin:0; }
+    .approval-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:24px; }
+    .approval-filters { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; align-items:center; }
+    .approval-filters .filter-btn { padding:6px 16px; border-radius:20px; border:1px solid var(--border-light); background:var(--surface-white); cursor:pointer; font-size:13px; transition:var(--transition); }
+    .approval-filters .filter-btn.active { background:var(--primary-green); color:#fff; border-color:var(--primary-green); }
+    .module-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600; }
+    .approval-actions { display:flex; gap:6px; }
+    .approval-actions .btn-sm { padding:4px 12px; font-size:12px; }
+    .empty-approval { text-align:center; padding:60px 20px; }
+    .empty-approval .icon { font-size:56px; margin-bottom:12px; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><img src="../assets/images/3D%20Logo%20%27sam%20k%27%20with%20Nature%20tru%20one%20.png" alt="AgriLedger" class="brand-logo logo" style="height:32px;width:auto;"><span>AgriLedger</span></div>
+    <div class="sidebar-user"><div class="avatar user-avatar-text">A</div><div class="user-info"><div class="name sidebar-user-name">Admin</div><div class="role sidebar-user-role">superAdmin</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="../dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <div class="nav-section">ADMIN</div>
+      <a href="approvals.html" class="active"><span class="nav-icon">✅</span><span class="nav-text">Approvals <span class="badge badge-red" id="pendingBadge">0</span></span></a>
+      <a href="../settings.html"><span class="nav-icon">👥</span><span class="nav-text">User Management</span></a>
+      <div class="nav-section">MODULES</div>
+      <a href="../modules.html"><span class="nav-icon">📱</span><span class="nav-text">All Modules</span></a>
+      <a href="../poultry/poultry-dashboard.html"><span class="nav-icon">🐔</span><span class="nav-text">Poultry</span></a>
+      <a href="../farming/crops.html"><span class="nav-icon">🌾</span><span class="nav-text">Crops</span></a>
+      <a href="../farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+      <a href="../farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+      <a href="../inventory.html"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+    </nav>
+    <div class="sidebar-footer"><a href="../settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a><a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a></div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><button class="topbar-toggle" id="sidebar-toggle">☰</button><div class="breadcrumb"><a href="../dashboard.html">Dashboard</a><span class="sep">›</span><span>Approvals</span></div></div>
+      <div class="topbar-right">
+        <button class="notification-btn" onclick="window.location.href='../notifications.html'">🔔<span class="badge badge-red" id="notifBadge">0</span></button>
+        <button class="profile-btn" onclick="window.location.href='../profile.html'"><div class="avatar user-avatar-text">A</div><span class="sidebar-user-name" style="font-size:13px;">Admin</span></button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="approval-hero">
+        <img src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=1200" alt="Farm approval" loading="lazy">
+        <div class="overlay"></div>
+        <div class="content">
+          <h1>Approval Queue</h1>
+          <p>Review and approve records submitted by workers across all farm modules</p>
+        </div>
+      </div>
+
+      <div class="approval-stats" id="approvalStats">
+        <div class="card" style="text-align:center;padding:14px;">
+          <div class="val" style="font-size:20px;font-weight:700;color:var(--accent-gold);" id="statPending">0</div>
+          <div style="font-size:12px;color:var(--text-secondary);">Pending</div>
+        </div>
+        <div class="card" style="text-align:center;padding:14px;">
+          <div class="val" style="font-size:20px;font-weight:700;color:var(--primary-green);" id="statApproved">0</div>
+          <div style="font-size:12px;color:var(--text-secondary);">Approved Today</div>
+        </div>
+        <div class="card" style="text-align:center;padding:14px;">
+          <div class="val" style="font-size:20px;font-weight:700;color:var(--accent-red);" id="statRejected">0</div>
+          <div style="font-size:12px;color:var(--text-secondary);">Rejected Today</div>
+        </div>
+        <div class="card" style="text-align:center;padding:14px;">
+          <div class="val" style="font-size:20px;font-weight:700;" id="statModules">0</div>
+          <div style="font-size:12px;color:var(--text-secondary);">Modules</div>
+        </div>
+      </div>
+
+      <div class="approval-filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="poultry">Poultry</button>
+        <button class="filter-btn" data-filter="crops">Crops</button>
+        <button class="filter-btn" data-filter="livestock">Livestock</button>
+        <button class="filter-btn" data-filter="dairy">Dairy</button>
+        <button class="filter-btn" data-filter="inventory">Inventory</button>
+        <select id="statusFilter" class="form-select" style="width:auto;margin-left:auto;">
+          <option value="pending">Pending</option>
+          <option value="all">All Status</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <div class="table-container">
+          <table class="sheet-table">
+            <thead><tr><th>Date</th><th>Module</th><th>Type</th><th>Details</th><th>Recorded By</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="approvalBody"><tr><td colspan="7"><div class="loading-spinner"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+<!-- Rejection Modal -->
+<div class="modal-overlay" id="rejectionModal" style="display:none;">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header"><h3>Rejection Reason</h3><button class="modal-close" onclick="closeModal('rejectionModal')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Reason for rejection</label>
+        <textarea id="rejectionReason" class="form-input" rows="3" placeholder="Provide a reason..."></textarea>
+      </div>
+      <button class="btn btn-danger btn-block" onclick="confirmReject()">Reject Record</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="../js/firebase-config.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+(function() {
+  var allPending = [];
+  var currentFilter = 'all';
+  var rejectRecordId = null;
+  var rejectCollection = null;
+
+  function loadApprovals() {
+    var collections = [
+      { name: 'poultryProduction', label: 'Poultry Production', module: 'poultry' },
+      { name: 'poultryFeedExpenses', label: 'Feed Purchase', module: 'poultry' },
+      { name: 'poultryFeedConsumption', label: 'Feed Usage', module: 'poultry' },
+      { name: 'poultryMortality', label: 'Mortality', module: 'poultry' },
+      { name: 'poultryVetHealth', label: 'Vet Health', module: 'poultry' },
+      { name: 'poultrySales', label: 'Poultry Sales', module: 'poultry' },
+      { name: 'poultryOtherIncome', label: 'Other Income', module: 'poultry' },
+      { name: 'daily_records', label: 'Daily Records', module: 'general' }
+    ];
+    allPending = [];
+
+    collections.forEach(function(col) {
+      db.collection(col.name).where('status', '==', 'pending').onSnapshot(function(snap) {
+        snap.docChanges().forEach(function(change) {
+          if (change.type === 'added') {
+            var doc = { id: change.doc.id, collection: col.name, module: col.module, label: col.label, ...change.doc.data() };
+            allPending.push(doc);
+          }
+          if (change.type === 'removed') {
+            allPending = allPending.filter(function(d) { return !(d.id === change.doc.id && d.collection === col.name); });
+          }
+        });
+        renderApprovals();
+      }, function(err) { console.warn('Error loading ' + col.name, err); });
+    });
+  }
+
+  function getModuleColor(m) {
+    var colors = { poultry:'#3B82F6', crops:'#F59E0B', livestock:'#EF4444', dairy:'#10B981', inventory:'#7C3AED', general:'#6B7280' };
+    return colors[m] || '#6B7280';
+  }
+
+  function getTypeLabel(doc) {
+    if (doc.saleType) return doc.saleType;
+    if (doc.sheetType) return doc.sheetType;
+    if (doc.recordType) return doc.recordType;
+    if (doc.treatment) return 'Treatment';
+    if (doc.deaths !== undefined) return 'Mortality';
+    if (doc.morningEggs !== undefined) return 'Production';
+    return doc.label || 'Record';
+  }
+
+  function getDetail(doc) {
+    if (doc.feedType) return doc.feedType + (doc.supplier ? ' (' + doc.supplier + ')' : '');
+    if (doc.birdType) return doc.birdType + (doc.batchId ? ' - Batch' : '');
+    if (doc.treatment) return doc.treatment;
+    if (doc.saleType) return doc.saleType + (doc.buyer ? ' - ' + doc.buyer : '');
+    if (doc.notes) return doc.notes;
+    return JSON.stringify(doc.data || {}).substring(0, 60);
+  }
+
+  function getDate(doc) {
+    if (doc.date) return doc.date.toDate ? doc.date.toDate() : new Date(doc.date);
+    if (doc.createdAt) return doc.createdAt.toDate ? doc.createdAt.toDate() : new Date(doc.createdAt);
+    return new Date();
+  }
+
+  function getRecordedBy(doc) {
+    if (doc.recordedByName) return doc.recordedByName;
+    if (doc.recordedBy) return doc.recordedBy.substring(0, 8) + '...';
+    return '—';
+  }
+
+  function renderApprovals() {
+    var filtered = allPending;
+    if (currentFilter !== 'all') filtered = filtered.filter(function(d) { return d.module === currentFilter; });
+    var selStatus = document.getElementById('statusFilter').value;
+    if (selStatus !== 'all') filtered = filtered.filter(function(d) { return (d.status || 'pending') === selStatus; });
+    filtered.sort(function(a, b) { return getDate(b) - getDate(a); });
+
+    var stats = { pending:0, approved:0, rejected:0 };
+    var today = new Date().toDateString();
+    allPending.forEach(function(d) {
+      var s = d.status || 'pending';
+      if (s === 'pending') stats.pending++;
+      var dd = d.date ? (d.date.toDate ? d.date.toDate() : new Date(d.date)) : new Date();
+      if (dd.toDateString() === today && s === 'approved') stats.approved++;
+      if (dd.toDateString() === today && s === 'rejected') stats.rejected++;
+    });
+    document.getElementById('statPending').textContent = stats.pending;
+    document.getElementById('statApproved').textContent = stats.approved;
+    document.getElementById('statRejected').textContent = stats.rejected;
+    document.getElementById('statModules').textContent = new Set(allPending.map(function(d) { return d.module; })).size;
+    document.getElementById('pendingBadge').textContent = stats.pending;
+
+    var tbody = document.getElementById('approvalBody');
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-approval"><div class="icon">✅</div><h3>All caught up!</h3><p>No pending records to review.</p></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = filtered.map(function(d) {
+      var mc = getModuleColor(d.module);
+      var dt = getDate(d);
+      var typ = getTypeLabel(d);
+      var detail = getDetail(d);
+      var by = getRecordedBy(d);
+      var st = d.status || 'pending';
+      var badgeHtml = st === 'pending' ? '<span class="status-pill pending">Pending</span>' :
+                      st === 'approved' ? '<span class="status-pill approved">Approved</span>' :
+                      '<span class="status-pill rejected">Rejected</span>';
+      var actionsHtml = '';
+      if (st === 'pending') {
+        actionsHtml = '<div class="approval-actions">' +
+          '<button class="btn btn-sm btn-primary" onclick="approveRecord(\'' + d.id + '\',\'' + d.collection + '\')">✓ Approve</button>' +
+          '<button class="btn btn-sm btn-danger" onclick="openReject(\'' + d.id + '\',\'' + d.collection + '\')">✕ Reject</button>' +
+        '</div>';
+      } else {
+        actionsHtml = '<span style="font-size:12px;color:var(--text-light);">' + (d.approvedBy ? 'by ' + d.approvedBy.substring(0,8) : '') + '</span>';
+      }
+      return '<tr>' +
+        '<td>' + formatDate(dt) + '</td>' +
+        '<td><span class="module-badge" style="background:' + mc + '20;color:' + mc + ';">● ' + d.module + '</span></td>' +
+        '<td>' + typ + '</td>' +
+        '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">' + detail + '</td>' +
+        '<td>' + by + '</td>' +
+        '<td>' + badgeHtml + '</td>' +
+        '<td>' + actionsHtml + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  window.approveRecord = function(id, collection) {
+    var user = getCurrentUser();
+    if (!user) { showToast('Please login first', 'error'); return; }
+    db.collection(collection).doc(id).update({
+      status: 'approved',
+      approvedBy: user.id,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function() {
+      showToast('Record approved', 'success');
+    }).catch(function(err) {
+      showToast('Error approving: ' + err.message, 'error');
+    });
+  };
+
+  window.openReject = function(id, collection) {
+    rejectRecordId = id;
+    rejectCollection = collection;
+    document.getElementById('rejectionReason').value = '';
+    openModal('rejectionModal');
+  };
+
+  window.confirmReject = function() {
+    var reason = document.getElementById('rejectionReason').value.trim();
+    if (!reason) { showToast('Please provide a rejection reason', 'error'); return; }
+    var user = getCurrentUser();
+    db.collection(rejectCollection).doc(rejectRecordId).update({
+      status: 'rejected',
+      approvedBy: user ? user.id : '',
+      rejectionReason: reason,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function() {
+      showToast('Record rejected', 'info');
+      closeModal('rejectionModal');
+    }).catch(function(err) {
+      showToast('Error: ' + err.message, 'error');
+    });
+  };
+
+  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+      currentFilter = this.getAttribute('data-filter');
+      renderApprovals();
+    });
+  });
+
+  document.getElementById('statusFilter').addEventListener('change', renderApprovals);
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initSidebar();
+    loadSidebarUser();
+    setTimeout(loadApprovals, 300);
+  });
+})();
+</script>
+</body>
+</html>

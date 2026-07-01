@@ -21,7 +21,7 @@
 <body>
 <div class="app-layout">
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand"><span>🌱</span><span>AgriLedger</span></div>
+    <div class="sidebar-brand"><img src="../assets/images/3D%20Logo%20%27sam%20k%27%20with%20Nature%20tru%20one%20.png" alt="AgriLedger" class="brand-logo logo" style="height:32px;width:auto;"><span>AgriLedger</span></div>
     <div class="sidebar-user"><div class="avatar user-avatar-text">J</div><div class="user-info"><div class="name sidebar-user-name">User</div><div class="role sidebar-user-role">general</div></div></div>
     <nav class="sidebar-nav">
       <a href="../dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
@@ -121,21 +121,25 @@
 
   function loadDemo() {
     allIncome = [
-      { id:'i1', date:new Date(2026,5,3), category:'Manure Sales', description:'Sold 15 bags of poultry manure', amount:4500, payment:'Cash', status:'Paid' },
-      { id:'i2', date:new Date(2026,5,10), category:'Equipment Rental', description:'Incubator rental fee', amount:3000, payment:'M-Pesa', status:'Paid' },
-      { id:'i3', date:new Date(2026,5,17), category:'Other', description:'Sold empty feed sacks', amount:1200, payment:'Cash', status:'Paid' },
-      { id:'i4', date:new Date(2026,5,22), category:'Space Rental', description:'Poultry house rental for brooder', amount:5000, payment:'Bank Transfer', status:'Outstanding' }
+      { id:'i1', date:new Date(2026,5,3), category:'Manure Sales', description:'Sold 15 bags of poultry manure', total:4500, payment:'Cash', status:'Paid' },
+      { id:'i2', date:new Date(2026,5,10), category:'Equipment Rental', description:'Incubator rental fee', total:3000, payment:'M-Pesa', status:'Paid' },
+      { id:'i3', date:new Date(2026,5,17), category:'Other', description:'Sold empty feed sacks', total:1200, payment:'Cash', status:'Paid' },
+      { id:'i4', date:new Date(2026,5,22), category:'Space Rental', description:'Poultry house rental for brooder', total:5000, payment:'Bank Transfer', status:'Outstanding' }
     ];
     renderCats(); renderTable();
   }
 
   window.saveIncome = function(e) {
     e.preventDefault();
+    var user = getCurrentUser();
     var data = {
+      userId: user ? user.id : '',
       date: new Date(document.getElementById('incDate').value + 'T00:00:00'),
       category: document.getElementById('incCategory').value,
       description: document.getElementById('incDesc').value,
-      amount: parseFloat(document.getElementById('incAmount').value)||0,
+      quantity: 0,
+      unitPrice: 0,
+      total: parseFloat(document.getElementById('incAmount').value)||0,
       payment: document.getElementById('incPayMethod').value,
       status: document.getElementById('incPaid').value,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -163,7 +167,7 @@
     var cats = { 'Manure Sales': 0, 'Equipment Rental': 0, 'Space Rental': 0, 'Other': 0 };
     var total = 0;
     monthInc.forEach(function(inc) {
-      var amt = parseFloat(inc.amount)||0;
+      var amt = parseFloat(inc.total)||parseFloat(inc.amount)||0;
       if (cats[inc.category] !== undefined) cats[inc.category] += amt;
       else cats['Other'] += amt;
       total += amt;
@@ -190,7 +194,7 @@
     tbody.innerHTML = sorted.map(function(inc) {
       var d = inc.date ? (inc.date.toDate ? inc.date.toDate() : new Date(inc.date)) : new Date();
       var badgeCls = inc.status === 'Paid' ? 'badge-green' : 'badge-red';
-      return '<tr><td>' + formatDate(d) + '</td><td>' + (inc.category||'—') + '</td><td>' + (inc.description||'—') + '</td><td><strong>' + formatCurrency(inc.amount||0) + '</strong></td><td>' + (inc.payment||'—') + '</td><td><span class="badge ' + badgeCls + '">' + (inc.status||'—') + '</span></td></tr>';
+      return '<tr><td>' + formatDate(d) + '</td><td>' + (inc.category||'—') + '</td><td>' + (inc.description||'—') + '</td><td><strong>' + formatCurrency(inc.total || inc.amount || 0) + '</strong></td><td>' + (inc.payment||'—') + '</td><td><span class="badge ' + badgeCls + '">' + (inc.status||'—') + '</span></td></tr>';
     }).join('');
   }
 

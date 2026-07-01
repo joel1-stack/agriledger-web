@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <style>
+    .admin-hero { position:relative; border-radius:var(--radius-md); overflow:hidden; margin-bottom:24px; min-height:200px; }
+    .admin-hero img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .admin-hero .overlay { position:absolute; inset:0; background:linear-gradient(135deg,rgba(27,67,50,0.92) 0%,rgba(45,122,62,0.7) 100%); }
+    .admin-hero .content { position:relative; padding:32px 28px; color:#fff; }
+    .admin-hero .content h1 { font-size:26px; font-weight:700; margin:0 0 6px; }
+    .admin-hero .content p { font-size:14px; opacity:0.85; margin:0; }
+    .admin-grid { display:grid; grid-template-columns:2fr 1fr; gap:20px; }
+    @media (max-width:768px) { .admin-grid { grid-template-columns:1fr; } }
+    .stat-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:20px; }
+    .stat-card { background:var(--surface-white); border-radius:var(--radius-md); padding:16px; border:1px solid var(--border-light); position:relative; overflow:hidden; }
+    .stat-card img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0.08; }
+    .stat-card .stat-content { position:relative; }
+    .stat-card .stat-icon { font-size:24px; margin-bottom:8px; }
+    .stat-card .stat-value { font-size:24px; font-weight:700; }
+    .stat-card .stat-label { font-size:12px; color:var(--text-secondary); margin-top:4px; }
+    .quick-link { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--radius-sm); border:1px solid var(--border-light); cursor:pointer; transition:var(--transition); background:var(--surface-white); margin-bottom:8px; }
+    .quick-link:hover { border-color:var(--primary-green); background:var(--primary-light); }
+    .quick-link .ql-icon { font-size:20px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:8px; }
+    .quick-link .ql-info { flex:1; }
+    .quick-link .ql-info .ql-title { font-weight:600; font-size:14px; }
+    .quick-link .ql-info .ql-desc { font-size:12px; color:var(--text-secondary); }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><img src="../assets/images/3D%20Logo%20%27sam%20k%27%20with%20Nature%20tru%20one%20.png" alt="AgriLedger" class="brand-logo logo" style="height:32px;width:auto;"><span>AgriLedger</span></div>
+    <div class="sidebar-user"><div class="avatar user-avatar-text">A</div><div class="user-info"><div class="name sidebar-user-name">Admin</div><div class="role sidebar-user-role">superAdmin</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="active"><span class="nav-icon">📊</span><span class="nav-text">Admin Dashboard</span></a>
+      <a href="approvals.html"><span class="nav-icon">✅</span><span class="nav-text">Approvals</span></a>
+      <a href="reports.html"><span class="nav-icon">📈</span><span class="nav-text">Reports</span></a>
+      <a href="../settings.html"><span class="nav-icon">👥</span><span class="nav-text">User Management</span></a>
+      <div class="nav-section">MODULES</div>
+      <a href="../modules.html"><span class="nav-icon">📱</span><span class="nav-text">All Modules</span></a>
+    </nav>
+    <div class="sidebar-footer"><a href="../settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a><a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a></div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><button class="topbar-toggle" id="sidebar-toggle">☰</button><div class="breadcrumb"><a href="../dashboard.html">Dashboard</a><span class="sep">›</span><span>Admin</span></div></div>
+      <div class="topbar-right">
+        <button class="notification-btn" onclick="window.location.href='../notifications.html'">🔔<span class="badge badge-red" id="notifBadge">0</span></button>
+        <button class="profile-btn" onclick="window.location.href='../profile.html'"><div class="avatar user-avatar-text">A</div><span style="font-size:13px;">Admin</span></button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="admin-hero">
+        <img src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=1200" alt="Admin" loading="lazy">
+        <div class="overlay"></div>
+        <div class="content">
+          <h1>Admin Dashboard</h1>
+          <p>Overview of all farm operations, pending approvals, and system health</p>
+        </div>
+      </div>
+
+      <div class="stat-row" id="adminStats">
+        <div class="stat-card"><img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" alt=""><div class="stat-content"><div class="stat-icon">👥</div><div class="stat-value" id="adUsers">0</div><div class="stat-label">Total Users</div></div></div>
+        <div class="stat-card"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200" alt=""><div class="stat-content"><div class="stat-icon">⏳</div><div class="stat-value" id="adPending">0</div><div class="stat-label">Pending Approvals</div></div></div>
+        <div class="stat-card"><img src="https://images.unsplash.com/photo-1553729459-afe8f2e0e95e?w=200" alt=""><div class="stat-content"><div class="stat-icon">✅</div><div class="stat-value" id="adApproved">0</div><div class="stat-label">Approved Today</div></div></div>
+        <div class="stat-card"><img src="https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?w=200" alt=""><div class="stat-content"><div class="stat-icon">📦</div><div class="stat-value" id="adModules">0</div><div class="stat-label">Active Modules</div></div></div>
+      </div>
+
+      <div class="admin-grid">
+        <div class="card">
+          <div class="card-header"><h3>Quick Actions</h3></div>
+          <div class="card-body">
+            <div class="quick-link" onclick="window.location.href='approvals.html'">
+              <div class="ql-icon" style="background:#FFF3E0;color:#F57C00;">✅</div>
+              <div class="ql-info"><div class="ql-title">Review Approvals</div><div class="ql-desc"><span id="pendingCount">0</span> records pending your review</div></div>
+              <span>→</span>
+            </div>
+            <div class="quick-link" onclick="window.location.href='../settings.html'">
+              <div class="ql-icon" style="background:#E8F5E9;color:#2E7D32;">👥</div>
+              <div class="ql-info"><div class="ql-title">Manage Users</div><div class="ql-desc">Add, edit, or deactivate users</div></div>
+              <span>→</span>
+            </div>
+            <div class="quick-link" onclick="window.location.href='../modules.html'">
+              <div class="ql-icon" style="background:#E3F2FD;color:#1565C0;">📱</div>
+              <div class="ql-info"><div class="ql-title">Browse Modules</div><div class="ql-desc">Access all farm management modules</div></div>
+              <span>→</span>
+            </div>
+            <div class="quick-link" onclick="window.location.href='../dashboard.html'">
+              <div class="ql-icon" style="background:#F3E5F5;color:#7B1FA2;">📊</div>
+              <div class="ql-info"><div class="ql-title">Main Dashboard</div><div class="ql-desc">View full farm analytics</div></div>
+              <span>→</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>System Status</h3></div>
+          <div class="card-body" id="systemStatus">
+            <div style="text-align:center;padding:20px;color:var(--text-light);">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="../js/firebase-config.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+(function() {
+  function loadAdminData() {
+    var user = getCurrentUser();
+    if (!user || !isSuperAdmin()) { window.location.href = '../login.html'; return; }
+
+    db.collection('users').onSnapshot(function(snap) {
+      document.getElementById('adUsers').textContent = snap.size;
+    }, function() {});
+
+    db.collection('poultryProduction').where('status','==','pending').onSnapshot(function(snap) {
+      var c = snap.size;
+      updatePending(c);
+    }, function() {});
+    db.collection('poultryFeedExpenses').where('status','==','pending').onSnapshot(function(snap) {
+      updatePending(snap.size);
+    }, function() {});
+    db.collection('poultryMortality').where('status','==','pending').onSnapshot(function(snap) {
+      updatePending(snap.size);
+    }, function() {});
+    db.collection('poultryVetHealth').where('status','==','pending').onSnapshot(function(snap) {
+      updatePending(snap.size);
+    }, function() {});
+    db.collection('poultrySales').where('status','==','pending').onSnapshot(function(snap) {
+      updatePending(snap.size);
+    }, function() {});
+    db.collection('poultryFeedConsumption').where('status','==','pending').onSnapshot(function(snap) {
+      updatePending(snap.size);
+    }, function() {});
+    db.collection('daily_records').where('status','==','pending').onSnapshot(function(snap) {
+      updatePending(snap.size);
+    }, function() {});
+
+    var today = new Date();
+    today.setHours(0,0,0,0);
+    var todayEnd = new Date(today.getTime() + 86400000);
+    db.collection('poultryProduction').where('status','==','approved').where('updatedAt','>=',today).onSnapshot(function(snap) {
+      document.getElementById('adApproved').textContent = snap.size;
+    }, function() {});
+
+    var modules = ['poultry','crops','livestock','dairy','inventory','cashbook','journal','contracts','property','transport'];
+    document.getElementById('adModules').textContent = modules.length;
+
+    document.getElementById('systemStatus').innerHTML = modules.map(function(m) {
+      return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--primary-green);"></span>' + m.charAt(0).toUpperCase() + m.slice(1) + '<span style="margin-left:auto;color:var(--text-light);font-size:11px;">Active</span></div>';
+    }).join('');
+  }
+
+  var totalPendingCount = 0;
+  var pendingLoads = 0;
+  function updatePending(c) {
+    totalPendingCount += c;
+    pendingLoads++;
+    if (pendingLoads >= 7) {
+      document.getElementById('adPending').textContent = totalPendingCount;
+      document.getElementById('pendingCount').textContent = totalPendingCount;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initSidebar();
+    loadSidebarUser();
+    setTimeout(loadAdminData, 300);
+  });
+})();
+</script>
+</body>
+</html>

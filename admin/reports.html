@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Admin Reports</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <style>
+    .report-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
+    .report-card { background:var(--surface-white); border-radius:var(--radius-md); border:1px solid var(--border-light); padding:20px; cursor:pointer; transition:var(--transition); }
+    .report-card:hover { border-color:var(--primary-green); box-shadow:0 4px 12px rgba(45,122,62,0.1); }
+    .report-card .rc-icon { font-size:32px; margin-bottom:8px; }
+    .report-card .rc-title { font-weight:600; font-size:15px; }
+    .report-card .rc-desc { font-size:12px; color:var(--text-secondary); margin-top:4px; }
+    .preview-table { margin-top:24px; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand"><img src="../assets/images/3D%20Logo%20%27sam%20k%27%20with%20Nature%20tru%20one%20.png" alt="AgriLedger" class="brand-logo logo" style="height:32px;width:auto;"><span>AgriLedger</span></div>
+    <div class="sidebar-user"><div class="avatar user-avatar-text">A</div><div class="user-info"><div class="name sidebar-user-name">Admin</div><div class="role sidebar-user-role">superAdmin</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Admin Dashboard</span></a>
+      <a href="approvals.html"><span class="nav-icon">✅</span><span class="nav-text">Approvals</span></a>
+      <a href="reports.html" class="active"><span class="nav-icon">📈</span><span class="nav-text">Reports</span></a>
+      <a href="../settings.html"><span class="nav-icon">👥</span><span class="nav-text">User Management</span></a>
+    </nav>
+    <div class="sidebar-footer"><a href="../settings.html"><span>⚙️</span><span class="nav-text">Settings</span></a><a href="#" onclick="logoutUser()"><span>🚪</span><span class="nav-text">Logout</span></a></div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><button class="topbar-toggle" id="sidebar-toggle">☰</button><div class="breadcrumb"><a href="../dashboard.html">Dashboard</a><span class="sep">›</span><span>Reports</span></div></div>
+      <div class="topbar-right">
+        <button class="notification-btn" onclick="window.location.href='../notifications.html'">🔔<span class="badge badge-red" id="notifBadge">0</span></button>
+        <button class="profile-btn" onclick="window.location.href='../profile.html'"><div class="avatar user-avatar-text">A</div><span style="font-size:13px;">Admin</span></button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="page-header"><h1>Reports</h1><p style="font-size:14px;color:var(--text-secondary);">Generate and view farm reports across all modules</p></div>
+
+      <div class="report-grid">
+        <div class="report-card" onclick="window.location.href='../reports.html'">
+          <div class="rc-icon">📊</div>
+          <div class="rc-title">Full Farm Report</div>
+          <div class="rc-desc">Overview of all operations, income, expenses</div>
+        </div>
+        <div class="report-card">
+          <div class="rc-icon">🥚</div>
+          <div class="rc-title">Poultry Production</div>
+          <div class="rc-desc">Egg production, feed costs, mortality rates</div>
+        </div>
+        <div class="report-card">
+          <div class="rc-icon">💰</div>
+          <div class="rc-title">Financial Summary</div>
+          <div class="rc-desc">Cash flow, profit & loss, balance sheet</div>
+        </div>
+        <div class="report-card">
+          <div class="rc-icon">👥</div>
+          <div class="rc-title">User Activity</div>
+          <div class="rc-desc">Worker records, approval rates, module usage</div>
+        </div>
+      </div>
+
+      <div class="card preview-table">
+        <div class="card-header"><h3>Monthly Summary</h3></div>
+        <div class="card-body">
+          <table class="sheet-table">
+            <thead><tr><th>Month</th><th>Eggs Produced</th><th>Feed Cost</th><th>Sales</th><th>Net Income</th><th>Mortality %</th></tr></thead>
+            <tbody id="reportBody"><tr><td colspan="6"><div class="loading-spinner"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="../js/firebase-config.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+(function() {
+  function loadReport() {
+    var months = {};
+    var loaded = 0;
+
+    function processMonth(records, field) {
+      records.forEach(function(doc) {
+        var d = doc.date ? (doc.date.toDate ? doc.date.toDate() : new Date(doc.date)) : new Date();
+        var key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0');
+        if (!months[key]) months[key] = { label: d.toLocaleString('default',{month:'short'}) + ' ' + d.getFullYear(), eggs:0, feedCost:0, sales:0, netIncome:0, deaths:0, totalBirds:0 };
+        if (field === 'eggs') months[key].eggs += parseInt(doc.totalEggs || doc.total || 0);
+        if (field === 'feed') months[key].feedCost += parseFloat(doc.totalCost || doc.total || 0);
+        if (field === 'sales') months[key].sales += parseFloat(doc.totalRevenue || doc.total || 0);
+        if (field === 'mortality') { months[key].deaths += parseInt(doc.deaths || doc.lost || 0); months[key].totalBirds += parseInt(doc.birdsAtStart || 0); }
+      });
+    }
+
+    db.collection('poultryProduction').get().then(function(snap) {
+      processMonth(snap.docs, 'eggs');
+      loaded++;
+      if (loaded >= 4) renderReport();
+    });
+    db.collection('poultryFeedExpenses').get().then(function(snap) {
+      processMonth(snap.docs, 'feed');
+      loaded++;
+      if (loaded >= 4) renderReport();
+    });
+    db.collection('poultrySales').get().then(function(snap) {
+      processMonth(snap.docs, 'sales');
+      loaded++;
+      if (loaded >= 4) renderReport();
+    });
+    db.collection('poultryMortality').get().then(function(snap) {
+      processMonth(snap.docs, 'mortality');
+      loaded++;
+      if (loaded >= 4) renderReport();
+    });
+  }
+
+  function renderReport() {
+    var keys = Object.keys(months).sort();
+    var tbody = document.getElementById('reportBody');
+    if (keys.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">📊</div><h3>No data</h3></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = keys.slice(-12).map(function(k) {
+      var m = months[k];
+      var net = m.sales - m.feedCost;
+      var mort = m.totalBirds > 0 ? ((m.deaths / m.totalBirds) * 100).toFixed(1) : '0.0';
+      return '<tr><td>' + m.label + '</td><td>' + formatNumber(m.eggs) + '</td><td>' + formatCurrency(m.feedCost) + '</td><td>' + formatCurrency(m.sales) + '</td><td style="color:' + (net >= 0 ? 'var(--primary-green)' : 'var(--accent-red)') + ';font-weight:600;">' + formatCurrency(net) + '</td><td>' + mort + '%</td></tr>';
+    }).join('');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initSidebar();
+    loadSidebarUser();
+    setTimeout(loadReport, 300);
+  });
+})();
+</script>
+</body>
+</html>

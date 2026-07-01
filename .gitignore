@@ -4,3 +4,5 @@ js/firebase-config.js
 # Local env
 .env
 .env.local
+
+.vscode/

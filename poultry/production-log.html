@@ -30,7 +30,7 @@
 <body>
 <div class="app-layout">
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand"><span>🌱</span><span>AgriLedger</span></div>
+    <div class="sidebar-brand"><img src="../assets/images/3D%20Logo%20%27sam%20k%27%20with%20Nature%20tru%20one%20.png" alt="AgriLedger" class="brand-logo logo" style="height:32px;width:auto;"><span>AgriLedger</span></div>
     <div class="sidebar-user"><div class="avatar user-avatar-text">J</div><div class="user-info"><div class="name sidebar-user-name">User</div><div class="role sidebar-user-role">general</div></div></div>
     <nav class="sidebar-nav">
       <a href="../dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
@@ -189,12 +189,12 @@
       var a = Math.floor(160 + Math.random() * 50);
       var total = m + a;
       var flock = 500;
-      allProduction.push({ id:'pd_' + i, date:d, batchId:'d1', batchName:'Batch A - Layers', birdType:'Layers', flockSize:flock, morning:m, afternoon:a, total:total, saleable:Math.floor(total*0.97), henDay:((total/flock)*100).toFixed(1), trays:(total/30).toFixed(1), broken:Math.floor(Math.random()*5), notes:'' });
+      allProduction.push({ id:'pd_' + i, date:d, batchId:'d1', batchName:'Batch A - Layers', birdType:'Layers', flockSize:flock, morningEggs:m, afternoonEggs:a, totalEggs:total, saleableEggs:Math.floor(total*0.97), henDayPercent:((total/flock)*100).toFixed(1), trays:(total/30).toFixed(1), broken:Math.floor(Math.random()*5), notes:'' });
       var m2 = Math.floor(55 + Math.random()*25);
       var a2 = Math.floor(45 + Math.random()*25);
       var total2 = m2 + a2;
       var flock2 = 200;
-      allProduction.push({ id:'pd_k' + i, date:d, batchId:'d3', batchName:'Batch C - Kienyeji', birdType:'Kienyeji', flockSize:flock2, morning:m2, afternoon:a2, total:total2, saleable:Math.floor(total2*0.95), henDay:((total2/flock2)*100).toFixed(1), trays:(total2/30).toFixed(1), broken:Math.floor(Math.random()*3), notes:'' });
+      allProduction.push({ id:'pd_k' + i, date:d, batchId:'d3', batchName:'Batch C - Kienyeji', birdType:'Kienyeji', flockSize:flock2, morningEggs:m2, afternoonEggs:a2, totalEggs:total2, saleableEggs:Math.floor(total2*0.95), henDayPercent:((total2/flock2)*100).toFixed(1), trays:(total2/30).toFixed(1), broken:Math.floor(Math.random()*3), notes:'' });
     }
     allBroilerWeights = [
       { id:'bw1', date:new Date(2026,5,1), batchId:'d2', batchName:'Batch B - Broilers', sampleSize:20, totalWeight:38.5, avgWeight:1.93, age:3 },
@@ -274,17 +274,19 @@
     var saleable = Math.max(0, total - broken);
     var flock = parseInt(document.getElementById('prodFlockSize').value)||0;
     var b = allBatches.find(function(x) { return x.id === batchId; });
+    var user = getCurrentUser();
     var data = {
+      userId: user ? user.id : '',
       date: new Date(dateVal + 'T00:00:00'),
       batchId: batchId,
       batchName: b ? b.name : '',
       birdType: document.getElementById('prodBirdType').value,
       flockSize: flock,
-      morning: morning,
-      afternoon: afternoon,
-      total: total,
-      saleable: saleable,
-      henDay: flock > 0 ? ((total/flock)*100).toFixed(1) : '0',
+      morningEggs: morning,
+      afternoonEggs: afternoon,
+      totalEggs: total,
+      saleableEggs: saleable,
+      henDayPercent: flock > 0 ? ((total/flock)*100).toFixed(1) : '0',
       trays: (total/30).toFixed(1),
       broken: broken,
       notes: document.getElementById('prodNotes').value,
@@ -353,21 +355,21 @@
       var d = p.date ? (p.date.toDate ? p.date.toDate() : new Date(p.date)) : new Date();
       return d.getMonth() === month && d.getFullYear() === year;
     });
-    var totalEggs = monthProds.reduce(function(s, p) { return s + (parseInt(p.total)||0); }, 0);
+    var totalEggs = monthProds.reduce(function(s, p) { return s + (parseInt(p.totalEggs || p.total)||0); }, 0);
     var totalTrays = monthProds.reduce(function(s, p) { return s + (parseFloat(p.trays)||0); }, 0);
     document.getElementById('monthlyTrays').textContent = formatNumber(totalTrays, 1);
 
     var layerProds = monthProds.filter(function(p) { return (p.birdType||'').toLowerCase().includes('layer'); });
     var kienProds = monthProds.filter(function(p) { return (p.birdType||'').toLowerCase().includes('kien'); });
-    var avgL = layerProds.length ? (layerProds.reduce(function(s,p) { return s + (parseFloat(p.henDay)||0); },0) / layerProds.length) : 0;
-    var avgK = kienProds.length ? (kienProds.reduce(function(s,p) { return s + (parseFloat(p.henDay)||0); },0) / kienProds.length) : 0;
+    var avgL = layerProds.length ? (layerProds.reduce(function(s,p) { return s + (parseFloat(p.henDayPercent || p.henDay)||0); },0) / layerProds.length) : 0;
+    var avgK = kienProds.length ? (kienProds.reduce(function(s,p) { return s + (parseFloat(p.henDayPercent || p.henDay)||0); },0) / kienProds.length) : 0;
     document.getElementById('avgLayerRate').textContent = avgL.toFixed(1) + '%';
     document.getElementById('avgKienyejiRate').textContent = avgK.toFixed(1) + '%';
 
     var todayEggs = allProduction.filter(function(p) {
       var d = p.date ? (p.date.toDate ? p.date.toDate() : new Date(p.date)) : new Date();
       return d.toDateString() === todayStr;
-    }).reduce(function(s, p) { return s + (parseInt(p.total)||0); }, 0);
+    }).reduce(function(s, p) { return s + (parseInt(p.totalEggs || p.total)||0); }, 0);
     document.getElementById('todayEggs').textContent = formatNumber(todayEggs);
   }
 
@@ -391,11 +393,11 @@
         '<td>' + (p.batchName||p.batchId||'—') + '</td>' +
         '<td>' + formatNumber(p.flockSize||0) + '</td>' +
         '<td>' + (p.birdType||'—') + '</td>' +
-        '<td>' + formatNumber(p.morning||0) + '</td>' +
-        '<td>' + formatNumber(p.afternoon||0) + '</td>' +
-        '<td><strong>' + formatNumber(p.total||0) + '</strong></td>' +
-        '<td>' + formatNumber(p.saleable||0) + '</td>' +
-        '<td>' + (p.henDay||'0') + '%</td>' +
+        '<td>' + formatNumber(p.morningEggs || p.morning||0) + '</td>' +
+        '<td>' + formatNumber(p.afternoonEggs || p.afternoon||0) + '</td>' +
+        '<td><strong>' + formatNumber(p.totalEggs || p.total||0) + '</strong></td>' +
+        '<td>' + formatNumber(p.saleableEggs || p.saleable||0) + '</td>' +
+        '<td>' + (p.henDayPercent || p.henDay||'0') + '%</td>' +
         '<td>' + (p.trays||'0') + '</td>' +
         '<td>' + (p.broken||0) + '</td>' +
         '<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;">' + (p.notes||'') + '</td>' +
@@ -421,7 +423,7 @@
       allProduction.forEach(function(p) {
         var pd = p.date ? (p.date.toDate ? p.date.toDate() : new Date(p.date)) : new Date();
         if (pd.toDateString() === ds) {
-          var total = parseInt(p.total)||0;
+          var total = parseInt(p.totalEggs || p.total)||0;
           if ((p.birdType||'').toLowerCase().includes('layer')) lTotal += total;
           else if ((p.birdType||'').toLowerCase().includes('kien')) kTotal += total;
           else lTotal += total;

@@ -20,7 +20,7 @@
 <body>
 <div class="app-layout">
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand"><span>🌱</span><span>AgriLedger</span></div>
+    <div class="sidebar-brand"><img src="../assets/images/3D%20Logo%20%27sam%20k%27%20with%20Nature%20tru%20one%20.png" alt="AgriLedger" class="brand-logo logo" style="height:32px;width:auto;"><span>AgriLedger</span></div>
     <div class="sidebar-user"><div class="avatar user-avatar-text">J</div><div class="user-info"><div class="name sidebar-user-name">User</div><div class="role sidebar-user-role">general</div></div></div>
     <nav class="sidebar-nav">
       <a href="../dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
@@ -67,7 +67,11 @@
           <form id="purchaseForm" onsubmit="return saveFeedPurchase(event)">
             <div class="form-group"><label class="form-label">Date</label><input type="date" id="purchDate" class="form-input" required></div>
             <div class="form-group"><label class="form-label">Supplier</label><input type="text" id="purchSupplier" class="form-input" placeholder="Supplier name" required></div>
-            <div class="form-group"><label class="form-label">Feed Type</label><input type="text" id="purchType" class="form-input" placeholder="e.g. Layers Mash" required></div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Feed Type</label><input type="text" id="purchType" class="form-input" placeholder="e.g. Layers Mash" required></div>
+              <div class="form-group"><label class="form-label">Bird Type</label><select id="purchBirdType" class="form-select"><option value="Layers">Layers</option><option value="Broilers">Broilers</option><option value="Kienyeji">Kienyeji</option></select></div>
+            </div>
+            <div class="form-group"><label class="form-label">Batch</label><select id="purchBatch" class="form-select"><option value="">Select Batch (optional)</option></select></div>
             <div class="form-row">
               <div class="form-group"><label class="form-label">Quantity (kg)</label><input type="number" id="purchQty" class="form-input" min="0" step="0.5" oninput="calcPurchTotal()" required></div>
               <div class="form-group"><label class="form-label">Unit Price (KSh)</label><input type="number" id="purchPrice" class="form-input" min="0" step="0.5" oninput="calcPurchTotal()" required></div>
@@ -84,12 +88,20 @@
         <div class="card"><div class="card-header"><h3 style="font-size:15px;">🌾 Daily Feed Usage</h3></div><div class="card-body">
           <form id="usageForm" onsubmit="return saveFeedUsage(event)">
             <div class="form-group"><label class="form-label">Date</label><input type="date" id="useDate" class="form-input" required></div>
-            <div class="form-group"><label class="form-label">Batch</label><select id="useBatch" class="form-select" required><option value="">Select Batch</option></select></div>
-            <div class="form-group"><label class="form-label">Feed Type</label><input type="text" id="useType" class="form-input" placeholder="e.g. Layers Mash" required></div>
+            <div class="form-group"><label class="form-label">Batch</label><select id="useBatch" class="form-select" required onchange="onUseBatchChange()"><option value="">Select Batch</option></select></div>
             <div class="form-row">
-              <div class="form-group"><label class="form-label">Quantity Used (kg)</label><input type="number" id="useQty" class="form-input" min="0" step="0.5" required></div>
+              <div class="form-group"><label class="form-label">Feed Type</label><input type="text" id="useType" class="form-input" placeholder="e.g. Layers Mash" required></div>
+              <div class="form-group"><label class="form-label">Bird Type</label><input type="text" id="useBirdType" class="form-input auto-field" readonly></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Current Birds</label><input type="number" id="useBirds" class="form-input auto-field" readonly></div>
+              <div class="form-group"><label class="form-label">Quantity Used (kg)</label><input type="number" id="useQty" class="form-input" min="0" step="0.5" oninput="calcFeedConsump()" required></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Per Bird/Day (Auto)</label><input type="text" id="usePerBird" class="form-input auto-field" readonly></div>
               <div class="form-group"><label class="form-label">Cost (KSh)</label><input type="number" id="useCost" class="form-input" min="0" step="0.5"></div>
             </div>
+            <div class="form-group"><label class="form-label">FCR (Auto)</label><input type="text" id="useFCR" class="form-input auto-field" readonly placeholder="0.00"></div>
             <button type="submit" class="btn btn-primary btn-block">💾 Record Usage</button>
           </form>
         </div></div>
@@ -121,11 +133,15 @@
       allBatches = []; snap.forEach(function(d) { allBatches.push({ id: d.id, ...d.data() }); });
       populateBatchSelect();
     }, function() {});
-    db.collection('feedExpenses').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
-      allFeed = []; snap.forEach(function(d) { allFeed.push({ id: d.id, ...d.data() }); });
+    db.collection('poultryFeedExpenses').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
+      snap.forEach(function(d) { allFeed.push({ id: d.id, ...d.data(), recordType:'purchase' }); });
       if (allFeed.length === 0) loadDemo();
       renderSummary(); renderTable();
-    }, function() { loadDemo(); });
+    }, function() {});
+    db.collection('poultryFeedConsumption').orderBy('date','desc').limit(500).onSnapshot(function(snap) {
+      snap.forEach(function(d) { allFeed.push({ id: d.id, ...d.data(), recordType:'usage' }); });
+      renderSummary(); renderTable();
+    }, function() {});
     db.collection('poultryProduction').limit(500).onSnapshot(function(snap) {
       allProduction = []; snap.forEach(function(d) { allProduction.push({ id: d.id, ...d.data() }); });
     }, function() {});
@@ -150,7 +166,32 @@
     sel.innerHTML = '<option value="">Select Batch</option>' + allBatches.filter(function(b) { return b.status === 'active'; }).map(function(b) {
       return '<option value="' + b.id + '">' + (b.name||'Unnamed') + ' (' + (b.flockSize||0) + ' birds)</option>';
     }).join('');
+    var purchSel = document.getElementById('purchBatch');
+    if (purchSel) {
+      purchSel.innerHTML = '<option value="">All Batches (optional)</option>' + allBatches.filter(function(b) { return b.status === 'active'; }).map(function(b) {
+        return '<option value="' + b.id + '">' + (b.name||'Unnamed') + ' (' + (b.birdType||'') + ')</option>';
+      }).join('');
+    }
   }
+
+  window.onUseBatchChange = function() {
+    var id = document.getElementById('useBatch').value;
+    var b = allBatches.find(function(x) { return x.id === id; });
+    if (b) {
+      document.getElementById('useBirdType').value = b.birdType || '';
+      document.getElementById('useBirds').value = b.flockSize || 0;
+    } else {
+      document.getElementById('useBirdType').value = '';
+      document.getElementById('useBirds').value = '';
+    }
+    calcFeedConsump();
+  };
+
+  window.calcFeedConsump = function() {
+    var qty = parseFloat(document.getElementById('useQty').value)||0;
+    var birds = parseInt(document.getElementById('useBirds').value)||0;
+    document.getElementById('usePerBird').value = birds > 0 ? (qty / birds).toFixed(3) + ' kg' : '—';
+  };
 
   window.calcPurchTotal = function() {
     var qty = parseFloat(document.getElementById('purchQty').value)||0;
@@ -160,21 +201,24 @@
 
   window.saveFeedPurchase = function(e) {
     e.preventDefault();
+    var user = getCurrentUser();
     var qty = parseFloat(document.getElementById('purchQty').value)||0;
     var price = parseFloat(document.getElementById('purchPrice').value)||0;
     var data = {
+      userId: user ? user.id : '',
       date: new Date(document.getElementById('purchDate').value + 'T00:00:00'),
-      recordType: 'purchase',
       supplier: document.getElementById('purchSupplier').value,
       feedType: document.getElementById('purchType').value,
-      qty: qty,
-      unitPrice: price,
-      total: qty * price,
+      birdType: document.getElementById('purchBirdType').value,
+      batchId: document.getElementById('purchBatch').value || '',
+      qtyKg: qty,
+      unitCost: price,
+      totalCost: qty * price,
       payment: document.getElementById('purchPay').value,
       status: document.getElementById('purchStatus').value,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
-    db.collection('feedExpenses').add(data).then(function() {
+    db.collection('poultryFeedExpenses').add(data).then(function() {
       showToast('Purchase recorded', 'success');
       document.getElementById('purchSupplier').value = '';
       document.getElementById('purchQty').value = '';
@@ -192,20 +236,26 @@
 
   window.saveFeedUsage = function(e) {
     e.preventDefault();
+    var user = getCurrentUser();
     var batchId = document.getElementById('useBatch').value;
     if (!batchId) { showToast('Select a batch', 'error'); return false; }
     var b = allBatches.find(function(x) { return x.id === batchId; });
+    var qty = parseFloat(document.getElementById('useQty').value)||0;
+    var birds = parseInt(document.getElementById('useBirds').value)||0;
     var data = {
+      userId: user ? user.id : '',
       date: new Date(document.getElementById('useDate').value + 'T00:00:00'),
-      recordType: 'usage',
       batchId: batchId,
       batchName: b ? b.name : '',
+      birdType: b ? b.birdType : '',
       feedType: document.getElementById('useType').value,
-      qty: parseFloat(document.getElementById('useQty').value)||0,
+      amountFed: qty,
+      birds: birds,
+      perBirdPerDay: birds > 0 ? (qty / birds) : 0,
       cost: parseFloat(document.getElementById('useCost').value)||0,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
-    db.collection('feedExpenses').add(data).then(function() {
+    db.collection('poultryFeedConsumption').add(data).then(function() {
       showToast('Feed usage recorded', 'success');
       document.getElementById('useType').value = '';
       document.getElementById('useQty').value = '';
@@ -226,17 +276,17 @@
       var d = f.date ? (f.date.toDate ? f.date.toDate() : new Date(f.date)) : new Date();
       return d.getMonth() === m && d.getFullYear() === y;
     });
-    var purchased = monthFeed.filter(function(f) { return f.recordType === 'purchase'; }).reduce(function(s,f) { return s + (parseFloat(f.total)||0); }, 0);
-    var used = monthFeed.filter(function(f) { return f.recordType === 'usage'; }).reduce(function(s,f) { return s + (parseFloat(f.qty)||0); }, 0);
-    var totalPurchQty = monthFeed.filter(function(f) { return f.recordType === 'purchase'; }).reduce(function(s,f) { return s + (parseFloat(f.qty)||0); }, 0);
+    var purchased = monthFeed.filter(function(f) { return f.recordType === 'purchase'; }).reduce(function(s,f) { return s + (parseFloat(f.totalCost || f.total)||0); }, 0);
+    var used = monthFeed.filter(function(f) { return f.recordType === 'usage'; }).reduce(function(s,f) { return s + (parseFloat(f.amountFed || f.qty)||0); }, 0);
+    var totalPurchQty = monthFeed.filter(function(f) { return f.recordType === 'purchase'; }).reduce(function(s,f) { return s + (parseFloat(f.qtyKg || f.qty)||0); }, 0);
     var remaining = totalPurchQty - used;
 
     document.getElementById('sumPurchased').textContent = formatCurrency(purchased);
     document.getElementById('sumUsed').textContent = formatNumber(used, 1) + ' kg';
 
     // Estimate remaining
-    var allUsed = allFeed.filter(function(f) { return f.recordType === 'usage'; }).reduce(function(s,f) { return s + (parseFloat(f.qty)||0); }, 0);
-    var allPurchQty = allFeed.filter(function(f) { return f.recordType === 'purchase'; }).reduce(function(s,f) { return s + (parseFloat(f.qty)||0); }, 0);
+    var allUsed = allFeed.filter(function(f) { return f.recordType === 'usage'; }).reduce(function(s,f) { return s + (parseFloat(f.amountFed || f.qty)||0); }, 0);
+    var allPurchQty = allFeed.filter(function(f) { return f.recordType === 'purchase'; }).reduce(function(s,f) { return s + (parseFloat(f.qtyKg || f.qty)||0); }, 0);
     document.getElementById('sumRemaining').textContent = formatNumber(Math.max(0, allPurchQty - allUsed), 1) + ' kg';
 
     // Cost per egg
@@ -244,7 +294,7 @@
       var d = p.date ? (p.date.toDate ? p.date.toDate() : new Date(p.date)) : new Date();
       return d.getMonth() === m && d.getFullYear() === y;
     });
-    var totalEggs = monthProds.reduce(function(s,p) { return s + (parseInt(p.total)||0); }, 0);
+    var totalEggs = monthProds.reduce(function(s,p) { return s + (parseInt(p.totalEggs || p.total)||0); }, 0);
     var costPerEgg = totalEggs > 0 ? (purchased / totalEggs) : 0;
     document.getElementById('sumCostPerEgg').textContent = formatCurrency(costPerEgg);
   }
@@ -264,10 +314,11 @@
     tbody.innerHTML = sorted.map(function(f) {
       var d = f.date ? (f.date.toDate ? f.date.toDate() : new Date(f.date)) : new Date();
       if (f.recordType === 'purchase') {
-        var badgeCls = f.status === 'Paid' ? 'badge-green' : 'badge-red';
-        return '<tr><td>' + formatDate(d) + '</td><td><span class="badge badge-blue">Purchase</span></td><td>' + (f.supplier||'—') + '</td><td>' + (f.feedType||'—') + '</td><td>' + formatNumber(f.qty||0) + '</td><td>KSh ' + formatNumber(f.unitPrice||0) + '</td><td><strong>' + formatCurrency(f.total||0) + '</strong></td><td>' + (f.payment||'—') + '</td><td><span class="badge ' + badgeCls + '">' + f.status + '</span></td></tr>';
+        var st = f.status || 'Paid';
+        var badgeCls = st === 'Paid' ? 'badge-green' : 'badge-red';
+        return '<tr><td>' + formatDate(d) + '</td><td><span class="badge badge-blue">Purchase</span></td><td>' + (f.supplier||'—') + '</td><td>' + (f.feedType||'—') + '</td><td>' + formatNumber(f.qtyKg || f.qty||0) + '</td><td>KSh ' + formatNumber(f.unitCost || f.unitPrice||0) + '</td><td><strong>' + formatCurrency(f.totalCost || f.total||0) + '</strong></td><td>' + (f.payment||'—') + '</td><td><span class="badge ' + badgeCls + '">' + st + '</span></td></tr>';
       } else {
-        return '<tr><td>' + formatDate(d) + '</td><td><span class="badge badge-green">Usage</span></td><td>' + (f.batchName||'—') + '</td><td>' + (f.feedType||'—') + '</td><td>' + formatNumber(f.qty||0, 1) + '</td><td>—</td><td><strong>' + formatCurrency(f.cost||0) + '</strong></td><td>—</td><td>—</td></tr>';
+        return '<tr><td>' + formatDate(d) + '</td><td><span class="badge badge-green">Usage</span></td><td>' + (f.batchName||'—') + '</td><td>' + (f.feedType||'—') + '</td><td>' + formatNumber(f.amountFed || f.qty||0, 1) + '</td><td>—</td><td><strong>' + formatCurrency(f.cost||0) + '</strong></td><td>—</td><td>—</td></tr>';
       }
     }).join('');
   }

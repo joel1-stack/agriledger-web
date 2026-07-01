@@ -281,9 +281,23 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Role</label>
-              <div class="role-info">
-                &#128161; Your role is set to <strong>General</strong> with full access to manage farm data.
+              <label class="form-label">Account Type</label>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div class="role-option" data-role="general" onclick="selectRole(this)" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--radius-sm);border:2px solid var(--border-light);cursor:pointer;transition:var(--transition);background:#F0FBF4;border-color:var(--primary-green);">
+                  <span style="font-size:22px;">🌾</span>
+                  <div style="flex:1;"><div style="font-weight:600;font-size:14px;">General Worker</div><div style="font-size:12px;color:var(--text-secondary);">Record farm activities, manage inventory &amp; view cashbook</div></div>
+                  <span class="role-check" style="color:var(--primary-green);font-size:18px;">✓</span>
+                </div>
+                <div class="role-option" data-role="viewAdmin" onclick="selectRole(this)" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--radius-sm);border:2px solid var(--border-light);cursor:pointer;transition:var(--transition);">
+                  <span style="font-size:22px;">👁️</span>
+                  <div style="flex:1;"><div style="font-weight:600;font-size:14px;">View Admin</div><div style="font-size:12px;color:var(--text-secondary);">View reports, export data &amp; analytics dashboard</div></div>
+                  <span class="role-check" style="color:var(--primary-green);font-size:18px;display:none;">✓</span>
+                </div>
+                <div class="role-option" data-role="superAdmin" onclick="selectRole(this)" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--radius-sm);border:2px solid var(--border-light);cursor:pointer;transition:var(--transition);">
+                  <span style="font-size:22px;">🛡️</span>
+                  <div style="flex:1;"><div style="font-weight:600;font-size:14px;">Super Admin</div><div style="font-size:12px;color:var(--text-secondary);">Full access: manage users, roles &amp; all farm data</div></div>
+                  <span class="role-check" style="color:var(--primary-green);font-size:18px;display:none;">✓</span>
+                </div>
               </div>
               <input type="hidden" id="role" value="general">
             </div>
@@ -445,8 +459,9 @@
         var password = regPassword.value;
         var farm = farmName.value.trim();
         var unit = businessUnit.value;
+        var selectedRole = role.value;
 
-        var result = await registerUser(email, password, name, phoneVal, farm, unit);
+        var result = await registerUser(email, password, name, phoneVal, farm, unit, selectedRole);
 
         if (result.success) {
           showToast('Account created successfully! Welcome to AgriLedger.', 'success');
@@ -459,6 +474,19 @@
           registerBtn.innerHTML = '<span class="btn-text">Create Account</span>';
         }
       });
+
+      // ROLE SELECTION
+      function selectRole(el) {
+        document.querySelectorAll('.role-option').forEach(function(r) {
+          r.style.borderColor = 'var(--border-light)';
+          r.style.background = '';
+          r.querySelector('.role-check').style.display = 'none';
+        });
+        el.style.borderColor = 'var(--primary-green)';
+        el.style.background = '#F0FBF4';
+        el.querySelector('.role-check').style.display = 'inline';
+        document.getElementById('role').value = el.getAttribute('data-role');
+      }
 
       // ENTER KEY NAVIGATION IN STEP 1
       confirmPassword.addEventListener('keydown', function(e) {

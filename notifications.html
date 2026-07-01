@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Notifications</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <style>
+    :root { --sidebar-bg: #1B4332; }
+    .hero-notif {
+      position: relative;
+      padding: 60px 24px;
+      background: linear-gradient(135deg, #1B4332 0%, #2D7A3E 100%);
+      color: white;
+      overflow: hidden;
+      border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+      margin-bottom: 24px;
+    }
+    .hero-notif::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200') center/cover no-repeat;
+      opacity: 0.12;
+    }
+    .hero-notif .hero-content { position: relative; z-index: 1; text-align: center; }
+    .hero-notif h1 { font-size: 32px; font-weight: 800; margin-bottom: 6px; }
+    .hero-notif p { font-size: 15px; color: rgba(255,255,255,0.8); }
+    .notif-actions { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .notif-actions .count { font-size: 14px; color: var(--text-secondary); }
+    .notif-group { margin-bottom: 24px; }
+    .notif-group-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      padding: 8px 16px;
+      background: var(--bg-cream);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .notif-group-title .badge { margin-left: auto; }
+    .notif-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px 20px;
+      background: var(--surface-white);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-light);
+      margin-bottom: 8px;
+      transition: var(--transition);
+    }
+    .notif-card:hover { box-shadow: var(--shadow-sm); border-color: var(--primary-green); }
+    .notif-card .notif-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+      background: var(--primary-light);
+    }
+    .notif-card .notif-body { flex: 1; min-width: 0; }
+    .notif-card .notif-body .notif-message { font-size: 14px; color: var(--text-primary); margin-bottom: 4px; line-height: 1.4; }
+    .notif-card .notif-body .notif-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--text-light); }
+    .notif-card .notif-body .notif-meta .module-badge {
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .notif-card .notif-body .notif-meta .module-badge.poultry { background: #E3F2FD; color: #1565C0; }
+    .notif-card .notif-body .notif-meta .module-badge.crops { background: #FFF8E1; color: #F57F17; }
+    .notif-card .notif-body .notif-meta .module-badge.livestock { background: #FFEBEE; color: #C62828; }
+    .notif-card .notif-body .notif-meta .module-badge.dairy { background: #E8F5E9; color: #2E7D32; }
+    .notif-card .notif-body .notif-meta .module-badge.inventory { background: #F3E5F5; color: #7B1FA2; }
+    .notif-card .notif-body .notif-meta .module-badge.finance { background: #F3E5F5; color: #059669; }
+    .notif-card .notif-body .notif-meta .module-badge.general { background: #F3F4F6; color: #6B7280; }
+    .notif-card .notif-body .notif-meta .module-badge.cashbook { background: #E0F2F1; color: #004D40; }
+    .notif-card .notif-body .notif-meta .module-badge.transport { background: #E0F7FA; color: #006064; }
+    .notif-card .notif-body .notif-meta .module-badge.reports { background: #FFF3E0; color: #E65100; }
+    .notif-card .notif-body .notif-meta .module-badge.settings { background: #F5F5F5; color: #424242; }
+    .notif-card .notif-body .notif-meta .module-badge.contracts { background: #E0F7FA; color: #00838F; }
+    .notif-card .notif-body .notif-meta .module-badge.property { background: #EDE7F6; color: #4527A0; }
+    .notif-card .notif-time { font-size: 12px; color: var(--text-light); white-space: nowrap; flex-shrink: 0; }
+    .bottom-nav { display: none; }
+    @media (max-width: 640px) {
+      .hero-notif { padding: 40px 16px; }
+      .hero-notif h1 { font-size: 26px; }
+      .notif-card { padding: 12px 16px; }
+      .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: #1B4332; z-index: 100; padding: 4px 0; justify-content: space-around; box-shadow: 0 -2px 10px rgba(0,0,0,0.15); }
+      .bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; color: rgba(255,255,255,0.6); font-size: 10px; padding: 6px 12px; text-decoration: none; transition: var(--transition); }
+      .bottom-nav a.active, .bottom-nav a:hover { color: white; }
+      .bottom-nav a .nav-icon { font-size: 20px; }
+      body { padding-bottom: 56px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <img src="assets/images/3D%20Logo%20%27sam%20k%27%20with%20Nature%20tru%20one%20.png" alt="AgriLedger" class="brand-logo logo">
+      <span>AgriLedger</span>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar"><span class="user-avatar-text">U</span></div>
+      <div class="user-info">
+        <div class="name sidebar-user-name">Loading...</div>
+        <div class="role sidebar-user-role">general</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Main</div>
+      <a href="dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <a href="modules.html"><span class="nav-icon">📱</span><span class="nav-text">All Modules</span></a>
+      <a href="notifications.html" class="active"><span class="nav-icon">🔔</span><span class="nav-text">Notifications</span></a>
+      <div class="nav-item has-sub"><span class="nav-icon">🌾</span><span class="nav-text">Farming</span><span class="nav-arrow">▶</span></div>
+      <div class="sub-nav">
+        <a href="farming/crops.html"><span class="nav-icon">🌱</span><span class="nav-text">Crops</span></a>
+        <a href="farming/livestock.html"><span class="nav-icon">🐄</span><span class="nav-text">Livestock</span></a>
+        <a href="farming/poultry.html"><span class="nav-icon">🐔</span><span class="nav-text">Poultry</span></a>
+        <a href="farming/dairy.html"><span class="nav-icon">🥛</span><span class="nav-text">Dairy</span></a>
+      </div>
+      <div class="nav-section">Finance</div>
+      <a href="inventory.html"><span class="nav-icon">📦</span><span class="nav-text">Inventory</span></a>
+      <a href="cashbook.html"><span class="nav-icon">💰</span><span class="nav-text">Cashbook</span></a>
+      <a href="journal.html"><span class="nav-icon">📓</span><span class="nav-text">Journal</span></a>
+      <div class="nav-section">Business</div>
+      <a href="contracts.html"><span class="nav-icon">📝</span><span class="nav-text">Contracts</span></a>
+      <a href="property.html"><span class="nav-icon">🏠</span><span class="nav-text">Property</span></a>
+      <a href="transport.html"><span class="nav-icon">🚚</span><span class="nav-text">Transport</span></a>
+      <a href="reports.html"><span class="nav-icon">📊</span><span class="nav-text">Reports</span></a>
+      <div class="nav-section">Poultry</div>
+      <a href="poultry/poultry-dashboard.html"><span class="nav-icon">🐔</span><span class="nav-text">Poultry Dashboard</span></a>
+      <a href="poultry/flock-register.html"><span class="nav-icon">📋</span><span class="nav-text">Flock Register</span></a>
+      <a href="poultry/production-log.html"><span class="nav-icon">🥚</span><span class="nav-text">Production Log</span></a>
+      <a href="poultry/sales.html"><span class="nav-icon">💵</span><span class="nav-text">Sales</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="settings.html"><span class="nav-icon">⚙️</span><span class="nav-text">Settings</span></a>
+      <a href="#" onclick="event.preventDefault();logoutUser()"><span class="nav-icon">🚪</span><span class="nav-text">Logout</span></a>
+    </div>
+  </aside>
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle">☰</button>
+        <div class="breadcrumb">
+          <a href="dashboard.html">Dashboard</a><span class="sep">›</span><span>Notifications</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="profile-btn" onclick="window.location.href='settings.html'">
+          <div class="avatar"><span class="user-avatar-text">U</span></div>
+          <span class="sidebar-user-name" style="font-size:13px;font-weight:500;color:var(--text-primary);">User</span>
+        </button>
+      </div>
+    </header>
+    <div class="page-content">
+      <div class="hero-notif">
+        <div class="hero-content">
+          <h1>Notifications</h1>
+          <p>Stay updated with farm activities</p>
+        </div>
+      </div>
+      <div class="notif-actions">
+        <span class="count" id="notifCount">Loading...</span>
+        <button class="btn btn-sm btn-secondary" id="markAllRead" onclick="markAllRead()">✓ Mark All Read</button>
+      </div>
+      <div id="notifList"><div class="loading-spinner"></div></div>
+    </div>
+  </main>
+  <nav class="bottom-nav">
+    <a href="dashboard.html"><span class="nav-icon">📊</span>Home</a>
+    <a href="modules.html"><span class="nav-icon">📱</span>Modules</a>
+    <a href="cashbook.html"><span class="nav-icon">💰</span>Cashbook</a>
+    <a href="notifications.html" class="active"><span class="nav-icon">🔔</span>Alerts</a>
+    <a href="settings.html"><span class="nav-icon">⚙️</span>More</a>
+  </nav>
+</div>
+<div id="toast-container"></div>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script>
+(function() {
+  var allNotifs = [];
+  var unsubscribers = [];
+
+  function timeAgo(date) {
+    if (!date) return '';
+    if (typeof date === 'string') date = new Date(date);
+    if (date.toDate) date = date.toDate();
+    var now = new Date();
+    var diffMs = now - date;
+    var diffSec = Math.floor(diffMs / 1000);
+    var diffMin = Math.floor(diffSec / 60);
+    var diffHr = Math.floor(diffMin / 60);
+    var diffDays = Math.floor(diffHr / 24);
+    if (diffSec < 60) return 'Just now';
+    if (diffMin < 60) return diffMin + 'm ago';
+    if (diffHr < 24) return diffHr + 'h ago';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return diffDays + 'd ago';
+    return formatDate(date);
+  }
+
+  function getDateGroup(date) {
+    if (!date) return 'Older';
+    if (typeof date === 'string') date = new Date(date);
+    if (date.toDate) date = date.toDate();
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+    var d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    if (d.getTime() === today.getTime()) return 'Today';
+    if (d.getTime() === yesterday.getTime()) return 'Yesterday';
+    return 'Older';
+  }
+
+  function getModuleBadge(module) {
+    var m = (module || 'general').toLowerCase();
+    var labels = {
+      poultry: 'Poultry', crops: 'Crops', livestock: 'Livestock', dairy: 'Dairy',
+      inventory: 'Inventory', cashbook: 'Cashbook', journal: 'Journal',
+      contracts: 'Contracts', property: 'Property', transport: 'Transport',
+      reports: 'Reports', settings: 'Settings', finance: 'Finance', general: 'General'
+    };
+    return '<span class="module-badge ' + m + '">' + (labels[m] || m.charAt(0).toUpperCase() + m.slice(1)) + '</span>';
+  }
+
+  function getNotifIcon(notif) {
+    var icons = {
+      poultry: '🐔', crops: '🌾', livestock: '🐄', dairy: '🥛',
+      inventory: '📦', cashbook: '💰', journal: '📓',
+      contracts: '📝', property: '🏠', transport: '🚚',
+      reports: '📊', settings: '⚙️', finance: '💵',
+      alert: '⚠️', approval: '⏳', task: '📋', harvest: '🌾',
+      production: '🥚', sales: '💵', health: '💊', feed: '🌽'
+    };
+    return icons[notif.type] || icons[notif.module] || '📌';
+  }
+
+  function renderNotifs() {
+    var container = document.getElementById('notifList');
+    var countEl = document.getElementById('notifCount');
+    if (!container) return;
+    if (allNotifs.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="icon">✅</div><h3>All caught up!</h3><p>No new notifications.</p></div>';
+      countEl.textContent = '0 notifications';
+      return;
+    }
+    var grouped = {};
+    allNotifs.forEach(function(n) {
+      var d = n.date ? (n.date.toDate ? n.date.toDate() : new Date(n.date)) : new Date();
+      var g = getDateGroup(d);
+      if (!grouped[g]) grouped[g] = [];
+      grouped[g].push(n);
+    });
+    var order = ['Today', 'Yesterday', 'Older'];
+    var html = '';
+    order.forEach(function(g) {
+      if (!grouped[g] || grouped[g].length === 0) return;
+      html += '<div class="notif-group">';
+      html += '<div class="notif-group-title">' + g + ' <span class="badge badge-green">' + grouped[g].length + '</span></div>';
+      grouped[g].forEach(function(n) {
+        var d = n.date ? (n.date.toDate ? n.date.toDate() : new Date(n.date)) : new Date();
+        html += '<div class="notif-card">' +
+          '<div class="notif-icon">' + getNotifIcon(n) + '</div>' +
+          '<div class="notif-body">' +
+            '<div class="notif-message">' + (n.message || n.description || n.name || 'Notification') + '</div>' +
+            '<div class="notif-meta">' + getModuleBadge(n.module || n.collection) + '</div>' +
+          '</div>' +
+          '<div class="notif-time">' + timeAgo(d) + '</div>' +
+        '</div>';
+      });
+      html += '</div>';
+    });
+    container.innerHTML = html;
+    countEl.textContent = allNotifs.length + ' notification' + (allNotifs.length !== 1 ? 's' : '');
+  }
+
+  function addNotifications(list, collectionName) {
+    list.forEach(function(doc) {
+      var data = doc.data();
+      data.id = doc.id;
+      data.collection = collectionName;
+      if (data.date && typeof data.date === 'object' && data.date.toDate) data._date = data.date.toDate();
+      allNotifs.push(data);
+    });
+  }
+
+  function loadNotifs() {
+    if (typeof db === 'undefined' || !db) {
+      document.getElementById('notifList').innerHTML = '<div class="empty-state"><div style="font-size:48px;margin-bottom:12px;">📡</div><h3>Connecting...</h3><p>Waiting for database connection.</p></div>';
+      return;
+    }
+    allNotifs = [];
+    var loaded = 0;
+    var totalCollections = 0;
+    var collections = [];
+
+    function checkDone() {
+      loaded++;
+      if (loaded >= totalCollections) {
+        allNotifs.sort(function(a, b) {
+          var da = a.date ? (a.date.toDate ? a.date.toDate() : new Date(a.date)) : new Date(0);
+          var db = b.date ? (b.date.toDate ? b.date.toDate() : new Date(b.date)) : new Date(0);
+          return db - da;
+        });
+        renderNotifs();
+      }
+    }
+
+    var dailyRecords = db.collection('daily_records').where('status', '==', 'pending');
+    collections.push({ query: dailyRecords, name: 'daily_records' });
+
+    var poultryPending = db.collection('poultryLayers').where('approval', '==', 'pending');
+    collections.push({ query: poultryPending, name: 'poultry' });
+
+    var flockPending = db.collection('flock').where('approval', '==', 'pending');
+    collections.push({ query: flockPending, name: 'poultry' });
+
+    var productionPending = db.collection('production').where('approval', '==', 'pending');
+    collections.push({ query: productionPending, name: 'poultry' });
+
+    totalCollections = collections.length;
+    collections.forEach(function(c) {
+      var unsub = c.query.onSnapshot(function(snap) {
+        addNotifications(snap.docs, c.name);
+        checkDone();
+      }, function() {
+        checkDone();
+      });
+      unsubscribers.push(unsub);
+    });
+  }
+
+  window.markAllRead = function() {
+    if (allNotifs.length === 0) {
+      showToast('No notifications to mark', 'info');
+      return;
+    }
+    var batch = db.batch();
+    var count = 0;
+    allNotifs.forEach(function(n) {
+      if (n.collection === 'daily_records' && n.id) {
+        batch.update(db.collection('daily_records').doc(n.id), { status: 'read', readAt: firebase.firestore.FieldValue.serverTimestamp() });
+        count++;
+      }
+    });
+    if (count > 0) {
+      batch.commit().then(function() {
+        showToast(count + ' notification' + (count !== 1 ? 's' : '') + ' marked as read', 'success');
+      }).catch(function(err) {
+        showToast('Error: ' + err.message, 'error');
+      });
+    } else {
+      showToast('No markable notifications', 'info');
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    loadNotifs();
+  });
+})();
+</script>
+</body>
+</html>

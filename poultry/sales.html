@@ -21,7 +21,7 @@
 <body>
 <div class="app-layout">
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand"><span>🌱</span><span>AgriLedger</span></div>
+    <div class="sidebar-brand"><img src="../assets/images/3D%20Logo%20%27sam%20k%27%20with%20Nature%20tru%20one%20.png" alt="AgriLedger" class="brand-logo logo" style="height:32px;width:auto;"><span>AgriLedger</span></div>
     <div class="sidebar-user"><div class="avatar user-avatar-text">J</div><div class="user-info"><div class="name sidebar-user-name">User</div><div class="role sidebar-user-role">general</div></div></div>
     <nav class="sidebar-nav">
       <a href="../dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
@@ -198,11 +198,11 @@
 
   function loadDemo() {
     allSales = [
-      { id:'s1', date:new Date(2026,5,5), type:'Egg Sales', buyer:'Nairobi Traders', batchName:'Batch A', qty:20, unitPrice:450, total:9000, payment:'Cash', status:'Paid' },
-      { id:'s2', date:new Date(2026,5,8), type:'Egg Sales', buyer:'Green Market', batchName:'Batch C', qty:15, unitPrice:600, total:9000, payment:'M-Pesa', status:'Paid' },
-      { id:'s3', date:new Date(2026,5,12), type:'Bird Sales', buyer:'Farmers Choice', batchName:'Batch B', qty:50, unitPrice:350, total:17500, payment:'Bank Transfer', status:'Paid' },
-      { id:'s4', date:new Date(2026,5,15), type:'Egg Sales', buyer:'Local Shop', batchName:'Batch A', qty:30, unitPrice:450, total:13500, payment:'Credit', status:'Outstanding' },
-      { id:'s5', date:new Date(2026,5,20), type:'Chicks', buyer:'Joel Kimani', batchName:'—', qty:100, unitPrice:150, total:15000, payment:'Cash', status:'Paid' }
+      { id:'s1', date:new Date(2026,5,5), saleType:'Egg Sales', buyer:'Nairobi Traders', batchName:'Batch A', quantity:20, unitPrice:450, totalRevenue:9000, payment:'Cash', paymentStatus:'Paid' },
+      { id:'s2', date:new Date(2026,5,8), saleType:'Egg Sales', buyer:'Green Market', batchName:'Batch C', quantity:15, unitPrice:600, totalRevenue:9000, payment:'M-Pesa', paymentStatus:'Paid' },
+      { id:'s3', date:new Date(2026,5,12), saleType:'Bird Sales', buyer:'Farmers Choice', batchName:'Batch B', quantity:50, unitPrice:350, totalRevenue:17500, payment:'Bank Transfer', paymentStatus:'Paid' },
+      { id:'s4', date:new Date(2026,5,15), saleType:'Egg Sales', buyer:'Local Shop', batchName:'Batch A', quantity:30, unitPrice:450, totalRevenue:13500, payment:'Credit', paymentStatus:'Outstanding' },
+      { id:'s5', date:new Date(2026,5,20), saleType:'Chicks', buyer:'Joel Kimani', batchName:'—', quantity:100, unitPrice:150, totalRevenue:15000, payment:'Cash', paymentStatus:'Paid' }
     ];
     renderSummary(); renderTable();
   }
@@ -225,6 +225,7 @@
 
   window.saveSale = function(e, type) {
     e.preventDefault();
+    var user = getCurrentUser();
     var prefix = type === 'Egg Sales' ? 'egg' : type === 'Bird Sales' ? 'bird' : type === 'Chicks' ? 'chick' : 'other';
     var dateVal = document.getElementById(prefix + 'Date').value;
     var buyer = document.getElementById(prefix + 'Buyer').value;
@@ -232,22 +233,25 @@
     var price = parseFloat(document.getElementById(prefix + 'Price')?.value) || 0;
     var amount = parseFloat(document.getElementById(prefix + 'Amount')?.value) || (qty * price);
     var batchSel = document.getElementById(prefix + 'Batch');
+    var batchId = batchSel ? batchSel.value : '';
     var batchName = batchSel ? (batchSel.options[batchSel.selectedIndex]?.text || '—') : '—';
     var payMethod = document.getElementById(prefix + 'PayMethod')?.value || 'Cash';
     var paid = document.getElementById(prefix + 'Paid')?.value || 'Paid';
-    var paidAmt = parseFloat(document.getElementById(prefix + 'PaidAmount')?.value) || amount;
+    var birdType = prefix === 'egg' ? (document.getElementById('eggType')?.value || '') : '';
 
     var data = {
+      userId: user ? user.id : '',
       date: new Date(dateVal + 'T00:00:00'),
-      type: type,
+      saleType: type,
       buyer: buyer,
+      batchId: batchId,
       batchName: batchName,
-      qty: qty,
+      birdType: birdType,
+      quantity: qty,
       unitPrice: price,
-      total: amount,
+      totalRevenue: amount,
       payment: payMethod,
-      status: paid,
-      paidAmount: paidAmt,
+      paymentStatus: paid,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
@@ -274,10 +278,10 @@
       var d = s.date ? (s.date.toDate ? s.date.toDate() : new Date(s.date)) : new Date();
       return d.getMonth() === m && d.getFullYear() === y;
     });
-    var total = monthSales.reduce(function(sum, s) { return sum + (parseFloat(s.total)||0); }, 0);
-    var eggs = monthSales.filter(function(s) { return s.type === 'Egg Sales'; }).reduce(function(sum,s) { return sum + (parseFloat(s.total)||0); }, 0);
-    var birds = monthSales.filter(function(s) { return s.type === 'Bird Sales'; }).reduce(function(sum,s) { return sum + (parseFloat(s.total)||0); }, 0);
-    var outstanding = monthSales.filter(function(s) { return s.status === 'Outstanding' || s.status === 'Partial'; }).reduce(function(sum,s) { return sum + (parseFloat(s.total)||0) - (parseFloat(s.paidAmount)||0); }, 0);
+    var total = monthSales.reduce(function(sum, s) { return sum + (parseFloat(s.totalRevenue)||parseFloat(s.total)||0); }, 0);
+    var eggs = monthSales.filter(function(s) { return (s.saleType || s.type) === 'Egg Sales'; }).reduce(function(sum,s) { return sum + (parseFloat(s.totalRevenue)||parseFloat(s.total)||0); }, 0);
+    var birds = monthSales.filter(function(s) { return (s.saleType || s.type) === 'Bird Sales'; }).reduce(function(sum,s) { return sum + (parseFloat(s.totalRevenue)||parseFloat(s.total)||0); }, 0);
+    var outstanding = monthSales.filter(function(s) { return (s.paymentStatus || s.status) === 'Outstanding' || (s.paymentStatus || s.status) === 'Partial'; }).reduce(function(sum,s) { return sum + (parseFloat(s.totalRevenue)||parseFloat(s.total)||0) - (parseFloat(s.paidAmount)||0); }, 0);
 
     document.getElementById('monthTotal').textContent = formatCurrency(total);
     document.getElementById('eggTotal').textContent = formatCurrency(eggs);
@@ -299,8 +303,8 @@
     });
     tbody.innerHTML = sorted.map(function(s) {
       var d = s.date ? (s.date.toDate ? s.date.toDate() : new Date(s.date)) : new Date();
-      var badgeCls = s.status === 'Paid' ? 'badge-green' : s.status === 'Partial' ? 'badge-gold' : 'badge-red';
-      return '<tr><td>' + formatDate(d) + '</td><td>' + (s.type||'—') + '</td><td>' + (s.buyer||'—') + '</td><td>' + (s.batchName||'—') + '</td><td>' + (s.qty||'—') + '</td><td>' + (s.unitPrice ? 'KSh '+formatNumber(s.unitPrice) : '—') + '</td><td><strong>' + formatCurrency(s.total||0) + '</strong></td><td>' + (s.payment||'—') + '</td><td><span class="badge ' + badgeCls + '">' + s.status + '</span></td></tr>';
+      var st = s.paymentStatus || s.status; var badgeCls = st === 'Paid' ? 'badge-green' : st === 'Partial' ? 'badge-gold' : 'badge-red';
+      return '<tr><td>' + formatDate(d) + '</td><td>' + (s.saleType || s.type || '—') + '</td><td>' + (s.buyer||'—') + '</td><td>' + (s.batchName||'—') + '</td><td>' + (s.quantity || s.qty || '—') + '</td><td>' + (s.unitPrice ? 'KSh '+formatNumber(s.unitPrice) : '—') + '</td><td><strong>' + formatCurrency(s.totalRevenue || s.total || 0) + '</strong></td><td>' + (s.payment||'—') + '</td><td><span class="badge ' + badgeCls + '">' + st + '</span></td></tr>';
     }).join('');
   }
 

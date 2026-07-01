@@ -20,7 +20,7 @@
 <body>
 <div class="app-layout">
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand"><span>🌱</span><span>AgriLedger</span></div>
+    <div class="sidebar-brand"><img src="../assets/images/3D%20Logo%20%27sam%20k%27%20with%20Nature%20tru%20one%20.png" alt="AgriLedger" class="brand-logo logo" style="height:32px;width:auto;"><span>AgriLedger</span></div>
     <div class="sidebar-user"><div class="avatar user-avatar-text">J</div><div class="user-info"><div class="name sidebar-user-name">User</div><div class="role sidebar-user-role">general</div></div></div>
     <nav class="sidebar-nav">
       <a href="../dashboard.html"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
@@ -141,7 +141,7 @@
     for (var i = 29; i >= 0; i--) {
       var d = new Date(now); d.setDate(d.getDate() - i);
       var causes = ['Disease','Injury','Unknown','Old Age','Predator'];
-      allMort.push({ id:'m'+i, date:d, batchId:'d1', batchName:'Batch A - Layers', lost:Math.floor(Math.random()*3)+1, cause:causes[Math.floor(Math.random()*causes.length)], notes:'' });
+      allMort.push({ id:'m'+i, date:d, batchId:'d1', batchName:'Batch A - Layers', deaths:Math.floor(Math.random()*3)+1, causeOfDeath:causes[Math.floor(Math.random()*causes.length)], actionTaken:'' });
     }
     renderSummary(); renderTable(); drawChart();
   }
@@ -157,14 +157,20 @@
     e.preventDefault();
     var batchId = document.getElementById('mortBatch').value;
     if (!batchId) { showToast('Select a batch', 'error'); return false; }
+    var user = getCurrentUser();
     var b = allBatches.find(function(x) { return x.id === batchId; });
+    var deaths = parseInt(document.getElementById('mortLost').value)||0;
+    var birdsAtStart = b ? parseInt(b.flockSize)||0 : 0;
     var data = {
+      userId: user ? user.id : '',
       date: new Date(document.getElementById('mortDate').value + 'T00:00:00'),
       batchId: batchId,
       batchName: b ? b.name : '',
-      lost: parseInt(document.getElementById('mortLost').value)||0,
-      cause: document.getElementById('mortCause').value,
-      notes: document.getElementById('mortNotes').value,
+      birdType: b ? b.birdType : '',
+      birdsAtStart: birdsAtStart,
+      deaths: deaths,
+      causeOfDeath: document.getElementById('mortCause').value,
+      actionTaken: document.getElementById('mortNotes').value,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     db.collection('poultryMortality').add(data).then(function() {
@@ -193,8 +199,8 @@
       var d = r.date ? (r.date.toDate ? r.date.toDate() : new Date(r.date)) : new Date();
       return d.getMonth() === lm && d.getFullYear() === ly;
     });
-    var count = thisMonth.reduce(function(s,r) { return s + (parseInt(r.lost)||0); }, 0);
-    var lastCount = lastMonth.reduce(function(s,r) { return s + (parseInt(r.lost)||0); }, 0);
+    var count = thisMonth.reduce(function(s,r) { return s + (parseInt(r.deaths)||parseInt(r.lost)||0); }, 0);
+    var lastCount = lastMonth.reduce(function(s,r) { return s + (parseInt(r.deaths)||parseInt(r.lost)||0); }, 0);
     document.getElementById('mortCount').textContent = count;
     document.getElementById('mortVsLast').textContent = (count - lastCount) > 0 ? '+' + (count - lastCount) : (count - lastCount);
 
@@ -205,7 +211,7 @@
 
     // Top cause
     var causes = {};
-    thisMonth.forEach(function(r) { causes[r.cause] = (causes[r.cause]||0) + (parseInt(r.lost)||0); });
+    thisMonth.forEach(function(r) { var c = r.causeOfDeath || r.cause; causes[c] = (causes[c]||0) + (parseInt(r.deaths)||parseInt(r.lost)||0); });
     var topCause = Object.keys(causes).sort(function(a,b) { return causes[b] - causes[a]; })[0] || '—';
     document.getElementById('mortTopCause').textContent = topCause;
   }
@@ -224,8 +230,8 @@
     });
     tbody.innerHTML = sorted.map(function(r) {
       var d = r.date ? (r.date.toDate ? r.date.toDate() : new Date(r.date)) : new Date();
-      var causeBadge = r.cause === 'Disease' ? 'badge-red' : r.cause === 'Predator' ? 'badge-gold' : 'badge-gray';
-      return '<tr><td>' + formatDate(d) + '</td><td>' + (r.batchName||'—') + '</td><td><strong style="color:var(--accent-red);">' + (r.lost||0) + '</strong></td><td><span class="badge ' + causeBadge + '">' + (r.cause||'—') + '</span></td><td>' + (r.notes||'') + '</td></tr>';
+      var cause = r.causeOfDeath || r.cause; var causeBadge = cause === 'Disease' ? 'badge-red' : cause === 'Predator' ? 'badge-gold' : 'badge-gray';
+      return '<tr><td>' + formatDate(d) + '</td><td>' + (r.batchName||'—') + '</td><td><strong style="color:var(--accent-red);">' + (r.deaths || r.lost || 0) + '</strong></td><td><span class="badge ' + causeBadge + '">' + cause + '</span></td><td>' + (r.actionTaken || r.notes || '') + '</td></tr>';
     }).join('');
   }
 
@@ -246,7 +252,7 @@
       var total = 0;
       allMort.forEach(function(r) {
         var rd = r.date ? (r.date.toDate ? r.date.toDate() : new Date(r.date)) : new Date();
-        if (rd.toDateString() === ds) total += (parseInt(r.lost)||0);
+        if (rd.toDateString() === ds) total += (parseInt(r.deaths)||parseInt(r.lost)||0);
       });
       data.push(total);
     }

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLedger - Worker Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <style>
+    :root { --sidebar-bg: #1B4332; }
+    .hero-dash {
+      position: relative;
+      padding: 60px 24px;
+      background: linear-gradient(135deg, #1B4332 0%, #2D7A3E 100%);
+      color: white;
+      overflow: hidden;
+      border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+      margin-bottom: 24px;
+    }
+    .hero-dash::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200') center/cover no-repeat;
+      opacity: 0.15;
+    }
+    .hero-dash .hero-content { position: relative; z-index: 1; text-align: center; }
+    .hero-dash h1 { font-size: 32px; font-weight: 800; margin-bottom: 6px; }
+    .hero-dash p { font-size: 15px; color: rgba(255,255,255,0.8); }
+    .kpi-card { position: relative; overflow: hidden; padding: 20px; border-radius: var(--radius-md); border-left: 4px solid var(--primary-green); min-height: 130px; display: flex; flex-direction: column; justify-content: space-between; }
+    .kpi-card .kpi-bg { position: absolute; inset: 0; opacity: 0.08; object-fit: cover; width: 100%; height: 100%; pointer-events: none; }
+    .kpi-card .kpi-label { font-size: 13px; color: var(--text-secondary); position: relative; z-index: 1; }
+    .kpi-card .kpi-value { font-size: 28px; font-weight: 700; color: var(--text-primary); position: relative; z-index: 1; }
+    .kpi-card .kpi-sub { font-size: 12px; color: var(--text-light); position: relative; z-index: 1; }
+    .quick-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+    .quick-actions .btn { flex: 1; min-width: 140px; padding: 14px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600; }
+    .section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border-light); transition: background 0.2s; }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-item:hover { background: var(--bg-cream); margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 8px; }
+    .activity-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+    .activity-dot.production { background: #3B82F6; box-shadow: 0 0 6px rgba(59,130,246,0.4); }
+    .activity-dot.feed { background: #F59E0B; box-shadow: 0 0 6px rgba(245,158,11,0.4); }
+    .activity-dot.mortality { background: #EF4444; box-shadow: 0 0 6px rgba(239,68,68,0.4); }
+    .activity-dot.health { background: #10B981; box-shadow: 0 0 6px rgba(16,185,129,0.4); }
+    .activity-dot.sales { background: #8B5CF6; box-shadow: 0 0 6px rgba(139,92,246,0.4); }
+    .activity-dot.expense { background: #F59E0B; box-shadow: 0 0 6px rgba(245,158,11,0.4); }
+    .activity-content { flex: 1; min-width: 0; }
+    .activity-content .title { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+    .activity-content .meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .batch-card { display: flex; align-items: center; gap: 14px; padding: 16px; background: var(--surface-white); border-radius: var(--radius-md); border: 1px solid var(--border-light); margin-bottom: 10px; transition: var(--transition); }
+    .batch-card:hover { border-color: var(--primary-green); box-shadow: var(--shadow-sm); }
+    .batch-card .batch-icon { width: 44px; height: 44px; border-radius: 10px; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+    .batch-card .batch-info { flex: 1; }
+    .batch-card .batch-info .batch-name { font-size: 15px; font-weight: 600; }
+    .batch-card .batch-info .batch-meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .batch-card .batch-status { font-size: 12px; }
+    .bottom-nav { display: none; }
+    @media (max-width: 640px) {
+      .hero-dash { padding: 40px 16px; }
+      .hero-dash h1 { font-size: 26px; }
+      .quick-actions .btn { min-width: 100%; }
+      .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: #1B4332; z-index: 100; padding: 4px 0; justify-content: space-around; box-shadow: 0 -2px 10px rgba(0,0,0,0.15); }
+      .bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; color: rgba(255,255,255,0.6); font-size: 10px; padding: 6px 12px; text-decoration: none; transition: var(--transition); }
+      .bottom-nav a.active, .bottom-nav a:hover { color: white; }
+      .bottom-nav a .nav-icon { font-size: 20px; }
+      body { padding-bottom: 56px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout" id="toast-container">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <img src="../assets/images/3D%20Logo%20%27sam%20k%27%20with%20Nature%20tru%20one%20.png" alt="AgriLedger" class="brand-logo logo">
+      <span>AgriLedger</span>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar"><span class="user-avatar-text">U</span></div>
+      <div class="user-info">
+        <div class="name sidebar-user-name">Loading...</div>
+        <div class="role sidebar-user-role">general</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Main</div>
+      <a href="dashboard.html" class="active"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+      <a href="modules.html"><span class="nav-icon">📱</span><span class="nav-text">All Modules</span></a>
+      <a href="../poultry/flock-register.html"><span class="nav-icon">📋</span><span class="nav-text">My Batches</span></a>
+      <a href="../profile.html"><span class="nav-icon">👤</span><span class="nav-text">Profile</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="../settings.html"><span class="nav-icon">⚙️</span><span class="nav-text">Settings</span></a>
+      <a href="#" onclick="event.preventDefault();logoutUser()"><span class="nav-icon">🚪</span><span class="nav-text">Logout</span></a>
+    </div>
+  </aside>
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle">☰</button>
+        <div class="breadcrumb"><a href="dashboard.html">Dashboard</a><span class="sep">›</span><span>My Farm</span></div>
+      </div>
+      <div class="topbar-right">
+        <button class="notification-btn" onclick="window.location.href='../notifications.html'">🔔<span class="badge badge-red" id="notifBadge" style="display:none;">0</span></button>
+        <button class="profile-btn" onclick="window.location.href='../profile.html'"><div class="avatar"><span class="user-avatar-text">U</span></div><span class="sidebar-user-name" style="font-size:13px;font-weight:500;color:var(--text-primary);">User</span></button>
+      </div>
+    </header>
+    <div class="page-content">
+      <div class="hero-dash">
+        <div class="hero-content">
+          <h1>My Farm Dashboard</h1>
+          <p id="currentDate">Loading...</p>
+        </div>
+      </div>
+      <div class="kpi-strip" id="kpiStrip">
+        <div class="card kpi-card stagger-card">
+          <img class="kpi-bg" src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200" alt="" loading="lazy">
+          <div class="kpi-label">Records Today</div>
+          <div class="kpi-value" id="kpiRecordsToday">0</div>
+          <div class="kpi-sub">records submitted today</div>
+        </div>
+        <div class="card kpi-card stagger-card" style="border-left-color:var(--accent-gold);">
+          <img class="kpi-bg" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200" alt="" loading="lazy">
+          <div class="kpi-label">Pending Approval</div>
+          <div class="kpi-value" id="kpiPending">0</div>
+          <div class="kpi-sub">awaiting review</div>
+        </div>
+        <div class="card kpi-card stagger-card" style="border-left-color:var(--accent-teal);">
+          <img class="kpi-bg" src="https://images.unsplash.com/photo-1553729459-afe8f2e0e95e?w=200" alt="" loading="lazy">
+          <div class="kpi-label">Approved</div>
+          <div class="kpi-value" id="kpiApproved">0</div>
+          <div class="kpi-sub">approved records</div>
+        </div>
+        <div class="card kpi-card stagger-card" style="border-left-color:var(--accent-blue);">
+          <img class="kpi-bg" src="https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?w=200" alt="" loading="lazy">
+          <div class="kpi-label">My Batches</div>
+          <div class="kpi-value" id="kpiBatches">0</div>
+          <div class="kpi-sub">active batches</div>
+        </div>
+      </div>
+      <div class="quick-actions">
+        <button class="btn btn-primary" onclick="showToast('Record Production - Coming soon', 'info')">🥚 Record Production</button>
+        <button class="btn btn-danger" onclick="showToast('Add Expense - Coming soon', 'info')">💰 Add Expense</button>
+        <button class="btn btn-secondary" style="background:var(--accent-gold);color:white;" onclick="showToast('Log Mortality - Coming soon', 'info')">⚠️ Log Mortality</button>
+      </div>
+      <div class="grid grid-2" style="margin-bottom:24px;">
+        <div class="card">
+          <div class="card-header"><h3>Recent Activity</h3><a href="history.html" style="font-size:13px;color:var(--primary-green);font-weight:500;">View All</a></div>
+          <div class="card-body" id="recentActivity"><div class="loading-spinner"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>My Active Batches</h3><a href="../poultry/flock-register.html" style="font-size:13px;color:var(--primary-green);font-weight:500;">Manage</a></div>
+          <div class="card-body" id="activeBatches"><div class="loading-spinner"></div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <nav class="bottom-nav">
+    <a href="dashboard.html" class="active"><span class="nav-icon">📊</span>Home</a>
+    <a href="history.html"><span class="nav-icon">📋</span>History</a>
+    <a href="../poultry/flock-register.html"><span class="nav-icon">🐔</span>Batches</a>
+    <a href="../profile.html"><span class="nav-icon">👤</span>Profile</a>
+    <a href="../settings.html"><span class="nav-icon">⚙️</span>More</a>
+  </nav>
+</div>
+<div id="toast-container"></div>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="../js/firebase-config.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script>
+(function() {
+  var COLLECTIONS = ['poultryProduction', 'poultryFeedExpenses', 'poultryFeedConsumption', 'poultryMortality', 'poultryVetHealth', 'poultrySales'];
+  var unsubs = [];
+
+  function updateDate() {
+    var el = document.getElementById('currentDate');
+    if (el) {
+      var now = new Date();
+      el.textContent = now.toLocaleDateString('en-KE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+  }
+
+  function getUser() {
+    var user = getCurrentUser();
+    if (!user) { window.location.href = '../login.html'; return null; }
+    return user;
+  }
+
+  function getModuleName(col) {
+    var names = {
+      poultryProduction: 'Production',
+      poultryFeedExpenses: 'Feed Expense',
+      poultryFeedConsumption: 'Feed Consumption',
+      poultryMortality: 'Mortality',
+      poultryVetHealth: 'Vet Health',
+      poultrySales: 'Sales'
+    };
+    return names[col] || col;
+  }
+
+  function getActivityDotClass(col) {
+    var map = {
+      poultryProduction: 'production',
+      poultryFeedExpenses: 'feed',
+      poultryFeedConsumption: 'feed',
+      poultryMortality: 'mortality',
+      poultryVetHealth: 'health',
+      poultrySales: 'sales'
+    };
+    return map[col] || 'production';
+  }
+
+  function getActivityDetail(data, col) {
+    if (col === 'poultryProduction') return (data.morningEggs !== undefined ? 'Eggs: ' + (data.morningEggs + (data.afternoonEggs || 0)) : 'Production record');
+    if (col === 'poultryFeedExpenses') return data.feedType || data.description || 'Feed expense';
+    if (col === 'poultryFeedConsumption') return data.feedType || data.description || 'Feed consumption';
+    if (col === 'poultryMortality') return (data.cause || 'Mortality') + (data.count ? ' (' + data.count + ')' : '');
+    if (col === 'poultryVetHealth') return data.treatment || data.description || 'Vet visit';
+    if (col === 'poultrySales') return data.saleType || data.description || 'Sale';
+    return 'Record';
+  }
+
+  function loadKPIs(user) {
+    var todayStart = new Date(); todayStart.setHours(0,0,0,0);
+    var recordsToday = 0;
+    var pendingCount = 0;
+    var approvedCount = 0;
+
+    COLLECTIONS.forEach(function(col) {
+      var q = db.collection(col).where('userId', '==', user.id);
+      var unsub = q.onSnapshot(function(snap) {
+        snap.docChanges().forEach(function(change) {
+          var data = change.doc.data();
+          var created = data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt)) : new Date();
+          if (created >= todayStart) recordsToday++;
+          var status = data.status || data.approval || 'pending';
+          if (status === 'pending') pendingCount++;
+          if (status === 'approved') approvedCount++;
+        });
+        document.getElementById('kpiRecordsToday').textContent = recordsToday;
+        document.getElementById('kpiPending').textContent = pendingCount;
+        document.getElementById('kpiApproved').textContent = approvedCount;
+      }, function(err) { console.error('KPI query error:', col, err); });
+      unsubs.push(unsub);
+    });
+
+    db.collection('poultryBatches').where('userId', '==', user.id).where('status', '==', 'active').onSnapshot(function(snap) {
+      document.getElementById('kpiBatches').textContent = snap.size || 0;
+    }, function(err) { console.error('Batch count error:', err); });
+  }
+
+  function loadRecentActivity(user) {
+    var allActivities = [];
+    var loaded = 0;
+
+    COLLECTIONS.forEach(function(col) {
+      var unsub = db.collection(col).where('userId', '==', user.id).orderBy('createdAt', 'desc').limit(10).onSnapshot(function(snap) {
+        allActivities = allActivities.filter(function(a) { return a.collection !== col; });
+        snap.forEach(function(d) {
+          var data = d.data();
+          allActivities.push({
+            id: d.id,
+            collection: col,
+            date: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt)) : new Date(),
+            type: getModuleName(col),
+            detail: getActivityDetail(data, col),
+            status: data.status || data.approval || 'pending'
+          });
+        });
+        loaded++;
+        if (loaded === COLLECTIONS.length) renderActivity(allActivities);
+      }, function(err) { loaded++; if (loaded === COLLECTIONS.length) renderActivity(allActivities); });
+      unsubs.push(unsub);
+    });
+  }
+
+  function renderActivity(activities) {
+    var el = document.getElementById('recentActivity');
+    if (!el) return;
+    activities.sort(function(a, b) { return b.date - a.date; });
+    var show = activities.slice(0, 10);
+    if (show.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p style="color:var(--text-secondary);">No recent activity</p></div>';
+      return;
+    }
+    el.innerHTML = show.map(function(a) {
+      var dotClass = getActivityDotClass(a.collection);
+      var statusPill = '';
+      if (a.status === 'pending') statusPill = '<span class="status-pill pending">⏳ Pending</span>';
+      else if (a.status === 'approved') statusPill = '<span class="status-pill approved">✓ Approved</span>';
+      else if (a.status === 'rejected') statusPill = '<span class="status-pill rejected">✗ Rejected</span>';
+      return '<div class="activity-item"><div class="activity-dot ' + dotClass + '"></div><div class="activity-content"><div class="title">' + a.type + ' — ' + a.detail + '</div><div class="meta">' + formatDate(a.date) + ' ' + statusPill + '</div></div></div>';
+    }).join('');
+  }
+
+  function loadActiveBatches(user) {
+    db.collection('poultryBatches').where('userId', '==', user.id).where('status', '==', 'active').orderBy('createdAt', 'desc').onSnapshot(function(snap) {
+      var el = document.getElementById('activeBatches');
+      if (!el) return;
+      if (snap.empty) {
+        el.innerHTML = '<div class="empty-state"><div class="icon">🐔</div><p style="color:var(--text-secondary);">No active batches</p></div>';
+        return;
+      }
+      el.innerHTML = snap.docs.map(function(d) {
+        var data = d.data();
+        var name = data.flockName || data.batchName || data.name || 'Batch #' + d.id.slice(0,6);
+        var count = data.currentCount || data.initialCount || '—';
+        var age = data.age || data.ageInWeeks || '';
+        return '<div class="batch-card"><div class="batch-icon">🐔</div><div class="batch-info"><div class="batch-name">' + name + '</div><div class="batch-meta">' + (count !== '—' ? count + ' birds' : '') + (age ? ' · ' + age + ' weeks' : '') + '</div></div><div class="batch-status"><span class="badge badge-green">Active</span></div></div>';
+      }).join('');
+    }, function(err) {
+      document.getElementById('activeBatches').innerHTML = '<div class="empty-state"><p style="color:var(--text-secondary);">Could not load batches</p></div>';
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    updateDate();
+    var user = getUser();
+    if (!user) return;
+    initSidebar();
+    loadSidebarUser();
+    loadKPIs(user);
+    loadRecentActivity(user);
+    loadActiveBatches(user);
+  });
+})();
+</script>
+</body>
+</html>
